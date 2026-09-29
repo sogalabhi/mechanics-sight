@@ -47,5 +47,83 @@
       "x": 3.464101615137755,
       "value": 6.928203230275509
     }
-  ]
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "determinate",
+      "restraints": 3,
+      "equations": 3,
+      "degree": 0,
+      "axial_degree": 0,
+      "bending_degree": 0,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "s1",
+        "fx": 0.0,
+        "fy": 3.0,
+        "moment": 0.0
+      },
+      {
+        "support_id": "s2",
+        "fx": 0.0,
+        "fy": 6.0,
+        "moment": 0.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 6.0,
+        "shear": [
+          3.0,
+          0.0,
+          -0.25
+        ],
+        "moment": [
+          0.0,
+          3.0,
+          0.0,
+          -0.08333333333333333
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 3.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0
+      },
+      {
+        "x": 6.0,
+        "shear_left": -6.0,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0
+      }
+    ],
+    "zero_shear_points": [
+      3.4641016151377544
+    ],
+    "extremes": {
+      "max_sagging": {
+        "x": 3.4641016151377544,
+        "value": 6.928203230275509
+      },
+      "max_hogging": null,
+      "max_positive_shear": {
+        "x": 0.0,
+        "value": 3.0
+      },
+      "max_negative_shear": {
+        "x": 6.0,
+        "value": -6.0
+      }
+    },
+    "warnings": []
+  }
 }

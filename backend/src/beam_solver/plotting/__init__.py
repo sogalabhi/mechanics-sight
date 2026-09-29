@@ -1,1 +1,1 @@
-"""plotting/__init__ — see plan.md."""
+"""Matplotlib plotting (optional extra ``plot``)."""

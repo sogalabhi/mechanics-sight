@@ -49,5 +49,99 @@
         "bending_degree": 0
       }
     }
-  ]
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "indeterminate",
+      "restraints": 4,
+      "equations": 3,
+      "degree": 1,
+      "axial_degree": 1,
+      "bending_degree": 0,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "s1",
+        "fx": 0.0,
+        "fy": 5.0,
+        "moment": 0.0
+      },
+      {
+        "support_id": "s2",
+        "fx": 0.0,
+        "fy": 5.0,
+        "moment": 0.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 3.0,
+        "shear": [
+          5.0
+        ],
+        "moment": [
+          0.0,
+          5.0
+        ]
+      },
+      {
+        "x_start": 3.0,
+        "x_end": 6.0,
+        "shear": [
+          -5.0
+        ],
+        "moment": [
+          15.0,
+          -5.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 5.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0
+      },
+      {
+        "x": 3.0,
+        "shear_left": 5.0,
+        "shear_right": -5.0,
+        "moment_left": 15.0,
+        "moment_right": 15.0
+      },
+      {
+        "x": 6.0,
+        "shear_left": -5.0,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0
+      }
+    ],
+    "zero_shear_points": [
+      3.0
+    ],
+    "extremes": {
+      "max_sagging": {
+        "x": 3.0,
+        "value": 15.0
+      },
+      "max_hogging": null,
+      "max_positive_shear": {
+        "x": 0.0,
+        "value": 5.0
+      },
+      "max_negative_shear": {
+        "x": 3.0,
+        "value": -5.0
+      }
+    },
+    "warnings": [
+      "Horizontal reactions are statically indeterminate but exactly zero: there are no horizontal loads."
+    ]
+  }
 }

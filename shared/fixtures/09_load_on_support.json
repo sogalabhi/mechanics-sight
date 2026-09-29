@@ -57,5 +57,67 @@
       "side": "left",
       "moment": 0
     }
-  ]
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "determinate",
+      "restraints": 3,
+      "equations": 3,
+      "degree": 0,
+      "axial_degree": 0,
+      "bending_degree": 0,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "s1",
+        "fx": 0.0,
+        "fy": 10.0,
+        "moment": 0.0
+      },
+      {
+        "support_id": "s2",
+        "fx": 0.0,
+        "fy": -0.0,
+        "moment": 0.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 6.0,
+        "shear": [
+          0.0
+        ],
+        "moment": [
+          0.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0
+      },
+      {
+        "x": 6.0,
+        "shear_left": 0.0,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0
+      }
+    ],
+    "zero_shear_points": [],
+    "extremes": {
+      "max_sagging": null,
+      "max_hogging": null,
+      "max_positive_shear": null,
+      "max_negative_shear": null
+    },
+    "warnings": []
+  }
 }

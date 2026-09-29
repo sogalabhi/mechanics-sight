@@ -22,7 +22,7 @@ dev = [
 ]
 
 [project.scripts]
-beam-solver = "beam_solver.cli:main"
+beam-solver = "beam_solver.cli:run"
 
 [build-system]
 requires = ["hatchling"]
