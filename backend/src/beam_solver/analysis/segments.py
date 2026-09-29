@@ -35,12 +35,38 @@ def build_segments(
             v, m = load.section_polynomials(x_start)
             shear = shear + v
             moment = moment + m
-        segments.append(
-            Segment(
-                x_start,
-                x_end,
-                tuple(float(c) for c in shear.trim(force_tol).coef),
-                tuple(float(c) for c in moment.trim(moment_tol).coef),
-            )
-        )
+        length = x_end - x_start
+        shear_coef = _trimmed(shear, length, force_tol)
+        moment_coef = _moment_like_shear(moment, shear_coef, moment_tol)
+        segments.append(Segment(x_start, x_end, shear_coef, moment_coef))
     return tuple(segments)
+
+
+def _trimmed(poly: Polynomial, length: float, tol: float) -> tuple[float, ...]:
+    """Drop trailing terms whose largest contribution on the segment, |c|·hᵏ, is below tol."""
+    coef = [float(c) for c in poly.coef]
+    while len(coef) > 1 and abs(coef[-1]) * length ** (len(coef) - 1) <= tol:
+        coef.pop()
+    if len(coef) == 1 and abs(coef[0]) <= tol:
+        coef[0] = 0.0
+    return tuple(coef)
+
+
+def _moment_like_shear(
+    moment: Polynomial, shear: tuple[float, ...], tol: float
+) -> tuple[float, ...]:
+    """Trim M to match the trimmed V: since M' = V, M's term k+1 exists only if V's term k does.
+
+    Trimming the two separately could keep a V term while dropping its M term, which
+    breaks M' = V on very short segments.
+    """
+    raw = [float(c) for c in moment.coef] + [0.0] * (len(shear) + 1)
+    coef = raw[: len(shear) + 1]
+    for k, v in enumerate(shear):
+        if v == 0.0:
+            coef[k + 1] = 0.0
+    if abs(coef[0]) <= tol:
+        coef[0] = 0.0
+    while len(coef) > 1 and coef[-1] == 0.0:
+        coef.pop()
+    return tuple(coef)

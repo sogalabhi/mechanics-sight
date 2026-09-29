@@ -101,8 +101,8 @@ def test_calculus_and_degrees(beam: Beam) -> None:
         v, m = s.shear_poly(), s.moment_poly()
         assert v.degree() <= 2
         assert m.degree() <= 3
-        diff = (m.deriv() - v).coef if m.degree() > 0 else -v.coef
-        assert np.allclose(diff, 0.0, atol=1e-6)
+        t = np.linspace(0.0, s.length, 7)
+        assert np.allclose(m.deriv()(t), v(t), atol=1e-6)
 
 
 @settings(max_examples=200, deadline=None)
