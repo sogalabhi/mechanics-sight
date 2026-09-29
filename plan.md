@@ -678,6 +678,8 @@ The solve takes a few milliseconds including validation. The network round trip 
 
 ## 11. Frontend (Phase 1.5 and 1.6)
 
+The detailed UI/UX design (layout, exact symbol geometry, interactions, diagrams, React structure) is in `docs/UI_DESIGN.md`.
+
 ### Rule
 The frontend never does mechanics. It evaluates polynomials (Horner's method), snaps positions, and draws. All physics lives in Python.
 

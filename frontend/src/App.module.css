@@ -1,0 +1,54 @@
+.shell {
+  display: grid;
+  height: 100%;
+  grid-template-columns: 184px 1fr 300px;
+  grid-template-rows: 48px 1fr 28px;
+  grid-template-areas:
+    'top top top'
+    'palette canvas inspector'
+    'status status status';
+}
+
+.top {
+  grid-area: top;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  font-weight: 500;
+  border-bottom: 1px solid var(--rule);
+}
+
+.palette {
+  grid-area: palette;
+  border-right: 1px solid var(--rule);
+  padding: 12px;
+}
+
+.canvas {
+  grid-area: canvas;
+  padding: 12px;
+}
+
+.inspector {
+  grid-area: inspector;
+  border-left: 1px solid var(--rule);
+  padding: 12px;
+}
+
+.status {
+  grid-area: status;
+  display: flex;
+  align-items: center;
+  padding: 0 16px;
+  border-top: 1px solid var(--rule);
+  color: var(--ink-2);
+}
+
+.title {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
