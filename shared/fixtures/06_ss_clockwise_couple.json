@@ -1,0 +1,56 @@
+{
+  "name": "06_ss_clockwise_couple",
+  "input": {
+    "schema_version": 1,
+    "length": 6.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "pin",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "roller",
+        "position": 6.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "c1",
+        "type": "moment",
+        "position": 2.0,
+        "magnitude": -12.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": -2,
+      "moment": 0.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 2,
+      "moment": 0.0
+    },
+    {
+      "x": 4,
+      "side": "left",
+      "shear": -2
+    },
+    {
+      "x": 2,
+      "side": "left",
+      "moment": -4
+    },
+    {
+      "x": 2,
+      "side": "right",
+      "moment": 8
+    }
+  ]
+}

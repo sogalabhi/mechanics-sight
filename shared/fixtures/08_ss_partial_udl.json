@@ -1,0 +1,48 @@
+{
+  "name": "08_ss_partial_udl",
+  "input": {
+    "schema_version": 1,
+    "length": 8.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "pin",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "roller",
+        "position": 8.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "d1",
+        "type": "distributed",
+        "start": 2.0,
+        "end": 6.0,
+        "w_start": -4.0,
+        "w_end": -4.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 8,
+      "moment": 0.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 8,
+      "moment": 0.0
+    },
+    {
+      "extreme": "max_sagging",
+      "x": 4,
+      "value": 24
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+{
+  "name": "09_load_on_support",
+  "input": {
+    "schema_version": 1,
+    "length": 6.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "pin",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "roller",
+        "position": 6.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "p1",
+        "type": "point",
+        "position": 0.0,
+        "magnitude": -10.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 10,
+      "moment": 0.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 0,
+      "moment": 0.0
+    },
+    {
+      "x": 0,
+      "side": "left",
+      "shear": 0
+    },
+    {
+      "x": 0,
+      "side": "right",
+      "shear": 0
+    },
+    {
+      "x": 3,
+      "side": "left",
+      "shear": 0
+    },
+    {
+      "x": 3,
+      "side": "left",
+      "moment": 0
+    }
+  ]
+}

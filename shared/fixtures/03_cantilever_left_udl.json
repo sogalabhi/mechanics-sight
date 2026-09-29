@@ -1,0 +1,47 @@
+{
+  "name": "03_cantilever_left_udl",
+  "input": {
+    "schema_version": 1,
+    "length": 4.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "fixed",
+        "position": 0.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "d1",
+        "type": "distributed",
+        "start": 0.0,
+        "end": 4.0,
+        "w_start": -3.0,
+        "w_end": -3.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 12,
+      "moment": 24
+    },
+    {
+      "x": 0,
+      "side": "right",
+      "moment": -24
+    },
+    {
+      "extreme": "max_hogging",
+      "x": 0,
+      "value": -24
+    },
+    {
+      "extreme": "max_sagging",
+      "x": null,
+      "value": null
+    }
+  ]
+}

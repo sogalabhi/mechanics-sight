@@ -1,0 +1,53 @@
+{
+  "name": "12_pin_pin",
+  "input": {
+    "schema_version": 1,
+    "length": 6.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "pin",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "pin",
+        "position": 6.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "p1",
+        "type": "point",
+        "position": 3.0,
+        "magnitude": -10.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 5,
+      "moment": 0.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 5,
+      "moment": 0.0
+    },
+    {
+      "x": 3,
+      "side": "left",
+      "moment": 15
+    },
+    {
+      "classification": {
+        "status": "indeterminate",
+        "axial_degree": 1,
+        "bending_degree": 0
+      }
+    }
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "name": "11_no_loads",
+  "input": {
+    "schema_version": 1,
+    "length": 5.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "pin",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "roller",
+        "position": 5.0
+      }
+    ],
+    "loads": []
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 0,
+      "moment": 0.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 0,
+      "moment": 0.0
+    },
+    {
+      "extreme": "max_sagging",
+      "x": null,
+      "value": null
+    },
+    {
+      "extreme": "max_hogging",
+      "x": null,
+      "value": null
+    }
+  ]
+}

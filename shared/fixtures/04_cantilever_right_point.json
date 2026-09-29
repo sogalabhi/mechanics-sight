@@ -1,0 +1,40 @@
+{
+  "name": "04_cantilever_right_point",
+  "input": {
+    "schema_version": 1,
+    "length": 4.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "fixed",
+        "position": 4.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "p1",
+        "type": "point",
+        "position": 0.0,
+        "magnitude": -5.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 5,
+      "moment": -20
+    },
+    {
+      "x": 2,
+      "side": "left",
+      "shear": -5
+    },
+    {
+      "x": 4,
+      "side": "left",
+      "moment": -20
+    }
+  ]
+}
