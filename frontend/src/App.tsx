@@ -1,6 +1,17 @@
+import { useEffect, useState } from 'react'
 import styles from './App.module.css'
+import SymbolGallery from '@/dev/SymbolGallery'
 
 export default function App() {
+  const [hash, setHash] = useState(window.location.hash)
+  useEffect(() => {
+    const on = () => setHash(window.location.hash)
+    window.addEventListener('hashchange', on)
+    return () => window.removeEventListener('hashchange', on)
+  }, [])
+
+  if (hash === '#/symbols') return <SymbolGallery />
+
   return (
     <div className={styles.shell}>
       <header className={styles.top}>Mechanics Sight</header>
