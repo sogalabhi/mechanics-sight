@@ -52,6 +52,7 @@ source = ["beam_solver"]
 
 [tool.importlinter]
 root_package = "beam_solver"
+exclude_type_checking_imports = true
 
 [[tool.importlinter.contracts]]
 name = "Layers"

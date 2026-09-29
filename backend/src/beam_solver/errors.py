@@ -1,5 +1,10 @@
 """Exception hierarchy. Each error has a ``code`` used by the API error envelope."""
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from beam_solver.solvers.classification import Classification
+
 
 class BeamError(Exception):
     """Base class for all beam solver errors."""
@@ -31,13 +36,21 @@ class InvalidSupportError(InvalidBeamError):
     code = "invalid_support"
 
 
-class UnstableBeamError(BeamError):
+class ClassifiedBeamError(BeamError):
+    """An error that carries the beam's classification (unstable or indeterminate)."""
+
+    def __init__(self, message: str, classification: "Classification") -> None:
+        super().__init__(message)
+        self.classification = classification
+
+
+class UnstableBeamError(ClassifiedBeamError):
     """The supports cannot hold the beam in equilibrium for every load."""
 
     code = "unstable"
 
 
-class IndeterminateBeamError(BeamError):
+class IndeterminateBeamError(ClassifiedBeamError):
     """The beam cannot be solved by statics alone (not supported yet)."""
 
     code = "indeterminate"
