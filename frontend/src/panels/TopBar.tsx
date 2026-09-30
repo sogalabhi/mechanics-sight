@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { EXAMPLES } from '@/model/examples'
 import { setLength, validateBeam } from '@/model/actions'
 import { shareUrl } from '@/model/share'
+import { downloadReport } from '@/report/downloadReport'
 import { applyTheme, loadTheme, type Theme } from '@/model/theme'
 import { useStore } from '@/store/store'
 import { NumberField } from '@/ui/NumberField'
@@ -14,6 +15,20 @@ export function TopBar() {
   const { commit, undo, redo, past, future } = useStore()
   const [theme, setTheme] = useState<Theme>(loadTheme)
   const [copied, setCopied] = useState<string | null>(null)
+  const canReport = useStore((s) => s.result !== null && s.error === null)
+  const [busy, setBusy] = useState(false)
+
+  const report = async () => {
+    setBusy(true)
+    try {
+      await downloadReport()
+    } catch (e) {
+      setCopied(e instanceof Error ? e.message : 'Report failed')
+      setTimeout(() => setCopied(null), 4000)
+    } finally {
+      setBusy(false)
+    }
+  }
 
   const share = async () => {
     try {
@@ -61,6 +76,9 @@ export function TopBar() {
         ))}
       </select>
       <button className={ui.btn} onClick={share}>Share</button>
+      <button className={ui.btn} onClick={report} disabled={!canReport || busy} title="Download a report with the beam, diagrams and calculation steps">
+        {busy ? 'Preparing…' : 'Report'}
+      </button>
       {copied && <span className={styles.toast} role="status">{copied}</span>}
       <ViewMenu />
       <span className={styles.spacer} />
