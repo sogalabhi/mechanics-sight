@@ -6,7 +6,7 @@ import pytest
 from conftest import beam_from_fixture, load_fixtures
 
 from beam_solver.domain import Beam, PointLoad, Support, SupportKind
-from beam_solver.errors import IndeterminateBeamError, UnstableBeamError
+from beam_solver.errors import UnstableBeamError
 from beam_solver.solvers import Determinacy, solve_reactions
 
 FIXTURES = load_fixtures()
@@ -69,6 +69,7 @@ def test_unstable(supports: list[tuple[SupportKind, float]]) -> None:
     ],
 )
 def test_indeterminate(supports: list[tuple[SupportKind, float]], degree: int) -> None:
-    with pytest.raises(IndeterminateBeamError) as info:
-        solve_reactions(beam_with(*supports))
-    assert info.value.classification.degree == degree
+    sol = solve_reactions(beam_with(*supports))
+    assert sol.classification.status is Determinacy.INDETERMINATE
+    assert sol.classification.degree == degree
+    assert len(sol.reactions) == len(supports)

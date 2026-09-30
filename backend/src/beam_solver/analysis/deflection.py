@@ -9,6 +9,7 @@ from beam_solver.analysis.results import DeflectionResult, DeflectionSegment, Ex
 from beam_solver.domain import Beam, SupportKind
 from beam_solver.domain.sections import PropertySpan
 from beam_solver.errors import SolverConsistencyError
+from beam_solver.solvers import Reaction
 from beam_solver.tolerances import POSITION_TOL, same_position
 
 
@@ -43,7 +44,11 @@ def _span_for_segment(spans: tuple[PropertySpan, ...], segment: Segment) -> Prop
     )
 
 
-def solve_deflection(beam: Beam, segments: Sequence[Segment]) -> DeflectionResult:
+def solve_deflection(
+    beam: Beam,
+    segments: Sequence[Segment],
+    reactions: Sequence[Reaction] | None = None,
+) -> DeflectionResult:
     """Integrate ``EI y'' = M`` and solve all continuity/support conditions at once."""
     if not segments:
         raise SolverConsistencyError("physical deflection requires analysis segments")
@@ -82,7 +87,9 @@ def solve_deflection(beam: Beam, segments: Sequence[Segment]) -> DeflectionResul
             rows.append(rotation_row)
             rhs.append(float(slope_right(0.0) - slope_left(h)))
 
-    # Pins and rollers impose y=0; fixed supports also impose theta=0.
+    reac_map = {r.support_id: r for r in reactions} if reactions is not None else {}
+
+    # Pins and rollers impose y = y_disp; fixed supports also impose theta = theta_disp.
     for support in beam.supports:
         i = _segment_at(segments, support.position)
         segment = segments[i]
@@ -93,26 +100,43 @@ def solve_deflection(beam: Beam, segments: Sequence[Segment]) -> DeflectionResul
         vertical[2 * i] = t
         vertical[2 * i + 1] = 1.0
         rows.append(vertical)
-        rhs.append(-float(displacement_particular(t)))
+
+        y_disp = -support.settlement
+        if support.spring_ky is not None and support.spring_ky > 0:
+            r = reac_map.get(support.id)
+            fy = r.fy if r is not None else 0.0
+            y_disp -= fy / support.spring_ky
+        rhs.append(-float(displacement_particular(t)) + y_disp)
 
         if support.kind is SupportKind.FIXED:
             rotation_row = _row(count)
             rotation_row[2 * i] = 1.0
             rows.append(rotation_row)
-            rhs.append(-float(slope_particular(t)))
+
+            theta_disp = 0.0
+            if support.spring_ktheta is not None and support.spring_ktheta > 0:
+                r = reac_map.get(support.id)
+                m = r.moment if r is not None else 0.0
+                theta_disp -= m / support.spring_ktheta
+            rhs.append(-float(slope_particular(t)) + theta_disp)
 
     matrix = np.vstack(rows)
     vector = np.asarray(rhs, dtype=float)
     expected = 2 * count
-    if matrix.shape != (expected, expected):
+    if matrix.shape[0] < expected:
         raise SolverConsistencyError(
             "deflection boundary conditions do not match the integration constants: "
             f"got {matrix.shape[0]} equations for {expected} constants"
         )
-    try:
-        constants = np.linalg.solve(matrix, vector)
-    except np.linalg.LinAlgError as exc:
-        raise SolverConsistencyError("deflection boundary conditions are singular") from exc
+    if matrix.shape[0] == expected:
+        try:
+            constants = np.linalg.solve(matrix, vector)
+        except np.linalg.LinAlgError as exc:
+            raise SolverConsistencyError("deflection boundary conditions are singular") from exc
+    else:
+        constants, residuals, rank, _ = np.linalg.lstsq(matrix, vector, rcond=None)
+        if rank < expected:
+            raise SolverConsistencyError("deflection boundary conditions are rank deficient")
 
     solved: list[DeflectionSegment] = []
     candidates: list[Extreme] = []

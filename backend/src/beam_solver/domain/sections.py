@@ -379,3 +379,8 @@ class PropertySpan:
     def ei(self) -> float:
         """Flexural rigidity EI (kN·m²)."""
         return self.material.young_modulus_kn_m2 * self.section.second_moment
+
+    @property
+    def ea(self) -> float:
+        """Axial rigidity EA (kN)."""
+        return self.material.young_modulus_kn_m2 * self.section.area

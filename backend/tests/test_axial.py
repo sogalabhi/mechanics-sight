@@ -4,7 +4,7 @@ import pytest
 
 from beam_solver.analysis import analyze
 from beam_solver.domain import Beam, PointLoad, Support, SupportKind
-from beam_solver.errors import IndeterminateBeamError, UnstableBeamError
+from beam_solver.errors import UnstableBeamError
 from beam_solver.io import beam_from_json, result_to_schema
 from beam_solver.solvers import Determinacy
 
@@ -100,15 +100,19 @@ def test_multiple_horizontal_loads_tension_and_compression():
     assert pytest.approx(res.max_compression.value, abs=1e-6) == -4.0
 
 
-def test_axially_indeterminate_with_horizontal_load_raises():
-    """Two pins under horizontal load is axially indeterminate (degree 1)."""
+def test_axially_indeterminate_with_horizontal_load_solves():
+    """Two pins under horizontal load is axially indeterminate (degree 1) and solves."""
     beam = Beam(
         6.0,
         (Support("A", SupportKind.PIN, 0.0), Support("B", SupportKind.PIN, 6.0)),
         (PointLoad("P", 3.0, magnitude=-10.0, fx=5.0),),
     )
-    with pytest.raises(IndeterminateBeamError, match="axial force"):
-        analyze(beam)
+    res = analyze(beam)
+    assert res.classification.status is Determinacy.INDETERMINATE
+    assert res.classification.axial_degree == 1
+    reac_dict = {r.support_id: r for r in res.reactions}
+    assert pytest.approx(reac_dict["A"].fx, abs=1e-5) == -2.5
+    assert pytest.approx(reac_dict["B"].fx, abs=1e-5) == -2.5
 
 
 def test_axially_unstable_with_horizontal_load_raises():
@@ -145,15 +149,19 @@ def test_api_schema_roundtrip_with_fx():
     assert out.extremes.max_tension.value == 10.0
 
 
-def test_balanced_horizontal_loads_still_require_axial_compatibility():
-    """Zero net force does not imply zero reactions between two pins."""
+def test_balanced_horizontal_loads_solve_via_axial_compatibility():
+    """Two pins under self-balancing horizontal loads solve via axial compatibility."""
     beam = Beam(
         6.0,
         (Support("A", SupportKind.PIN, 0.0), Support("B", SupportKind.PIN, 6.0)),
         (PointLoad("p", 2.0, 0.0, fx=10.0), PointLoad("q", 4.0, 0.0, fx=-10.0)),
     )
-    with pytest.raises(IndeterminateBeamError, match="axial force"):
-        analyze(beam)
+    res = analyze(beam)
+    assert res.classification.status is Determinacy.INDETERMINATE
+    assert res.classification.axial_degree == 1
+    reac_dict = {r.support_id: r for r in res.reactions}
+    assert pytest.approx(reac_dict["A"].fx, abs=1e-5) == -10.0 / 3.0
+    assert pytest.approx(reac_dict["B"].fx, abs=1e-5) == 10.0 / 3.0
 
 
 @pytest.mark.parametrize(("fixed_x", "load_x", "expected"), [(0.0, 6.0, 7.0), (6.0, 0.0, -7.0)])

@@ -49,9 +49,10 @@ def test_indeterminate(client: TestClient) -> None:
             {"id": "b", "type": "roller", "position": 6},
         ],
     }
-    error = client.post(URL, json=body).json()["error"]
-    assert error["code"] == "indeterminate"
-    assert error["details"]["classification"]["bending_degree"] == 1
+    res = client.post(URL, json=body).json()
+    assert res["classification"]["status"] == "indeterminate"
+    assert res["classification"]["bending_degree"] == 1
+    assert len(res["reactions"]) == 2
 
 
 def test_domain_validation(client: TestClient) -> None:
@@ -143,6 +144,8 @@ def test_balanced_axial_loads_are_indeterminate(client: TestClient) -> None:
             ],
         },
     )
-    assert response.status_code == 422
-    assert response.json()["error"]["code"] == "indeterminate"
-    assert response.json()["error"]["details"]["classification"]["axial_degree"] == 1
+    assert response.status_code == 200
+    res = response.json()
+    assert res["classification"]["status"] == "indeterminate"
+    assert res["classification"]["axial_degree"] == 1
+    assert len(res["reactions"]) == 2

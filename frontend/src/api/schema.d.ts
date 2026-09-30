@@ -531,6 +531,21 @@ export interface components {
              */
             position: number;
             /**
+             * Settlement
+             * @description m, downward positive
+             */
+            settlement?: number | null;
+            /**
+             * Spring Ktheta
+             * @description kN·m/rad, rotational spring stiffness
+             */
+            spring_ktheta?: number | null;
+            /**
+             * Spring Ky
+             * @description kN/m, vertical spring stiffness
+             */
+            spring_ky?: number | null;
+            /**
              * Type
              * @enum {string}
              */

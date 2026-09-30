@@ -4,9 +4,9 @@ import math
 
 import pytest
 
-from beam_solver.analysis.shear_stress import shear_stress_profile, solve_shear_stress
 from beam_solver.analysis.results import Segment
-from beam_solver.domain import Beam, Material, RectangularSection, Support, SupportKind, PointLoad
+from beam_solver.analysis.shear_stress import shear_stress_profile, solve_shear_stress
+from beam_solver.domain import Beam, Material, PointLoad, RectangularSection, Support, SupportKind
 from beam_solver.errors import SolverConsistencyError
 
 

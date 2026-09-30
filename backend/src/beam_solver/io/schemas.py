@@ -21,6 +21,11 @@ class SupportIn(_Model):
     id: Id
     type: Literal["pin", "roller", "fixed"]
     position: float = Field(description="m from the left end")
+    settlement: float | None = Field(default=None, description="m, downward positive")
+    spring_ky: float | None = Field(default=None, description="kN/m, vertical spring stiffness")
+    spring_ktheta: float | None = Field(
+        default=None, description="kN·m/rad, rotational spring stiffness"
+    )
 
 
 class PointLoadIn(_Model):

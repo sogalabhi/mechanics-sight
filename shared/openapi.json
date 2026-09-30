@@ -1260,6 +1260,42 @@
             "title": "Position",
             "type": "number"
           },
+          "settlement": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "m, downward positive",
+            "title": "Settlement"
+          },
+          "spring_ktheta": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "kN\u00b7m/rad, rotational spring stiffness",
+            "title": "Spring Ktheta"
+          },
+          "spring_ky": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "kN/m, vertical spring stiffness",
+            "title": "Spring Ky"
+          },
           "type": {
             "enum": [
               "pin",

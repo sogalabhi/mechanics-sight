@@ -2,17 +2,17 @@
 
 from dataclasses import replace
 
+from beam_solver.analysis.bending_stress import solve_bending_stress
 from beam_solver.analysis.canonical import detect_canonical
 from beam_solver.analysis.critical_points import build_critical_points
 from beam_solver.analysis.deflection import solve_deflection
 from beam_solver.analysis.extremes import find_extremes
 from beam_solver.analysis.results import AnalysisResult
 from beam_solver.analysis.segments import build_segments, critical_positions
+from beam_solver.analysis.shear_stress import solve_shear_stress
 from beam_solver.domain import Beam, Load, PointLoad, PointMoment
 from beam_solver.solvers import Reaction, solve_reactions
 from beam_solver.tolerances import force_tol, load_scale, moment_tol
-from beam_solver.analysis.bending_stress import solve_bending_stress
-from beam_solver.analysis.shear_stress import solve_shear_stress
 
 
 def reaction_loads(reactions: tuple[Reaction, ...], beam: Beam) -> tuple[Load, ...]:
@@ -59,7 +59,9 @@ def analyze(beam: Beam) -> AnalysisResult:
         warnings=solution.warnings,
         max_tension=extremes.max_tension,
         max_compression=extremes.max_compression,
-        deflection=solve_deflection(beam, segments) if can_do_physical else None,
+        deflection=solve_deflection(beam, segments, reactions=solution.reactions)
+        if can_do_physical
+        else None,
         bending_stress=solve_bending_stress(beam, segments) if can_do_physical else None,
         shear_stress=solve_shear_stress(beam, segments) if can_do_physical else None,
     )

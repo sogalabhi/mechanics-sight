@@ -6,7 +6,6 @@ import numpy as np
 
 from beam_solver.domain import Beam, Direction
 from beam_solver.errors import (
-    IndeterminateBeamError,
     SolverConsistencyError,
     UnstableBeamError,
 )
@@ -44,12 +43,15 @@ def solve_reactions(beam: Beam) -> ReactionSolution:
     classification = classify(system)
     if classification.status is Determinacy.UNSTABLE:
         raise UnstableBeamError(classification.reason or "unstable", classification)
-    if classification.bending_degree > 0:
-        raise IndeterminateBeamError(
-            f"Indeterminate to degree {classification.bending_degree} in bending; "
-            "supported from Phase 4.",
-            classification,
-        )
+
+    has_settlement_or_spring = any(
+        s.settlement != 0.0 or s.spring_ky is not None or s.spring_ktheta is not None
+        for s in beam.supports
+    )
+    if classification.status is Determinacy.INDETERMINATE or has_settlement_or_spring:
+        from beam_solver.solvers.stiffness import solve_stiffness
+
+        return solve_stiffness(beam, classification)
 
     a_bending, b_bending = system.bending_block()
     try:
@@ -67,15 +69,7 @@ def solve_reactions(beam: Beam) -> ReactionSolution:
     )
 
     axial_cols = system.axial_columns()
-    if classification.axial_degree > 0:
-        total_applied_fx = sum(abs(load.horizontal_resultant()) for load in beam.loads)
-        if abs(total_applied_fx) > force_tol(scale):
-            raise IndeterminateBeamError(
-                f"Indeterminate to degree {classification.axial_degree} in axial force; "
-                "supported from Phase 4.",
-                classification,
-            )
-    elif len(axial_cols) == 1:
+    if len(axial_cols) == 1:
         values[axial_cols[0]] = float(system.b[0])
 
     residual = float(np.linalg.norm(system.a @ values - system.b))

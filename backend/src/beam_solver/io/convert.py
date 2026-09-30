@@ -38,7 +38,6 @@ from beam_solver.io.schemas import (
     ISectionIn,
     PointLoadIn,
     PointMomentIn,
-    PropertySpanIn,
     ReactionOut,
     RectangularSectionIn,
     SectionIn,
@@ -65,7 +64,17 @@ def _section_from_schema(data: SectionIn | None) -> Section | None:
 
 
 def beam_from_schema(data: BeamIn) -> Beam:
-    supports = tuple(Support(s.id, SupportKind(s.type), s.position) for s in data.supports)
+    supports = tuple(
+        Support(
+            s.id,
+            SupportKind(s.type),
+            s.position,
+            settlement=s.settlement if s.settlement is not None else 0.0,
+            spring_ky=s.spring_ky,
+            spring_ktheta=s.spring_ktheta,
+        )
+        for s in data.supports
+    )
     loads: list[Load] = []
     for ld in data.loads:
         if isinstance(ld, PointLoadIn):
