@@ -1,0 +1,3 @@
+fastapi>=0.110
+numpy>=2
+pydantic>=2
