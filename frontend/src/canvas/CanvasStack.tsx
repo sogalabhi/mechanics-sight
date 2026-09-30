@@ -3,6 +3,7 @@ import { Crosshair } from '@/diagrams/Crosshair'
 import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { DEFLECTION_PANEL_HEIGHT, ElasticCurvePanel } from '@/diagrams/ElasticCurvePanel'
 import { IntegrationCard } from '@/diagrams/IntegrationCard'
+import { VirtualSawCard } from '@/diagrams/VirtualSawCard'
 import { useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
 import { Guides } from './Guides'
@@ -26,12 +27,21 @@ export function CanvasStack({ width }: { width: number }) {
       if (e.key === 'Escape') {
         useStore.getState().setPinned(null)
         useStore.getState().setIntegrationRange(null)
+        useStore.getState().setSawCutX(null)
         useStore.getState().select(null)
+      } else if (e.key === 's' || e.key === 'S') {
+        const tag = (e.target as HTMLElement)?.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA') return
+        const s = useStore.getState()
+        const curX = s.pinnedX ?? s.hoverX
+        if (curX !== null && curX > 1e-4 && curX < length - 1e-4) {
+          s.setSawCutX(s.sawCutX === curX ? null : curX)
+        }
       }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [])
+  }, [length])
 
   /** Beam x (m) under a pointer, snapped to the ends, critical points, and zero shear roots; null off the beam. */
   const xAt = (clientX: number): number | null => {
@@ -106,6 +116,7 @@ export function CanvasStack({ width }: { width: number }) {
       }}
     >
       <IntegrationCard />
+      <VirtualSawCard />
       <svg width={width} height={BEAM_PANEL_HEIGHT} style={{ display: 'block' }}>
         <Guides height={BEAM_PANEL_HEIGHT} />
         <BeamView />

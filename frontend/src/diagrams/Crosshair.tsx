@@ -15,6 +15,9 @@ interface Props {
 export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }: Props) {
   const pinned = useStore((s) => s.pinnedX)
   const hover = useStore((s) => s.hoverX)
+  const sawCutX = useStore((s) => s.sawCutX)
+  const setSawCutX = useStore((s) => s.setSawCutX)
+  const beam = useStore((s) => s.beam)
   const result = useStore((s) => s.result)
   const showCalculus = useStore((s) => s.showCalculus)
   const xs = useXScale()
@@ -87,6 +90,38 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
         strokeWidth={1}
         strokeDasharray={pinned === null ? '3 3' : undefined}
       />
+      {!kind && mx > 1e-4 && mx < beam.length - 1e-4 && (
+        <g
+          pointerEvents="auto"
+          style={{ cursor: 'pointer' }}
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            setSawCutX(sawCutX === mx ? null : mx)
+          }}
+        >
+          <rect
+            x={px - 40}
+            y={8}
+            width={80}
+            height={20}
+            rx={4}
+            fill="var(--panel)"
+            stroke={sawCutX === mx ? '#d97706' : 'var(--rule)'}
+            strokeWidth={1.2}
+          />
+          <text
+            x={px}
+            y={22}
+            textAnchor="middle"
+            fontFamily="var(--font-mono)"
+            fontSize={10}
+            fontWeight={600}
+            fill={sawCutX === mx ? '#d97706' : 'var(--ink)'}
+          >
+            {sawCutX === mx ? '🪚 Close' : '🪚 Saw Cut'}
+          </text>
+        </g>
+      )}
       {v && yOf && (
         <>
           <circle

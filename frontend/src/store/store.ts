@@ -26,6 +26,7 @@ interface State {
   showDeflection: boolean
   hoverX: number | null
   pinnedX: number | null
+  sawCutX: number | null
   integrationRange: [number, number] | null
   /** One call = one undo step. */
   commit: (beam: BeamInput, selectId?: string | null) => void
@@ -36,6 +37,7 @@ interface State {
   setError: (e: AnalysisError) => void
   setHover: (x: number | null) => void
   setPinned: (x: number | null) => void
+  setSawCutX: (x: number | null) => void
   setIntegrationRange: (range: [number, number] | null) => void
   setShowWorking: (on: boolean) => void
   setStepsUnsupported: (v: boolean) => void
@@ -60,6 +62,7 @@ export const useStore = create<State>((set) => ({
   showDeflection: true,
   hoverX: null,
   pinnedX: null,
+  sawCutX: null,
   integrationRange: null,
   commit: (beam, selectId) =>
     set((s) => ({
@@ -77,6 +80,7 @@ export const useStore = create<State>((set) => ({
   setError: (error) => set({ error }),
   setHover: (hoverX) => set({ hoverX }),
   setPinned: (pinnedX) => set({ pinnedX }),
+  setSawCutX: (sawCutX) => set({ sawCutX }),
   setIntegrationRange: (integrationRange) => set({ integrationRange }),
   setShowWorking: (showWorking) => set({ showWorking, stepsUnsupported: false }),
   setStepsUnsupported: (stepsUnsupported) => set({ stepsUnsupported }),

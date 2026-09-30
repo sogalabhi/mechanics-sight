@@ -807,15 +807,28 @@ Even before user input of $E$ and $I$ in Phase 3, determinate beam deformation s
   - Automatically identifies applied moment couple jumps inside the interval.
   - Dismissible with `Escape` or a single click.
 
-### 11.5.4 The "Virtual Saw" (Interactive Free Body Cut)
-- On hover or when toggling "Inspect Cut" at any coordinate $x$:
-  - The beam visually separates at $x$, showing the left segment as an isolated free body diagram.
-  - The applied external loads to the left of the cut are rendered.
-  - The internal shear force $V_{\text{cut}}$ and internal bending moment $M_{\text{cut}}$ appear on the cut face as glowing balancing vectors.
-  - An equilibrium popup proves why those values exist:
-    $$\Sigma F_y = 0 \implies V_{\text{cut}} = \Sigma F_{\text{left}}$$
-    $$\Sigma M_{\text{cut}} = 0 \implies M_{\text{cut}} = -\Sigma M_{\text{anticlockwise, left}}$$
-- Converts the abstract internal force convention into an intuitive physical balancing act.
+### 11.5.4 The "Virtual Saw" (Interactive Free Body Cut) [x] (Implemented & Verified)
+- Converts the abstract internal force convention into an intuitive physical balancing act:
+- **Interactive Triggering:**
+  - Pinned crosshair badge: clicking `[🪚 Saw Cut]` at coordinate $x$ slices the beam.
+  - View Menu: "Virtual saw (cut beam)" button.
+  - Keyboard shortcut: pressing `S` or `C` slices at the hovered or pinned position; `Escape` clears the cut.
+- **Visual Slicing on Beam (`BeamView.tsx`):**
+  - The beam visually separates at $x$ with an amber jagged saw cut line and section badge `🪚 Cut x = ... m`.
+  - The right segment $(x, L]$ dims down (reduced opacity), isolating the left segment $[0, x]$.
+- **Mini Free Body Diagram (FBD) Canvas (`VirtualSawCard.tsx`):**
+  - Renders an isolated SVG of the left segment with support reactions, point loads, sliced distributed loads (trapezoids), and applied couples.
+  - Exposed right cut face clearly displays internal shear vector $V_{\text{cut}}$ (downward positive convention) and internal bending moment arc $M_{\text{cut}}$ (anticlockwise sagging positive convention).
+- **First-Principles Equilibrium Proof:**
+  - **Vertical Force Balance ($\Sigma F_y = 0$):**
+    $$\Sigma F_y = \sum F_{y,\text{reactions}} + \sum F_{y,\text{loads}} - V_{\text{cut}} = 0 \implies V_{\text{cut}} = \dots$$
+    Confirmed against the Shear Force Diagram: $V_{\text{cut}} \equiv V(x)$ $\checkmark$.
+  - **Moment Equilibrium About Cut Face ($\Sigma M_{\text{cut}} = 0$):**
+    $$\Sigma M_{\text{cut}} = \sum (\text{External Moments about cut}) - M_{\text{cut}} = 0 \implies M_{\text{cut}} = \dots$$
+    Confirmed against the Bending Moment Diagram: $M_{\text{cut}} \equiv M(x)$ $\checkmark$.
+  - **Physical Fiber Insight:** Explains sagging/hogging curvature in terms of internal resisting moments.
+- **Analytical Engine (`frontend/src/math/sectionCut.ts`):**
+  - Exact closed-form static equilibrium equations across all support types, trapezoid/triangle distributed load slices, point loads, and couples. Tested across 5 fixture test suites in `sectionCut.test.ts`.
 
 ### 11.5.5 Symbolic Formula Matcher & First-Principles Proofs
 Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but students struggle to connect them to computer outputs.

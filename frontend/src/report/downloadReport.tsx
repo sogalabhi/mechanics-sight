@@ -8,8 +8,8 @@ import { ReportFigures } from './ReportFigures'
 /** Draw the three figures off-screen with selection, crosshair and reactions cleared. */
 function renderFigures(): { beam: string; sfd: string; bmd: string } {
   const s = useStore.getState()
-  const saved = { selectedId: s.selectedId, hoverX: s.hoverX, pinnedX: s.pinnedX, integrationRange: s.integrationRange, showReactions: s.showReactions, showGuides: s.showGuides, showCalculus: s.showCalculus, showDeflection: s.showDeflection }
-  useStore.setState({ selectedId: null, hoverX: null, pinnedX: null, integrationRange: null, showReactions: false, showGuides: true, showCalculus: false, showDeflection: s.showDeflection })
+  const saved = { selectedId: s.selectedId, hoverX: s.hoverX, pinnedX: s.pinnedX, sawCutX: s.sawCutX, integrationRange: s.integrationRange, showReactions: s.showReactions, showGuides: s.showGuides, showCalculus: s.showCalculus, showDeflection: s.showDeflection }
+  useStore.setState({ selectedId: null, hoverX: null, pinnedX: null, sawCutX: null, integrationRange: null, showReactions: false, showGuides: true, showCalculus: false, showDeflection: s.showDeflection })
   const host = document.createElement('div')
   const root = createRoot(host)
   try {

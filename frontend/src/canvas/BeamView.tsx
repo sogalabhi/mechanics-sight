@@ -3,7 +3,7 @@ import {
   Beam, Couple, DimensionChain, DistributedLoad, FixedSupport, PinSupport, PointLoad, RollerSupport,
   loadHeight, ReactionForce, ReactionMoment,
 } from '@/drawing'
-import { formatQty } from '@/math/format'
+import { formatNumber, formatQty } from '@/math/format'
 import { packLanes } from '@/math/lanes'
 import { allItems, keyPoints } from '@/model/actions'
 import type { Item } from '@/model/types'
@@ -56,6 +56,7 @@ export function BeamView() {
   const result = useStore((s) => s.result)
   const stale = useStore((s) => s.error !== null)
   const showReactions = useStore((s) => s.showReactions)
+  const sawCutX = useStore((s) => s.sawCutX)
   const selectedId = useStore((s) => s.selectedId)
   const select = useStore((s) => s.select)
   const x = useXScale()
@@ -136,6 +137,49 @@ export function BeamView() {
         </g>
       )}
       <DimensionChain points={keyPoints(beam).map((v) => ({ x: x(v), value: v }))} />
+      {/* Virtual Saw Section Cut Graphic */}
+      {sawCutX !== null && sawCutX > 1e-4 && sawCutX < beam.length - 1e-4 && (
+        <g pointerEvents="none">
+          {/* Dim the right side of the beam to isolate the left segment */}
+          <rect
+            x={x(sawCutX)}
+            y={-BEAM_Y}
+            width={Math.max(0, xL - x(sawCutX) + 60)}
+            height={BEAM_PANEL_HEIGHT}
+            fill="var(--paper)"
+            fillOpacity={0.62}
+          />
+          {/* Jagged Saw Cut Line */}
+          <path
+            d={`M${x(sawCutX)},-22 L${x(sawCutX) + 3.5},-11 L${x(sawCutX) - 3.5},0 L${x(sawCutX) + 3.5},11 L${x(sawCutX)},22`}
+            stroke="#d97706"
+            strokeWidth={2.4}
+            fill="none"
+          />
+          <rect
+            x={x(sawCutX) - 48}
+            y={-40}
+            width={96}
+            height={16}
+            rx={3}
+            fill="var(--panel)"
+            stroke="#d97706"
+            strokeWidth={1}
+            opacity={0.94}
+          />
+          <text
+            x={x(sawCutX)}
+            y={-28}
+            textAnchor="middle"
+            fontFamily="var(--font-mono)"
+            fontSize={9.5}
+            fontWeight={600}
+            fill="#d97706"
+          >
+            🪚 Cut x = {formatNumber(sawCutX)} m
+          </text>
+        </g>
+      )}
       {beam.supports.length === 0 && (
         <text x={(x0 + xL) / 2} y={36} textAnchor="middle" fontSize={13} fill="var(--ink-2)">
           Add a support from the palette.
