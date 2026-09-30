@@ -29,3 +29,9 @@ export function formatLabel(v: number, unit: string): string {
   const s = fixed(Math.abs(v), 3).replace(/\.?0+$/, '')
   return `${s}${THIN}${unit}`
 }
+
+/** Axis tick: up to 3 decimals, trailing zeros removed, true minus. */
+export function formatTick(v: number): string {
+  const s = fixed(v, 3).replace(/\.?0+$/, '')
+  return s === '' || s === MINUS ? '0' : s
+}

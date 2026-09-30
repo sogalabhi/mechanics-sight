@@ -15,8 +15,8 @@ interface Props {
   showHandle?: boolean
 }
 
-const CHAIN_Y = 70
-const OVERALL_Y = 92
+const CHAIN_Y = 84
+const OVERALL_Y = 106
 const EXT_FROM = 49
 
 export function DimensionChain({ points, showHandle = false }: Props) {

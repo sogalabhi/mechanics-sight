@@ -671,6 +671,12 @@ For `unstable` and `indeterminate`, `details` contains the `classification`. The
 - Later phases add **optional fields with defaults** (for example `fx: 0.0`, `hinges: []`), so every v1 request stays a valid request.
 - `schema_version` changes only on a breaking change. The frontend owns a `migrate(beamJson)` function for old saved and shared beams.
 
+### Working steps (M6.5)
+The solver already builds the equilibrium system, so it also records how it got each number. `steps` is an optional list of structured items, `{kind, symbolic, substituted, result}`, for reactions (ΣFy = 0, ΣM = 0), each segment's V(x) and M(x), and the zero-shear and extreme points. The frontend formats them; the wording and math styling live in one place, and the frontend still does no mechanics.
+- It is returned only with `?steps=true`, so live analysis and dragging (M7) stay small and fast.
+- It is an optional field with a default, so `schema_version` does not change (see Versioning).
+- Steps come from the same computation as the numbers, so they cannot disagree with the diagrams.
+
 ### Performance
 The solve takes a few milliseconds including validation. The network round trip dominates.
 
@@ -788,6 +794,7 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | M4 | `io` schemas + CLI (`beam-solver analyze beam.json --plot out.png --json out.json`) + matplotlib plots | The CLI reproduces the fixture `output` snapshots, and the plots look right for all hand cases. |
 | M5 | FastAPI app, error envelope, `openapi.json` export, TS type generation | API tests pass on the fixtures. The contract CI check is green. |
 | M6 | Phase 1.5 frontend: form, stacked diagrams, hover, URL sharing, undo | Vitest contract tests pass. Manual check on all hand cases. |
+| M6.5 | Working steps: backend emits structured `steps` (equilibrium equations with numbers substituted, per-segment V(x) and M(x), zero-shear and extremes), opt-in via `?steps=true`. Frontend "Working" panel rendered with KaTeX | Steps for all 12 hand cases match the hand solutions in `docs/`. Fixture snapshots and the `openapi.json` contract check are green. The panel shows the right steps for all 12 cases. |
 | M7 | Phase 1.6: drag and drop, snapping, throttled live updates | Playwright drag tests pass (snap to support, jump display, error while dragging). |
 | M8+ | Phase 2 → 3 → 4, each starting with new hand cases and fixtures | Same bar as M2/M3 for each new feature. |
 

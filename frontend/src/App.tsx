@@ -1,6 +1,41 @@
 import { useEffect, useState } from 'react'
 import styles from './App.module.css'
+import { startLiveAnalysis } from '@/api/live'
+import { CanvasStack } from '@/canvas/CanvasStack'
+import { XScaleProvider } from '@/canvas/XScaleContext'
+import { useWidth } from '@/canvas/useWidth'
 import SymbolGallery from '@/dev/SymbolGallery'
+import { Inspector } from '@/panels/Inspector'
+import { Banner } from '@/panels/Banner'
+import { Palette } from '@/panels/Palette'
+import { Results } from '@/panels/Results'
+import { StatusBar } from '@/panels/StatusBar'
+import { TopBar } from '@/panels/TopBar'
+import { useShortcuts } from '@/panels/useShortcuts'
+import { applyTheme, loadTheme } from '@/model/theme'
+import { useStore } from '@/store/store'
+
+function Editor() {
+  const length = useStore((s) => s.beam.length)
+  const [ref, width] = useWidth<HTMLElement>()
+  useEffect(() => startLiveAnalysis(), [])
+  useEffect(() => applyTheme(loadTheme()), [])
+  useShortcuts()
+  return (
+    <div className={styles.shell}>
+      <header className={styles.top}><TopBar /></header>
+      <aside className={styles.palette}><Palette /></aside>
+      <main className={styles.canvas} ref={ref}>
+        <XScaleProvider length={length} width={width}>
+          <Banner />
+          <CanvasStack width={width} />
+        </XScaleProvider>
+      </main>
+      <aside className={styles.inspector}><Inspector /><hr className={styles.hr} /><Results /></aside>
+      <footer className={`${styles.status} num`}><StatusBar /></footer>
+    </div>
+  )
+}
 
 export default function App() {
   const [hash, setHash] = useState(window.location.hash)
@@ -9,22 +44,5 @@ export default function App() {
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
   }, [])
-
-  if (hash === '#/symbols') return <SymbolGallery />
-
-  return (
-    <div className={styles.shell}>
-      <header className={styles.top}>Mechanics Sight</header>
-      <aside className={styles.palette}>
-        <h2 className={styles.title}>Palette</h2>
-      </aside>
-      <main className={styles.canvas}>
-        <h2 className={styles.title}>Beam</h2>
-      </main>
-      <aside className={styles.inspector}>
-        <h2 className={styles.title}>Inspector</h2>
-      </aside>
-      <footer className={`${styles.status} num`}>x = —</footer>
-    </div>
-  )
+  return hash === '#/symbols' ? <SymbolGallery /> : <Editor />
 }

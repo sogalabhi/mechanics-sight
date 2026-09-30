@@ -29,17 +29,15 @@ export function ReactionForce({ x, value, unit = 'kN' }: VProps) {
 
 interface MProps {
   x: number
-  end: 'left' | 'right'
   /** Signed: positive = anticlockwise. */
   value: number
   unit?: string
 }
 
-/** Moment reaction at a fixed support, beside the wall on the beam side. */
-export function ReactionMoment({ x, end, value, unit = 'kN·m' }: MProps) {
-  const dir = end === 'left' ? 1 : -1
+/** Moment reaction at a fixed support, centred on the support's position. */
+export function ReactionMoment({ x, value, unit = 'kN·m' }: MProps) {
   return (
-    <g transform={`translate(${x + dir * 34},0)`}>
+    <g transform={`translate(${x},0)`}>
       <ArcMoment anticlockwise={value > 0} color="var(--reaction)" state="default" r={18} />
       <text x={0} y={-26} textAnchor="middle" fontFamily={MONO} fontSize={12} fill="var(--reaction)">
         {formatLabel(value, unit)}

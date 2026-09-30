@@ -18,11 +18,11 @@ interface Props {
 }
 
 const FACE = -5
-const heightOf = (w: number, wMax: number) => (w === 0 || wMax === 0 ? 0 : 10 + (34 * Math.abs(w)) / wMax)
+export const loadHeight = (w: number, wMax: number) => (w === 0 || wMax === 0 ? 0 : 10 + (34 * Math.abs(w)) / wMax)
 
 export function DistributedLoad({ xs, xe, w1, w2, wMax, lift = 0, unit = 'kN/m', state = 'default' }: Props) {
-  const h1 = heightOf(w1, wMax)
-  const h2 = heightOf(w2, wMax)
+  const h1 = loadHeight(w1, wMax)
+  const h2 = loadHeight(w2, wMax)
   const up = (w1 !== 0 ? w1 : w2) > 0
   const color = stateColor(state, 'var(--load)')
   const width = xe - xs

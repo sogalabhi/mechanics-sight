@@ -110,7 +110,7 @@ export default function SymbolGallery() {
             <g transform="translate(40,60)">
               <Beam length={160} />
               <FixedSupport x={0} end="left" />
-              <ReactionMoment x={0} end="left" value={-30} />
+              <ReactionMoment x={0} value={-30} />
             </g>
           </Cell>
         </div>

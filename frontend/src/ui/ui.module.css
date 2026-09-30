@@ -1,0 +1,13 @@
+.field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.fieldLabel { font-size: 11px; color: var(--ink-2); }
+.inputWrap { display: flex; align-items: center; gap: 6px; }
+.input { width: 100%; height: 28px; padding: 0 8px; text-align: right; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); }
+.input[aria-invalid='true'] { border-color: var(--danger); }
+.unit { width: 40px; color: var(--ink-2); font-size: 12px; }
+.err { color: var(--danger); font-size: 11px; }
+.seg { display: flex; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.seg button { flex: 1; height: 28px; font: inherit; color: var(--ink); background: var(--panel); border: 0; border-right: 1px solid var(--rule); cursor: pointer; }
+.seg button:last-child { border-right: 0; }
+.seg button[aria-pressed='true'] { background: var(--ink); color: var(--paper); }
+.btn { height: 28px; padding: 0 10px; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
+.btn:disabled { color: var(--ink-2); cursor: default; }

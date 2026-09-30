@@ -1,0 +1,57 @@
+import { create } from 'zustand'
+import { emptyBeam } from '@/model/actions'
+import { beamFromHash } from '@/model/share'
+import type { AnalysisResult, BeamInput } from '@/model/types'
+
+export interface AnalysisError {
+  kind: 'beam' | 'network'
+  message: string
+}
+
+interface State {
+  beam: BeamInput
+  past: BeamInput[]
+  future: BeamInput[]
+  selectedId: string | null
+  /** Last good result. Kept while `error` is set so the diagrams can be greyed out. */
+  result: AnalysisResult | null
+  error: AnalysisError | null
+  hoverX: number | null
+  pinnedX: number | null
+  /** One call = one undo step. */
+  commit: (beam: BeamInput, selectId?: string | null) => void
+  undo: () => void
+  redo: () => void
+  select: (id: string | null) => void
+  setResult: (r: AnalysisResult | null) => void
+  setError: (e: AnalysisError) => void
+  setHover: (x: number | null) => void
+  setPinned: (x: number | null) => void
+}
+
+export const useStore = create<State>((set) => ({
+  beam: beamFromHash(window.location.hash) ?? emptyBeam(6),
+  past: [],
+  future: [],
+  selectedId: null,
+  result: null,
+  error: null,
+  hoverX: null,
+  pinnedX: null,
+  commit: (beam, selectId) =>
+    set((s) => ({
+      beam,
+      past: [...s.past, s.beam],
+      future: [],
+      selectedId: selectId === undefined ? s.selectedId : selectId,
+    })),
+  undo: () =>
+    set((s) => (s.past.length ? { beam: s.past[s.past.length - 1], past: s.past.slice(0, -1), future: [s.beam, ...s.future] } : s)),
+  redo: () =>
+    set((s) => (s.future.length ? { beam: s.future[0], past: [...s.past, s.beam], future: s.future.slice(1) } : s)),
+  select: (id) => set({ selectedId: id }),
+  setResult: (result) => set({ result, error: null }),
+  setError: (error) => set({ error }),
+  setHover: (hoverX) => set({ hoverX }),
+  setPinned: (pinnedX) => set({ pinnedX }),
+}))
