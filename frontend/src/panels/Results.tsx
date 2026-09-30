@@ -25,6 +25,8 @@ export function Results() {
     ['M min (hogging)', ex.max_hogging, 'kN·m'],
     ['V max', ex.max_positive_shear, 'kN'],
     ['V min', ex.max_negative_shear, 'kN'],
+    ...(ex.max_tension ? [['N max (tension)' as const, ex.max_tension, 'kN'] as [string, { x: number; value: number }, string]] : []),
+    ...(ex.max_compression ? [['N min (compression)' as const, ex.max_compression, 'kN'] as [string, { x: number; value: number }, string]] : []),
   ]
   return (
     <div>

@@ -85,6 +85,9 @@
         "moment": [
           0.0,
           5.0
+        ],
+        "axial": [
+          0.0
         ]
       },
       {
@@ -96,6 +99,9 @@
         "moment": [
           15.0,
           -5.0
+        ],
+        "axial": [
+          0.0
         ]
       }
     ],
@@ -105,21 +111,27 @@
         "shear_left": 0.0,
         "shear_right": 5.0,
         "moment_left": 0.0,
-        "moment_right": 0.0
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
       },
       {
         "x": 3.0,
         "shear_left": 5.0,
         "shear_right": -5.0,
         "moment_left": 15.0,
-        "moment_right": 15.0
+        "moment_right": 15.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
       },
       {
         "x": 6.0,
         "shear_left": -5.0,
         "shear_right": 0.0,
         "moment_left": 0.0,
-        "moment_right": 0.0
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
       }
     ],
     "zero_shear_points": [
@@ -138,7 +150,9 @@
       "max_negative_shear": {
         "x": 3.0,
         "value": -5.0
-      }
+      },
+      "max_tension": null,
+      "max_compression": null
     },
     "warnings": [
       "Horizontal reactions are statically indeterminate but exactly zero: there are no horizontal loads."

@@ -1,0 +1,136 @@
+{
+  "name": "15_cantilever_compression",
+  "input": {
+    "schema_version": 1,
+    "length": 5,
+    "supports": [
+      {
+        "id": "a",
+        "type": "fixed",
+        "position": 0
+      }
+    ],
+    "loads": [
+      {
+        "id": "p",
+        "type": "point",
+        "position": 5,
+        "magnitude": -5,
+        "fx": -12
+      }
+    ]
+  },
+  "checks": [
+    {
+      "x": 0,
+      "side": "left",
+      "axial": 0
+    },
+    {
+      "x": 0,
+      "side": "right",
+      "axial": -12
+    },
+    {
+      "x": 5,
+      "side": "left",
+      "axial": -12
+    },
+    {
+      "x": 5,
+      "side": "right",
+      "axial": 0
+    }
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "determinate",
+      "restraints": 3,
+      "equations": 3,
+      "degree": 0,
+      "axial_degree": 0,
+      "bending_degree": 0,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "a",
+        "fx": 12.0,
+        "fy": 5.0,
+        "moment": 25.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 5.0,
+        "shear": [
+          5.0
+        ],
+        "moment": [
+          -25.0,
+          5.0
+        ],
+        "axial": [
+          -12.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 5.0,
+        "moment_left": 0.0,
+        "moment_right": -25.0,
+        "axial_left": 0.0,
+        "axial_right": -12.0
+      },
+      {
+        "x": 5.0,
+        "shear_left": 5.0,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0,
+        "axial_left": -12.0,
+        "axial_right": 0.0
+      }
+    ],
+    "zero_shear_points": [],
+    "extremes": {
+      "max_sagging": null,
+      "max_hogging": {
+        "x": 0.0,
+        "value": -25.0
+      },
+      "max_positive_shear": {
+        "x": 0.0,
+        "value": 5.0
+      },
+      "max_negative_shear": null,
+      "max_tension": null,
+      "max_compression": {
+        "x": 0.0,
+        "value": -12.0
+      }
+    },
+    "warnings": [],
+    "canonical": {
+      "case_id": "cantilever_end_point",
+      "name": "Cantilever Beam with End Point Load",
+      "symbolic_formula": "M_{\\min} = -PL\\ \\text{(hogging)},\\quad M_{\\text{wall}} = +PL",
+      "symbolic_reactions": "R_y = P, \\quad M_{\\text{wall}} = PL",
+      "substituted_formula": "M_{\\min} = -(5\\ \\text{kN}) \\cdot (5\\ \\text{m})",
+      "result_text": "M_{\\min} = -25\\ \\text{kN\u00b7m}",
+      "location_text": "x = 0\\ \\text{m}\\ (\\text{at fixed wall})",
+      "derivation": [
+        "1.\\ \\text{Reactions at the Clamped Support } (x = 0):",
+        "\\Sigma F_y = 0 \\implies R_y = P",
+        "\\Sigma M_{\\text{wall}} = 0 \\implies M_{\\text{wall}} - P \\cdot L = 0 \\implies M_{\\text{wall}} = +PL\\ \\text{(anticlockwise)}",
+        "2.\\ \\text{Internal Moment at the Fixed End } (x = 0^+):",
+        "M(0^+) = -M_{\\text{wall}} = \\mathbf{-PL}\\ \\text{(hogging)}"
+      ]
+    }
+  }
+}

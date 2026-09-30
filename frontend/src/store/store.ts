@@ -23,6 +23,7 @@ interface State {
   showReactions: boolean
   showGuides: boolean
   showCalculus: boolean
+  showAxial: boolean | null
   showDeflection: boolean
   hoverX: number | null
   pinnedX: number | null
@@ -44,6 +45,7 @@ interface State {
   setShowReactions: (v: boolean) => void
   setShowGuides: (v: boolean) => void
   setShowCalculus: (v: boolean) => void
+  setShowAxial: (v: boolean | null) => void
   setShowDeflection: (v: boolean) => void
 }
 
@@ -59,6 +61,7 @@ export const useStore = create<State>((set) => ({
   showReactions: true,
   showGuides: true,
   showCalculus: true,
+  showAxial: null,
   showDeflection: true,
   hoverX: null,
   pinnedX: null,
@@ -87,5 +90,6 @@ export const useStore = create<State>((set) => ({
   setShowReactions: (showReactions) => set({ showReactions }),
   setShowGuides: (showGuides) => set({ showGuides }),
   setShowCalculus: (showCalculus) => set({ showCalculus }),
+  setShowAxial: (showAxial) => set({ showAxial }),
   setShowDeflection: (showDeflection) => set({ showDeflection }),
 }))

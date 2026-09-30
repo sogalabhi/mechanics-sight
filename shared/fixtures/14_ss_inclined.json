@@ -1,0 +1,176 @@
+{
+  "name": "14_ss_inclined",
+  "input": {
+    "schema_version": 1,
+    "length": 6,
+    "supports": [
+      {
+        "id": "a",
+        "type": "pin",
+        "position": 0
+      },
+      {
+        "id": "b",
+        "type": "roller",
+        "position": 6
+      }
+    ],
+    "loads": [
+      {
+        "id": "p",
+        "type": "point",
+        "position": 2,
+        "magnitude": -8,
+        "fx": 6
+      }
+    ]
+  },
+  "checks": [
+    {
+      "x": 0,
+      "side": "right",
+      "axial": 6
+    },
+    {
+      "x": 2,
+      "side": "left",
+      "axial": 6
+    },
+    {
+      "x": 2,
+      "side": "right",
+      "axial": 0
+    },
+    {
+      "x": 6,
+      "side": "right",
+      "axial": 0
+    }
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "determinate",
+      "restraints": 3,
+      "equations": 3,
+      "degree": 0,
+      "axial_degree": 0,
+      "bending_degree": 0,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "a",
+        "fx": -6.0,
+        "fy": 5.333333333333334,
+        "moment": 0.0
+      },
+      {
+        "support_id": "b",
+        "fx": 0.0,
+        "fy": 2.6666666666666665,
+        "moment": 0.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 2.0,
+        "shear": [
+          5.333333333333334
+        ],
+        "moment": [
+          0.0,
+          5.333333333333334
+        ],
+        "axial": [
+          6.0
+        ]
+      },
+      {
+        "x_start": 2.0,
+        "x_end": 6.0,
+        "shear": [
+          -2.666666666666666
+        ],
+        "moment": [
+          10.666666666666668,
+          -2.666666666666666
+        ],
+        "axial": [
+          0.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 5.333333333333334,
+        "moment_left": 0.0,
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 6.0
+      },
+      {
+        "x": 2.0,
+        "shear_left": 5.333333333333334,
+        "shear_right": -2.666666666666666,
+        "moment_left": 10.666666666666668,
+        "moment_right": 10.666666666666668,
+        "axial_left": 6.0,
+        "axial_right": 0.0
+      },
+      {
+        "x": 6.0,
+        "shear_left": -2.666666666666666,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      }
+    ],
+    "zero_shear_points": [
+      2.0
+    ],
+    "extremes": {
+      "max_sagging": {
+        "x": 2.0,
+        "value": 10.666666666666668
+      },
+      "max_hogging": null,
+      "max_positive_shear": {
+        "x": 0.0,
+        "value": 5.333333333333334
+      },
+      "max_negative_shear": {
+        "x": 2.0,
+        "value": -2.666666666666666
+      },
+      "max_tension": {
+        "x": 0.0,
+        "value": 6.0
+      },
+      "max_compression": null
+    },
+    "warnings": [],
+    "canonical": {
+      "case_id": "ss_point_ab",
+      "name": "Simply Supported Beam with Point Load",
+      "symbolic_formula": "M_{\\max} = \\frac{Pab}{L}",
+      "symbolic_reactions": "R_A = \\frac{Pb}{L}, \\quad R_B = \\frac{Pa}{L}",
+      "substituted_formula": "M_{\\max} = \\frac{(8\\ \\text{kN}) \\cdot (2\\ \\text{m}) \\cdot (4\\ \\text{m})}{6\\ \\text{m}}",
+      "result_text": "M_{\\max} = 10.667\\ \\text{kN\u00b7m}",
+      "location_text": "x = 2\\ \\text{m}",
+      "derivation": [
+        "1.\\ \\text{Support Reactions by Moment Equilibrium}:",
+        "\\Sigma M_A = 0 \\implies R_B \\cdot L - P a = 0 \\implies R_B = \\frac{Pa}{L}, \\quad R_A = \\frac{Pb}{L}",
+        "2.\\ \\text{Bending Moment Function to the Left of the Load } (x \\le a):",
+        "M(x) = R_A x = \\left(\\frac{Pb}{L}\\right)x",
+        "3.\\ \\text{Maximum Moment at the Applied Load } (x = a):",
+        "M(a) = \\left(\\frac{Pb}{L}\\right)a = \\mathbf{\\frac{Pab}{L}}"
+      ]
+    }
+  }
+}

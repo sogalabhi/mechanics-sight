@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import {
   Beam, Couple, DimensionChain, DistributedLoad, FixedSupport, Hinge, PinSupport, PointLoad, RollerSupport,
-  loadHeight, ReactionForce, ReactionMoment,
+  loadHeight, ReactionForce, ReactionAxialForce, ReactionMoment,
 } from '@/drawing'
 import { formatNumber, formatQty } from '@/math/format'
 import { packLanes } from '@/math/lanes'
@@ -94,10 +94,15 @@ export function BeamView() {
           )
         }
         if (item.type === 'point') {
+          const fx = item.fx ?? 0
+          const desc =
+            Math.abs(fx) > 1e-6
+              ? `Point load ${formatNumber(Math.hypot(fx, item.magnitude))} kN at ${formatQty(item.position, 'm')}`
+              : `Point load ${Math.abs(item.magnitude)} kN ${item.magnitude < 0 ? 'down' : 'up'} at ${formatQty(item.position, 'm')}`
           return (
-            <Selectable key={item.id} item={item} bounds={[x(item.position) - 24, -72, x(item.position) + 24, -2]}
-              label={`Point load ${Math.abs(item.magnitude)} kN ${item.magnitude < 0 ? 'down' : 'up'} at ${formatQty(item.position, 'm')}`}>
-              <PointLoad x={x(item.position)} magnitude={item.magnitude} state={st} />
+            <Selectable key={item.id} item={item} bounds={[x(item.position) - 36, -72, x(item.position) + 36, -2]}
+              label={desc}>
+              <PointLoad x={x(item.position)} magnitude={item.magnitude} fx={fx} state={st} />
             </Selectable>
           )
         }
@@ -137,6 +142,7 @@ export function BeamView() {
             return (
               <g key={r.support_id}>
                 {Math.abs(r.fy) > 1e-9 && <ReactionForce x={x(sup.position)} value={r.fy} />}
+                {Math.abs(r.fx) > 1e-9 && <ReactionAxialForce x={x(sup.position)} value={r.fx} />}
                 {sup.type === 'fixed' && Math.abs(r.moment) > 1e-9 && (
                   <ReactionMoment x={x(sup.position)} value={r.moment} />
                 )}

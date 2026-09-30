@@ -49,7 +49,7 @@ def beams(draw: st.DrawFn) -> Beam:
     for i in range(n):
         choice = draw(st.sampled_from(["point", "moment", "distributed"]))
         if choice == "point":
-            loads.append(PointLoad(f"p{i}", draw(positions), draw(magnitudes)))
+            loads.append(PointLoad(f"p{i}", draw(positions), draw(magnitudes), fx=draw(magnitudes)))
         elif choice == "moment":
             loads.append(PointMoment(f"c{i}", draw(positions), draw(magnitudes)))
         else:
@@ -127,5 +127,31 @@ def test_extremes_bound_samples(beam: Beam) -> None:
     sampled = result.sample(50)
     top = result.max_sagging.value if result.max_sagging else 0.0
     bottom = result.max_hogging.value if result.max_hogging else 0.0
-    assert max(sampled.moment) <= top + 1e-6
-    assert min(sampled.moment) >= bottom - 1e-6
+    # Allow floating-point roundoff at the existing absolute tolerance boundary.
+    roundoff = 1e-12 * max(1.0, *(abs(m) for m in sampled.moment))
+    assert max(sampled.moment) <= top + 1e-6 + roundoff
+    assert min(sampled.moment) >= bottom - 1e-6 - roundoff
+
+
+@settings(max_examples=150, deadline=None)
+@given(beams())
+def test_axial_right_section_and_jumps(beam: Beam) -> None:
+    """Independent right-section equilibrium, point-force jumps and closure for N."""
+    result = analyze(beam)
+    loads = all_loads(beam, result)
+    for x in interior_samples(result):
+        right_force = sum(
+            right.horizontal_resultant()
+            for load in loads
+            if (right := load.split(x)[1]) is not None
+        )
+        assert result.axial_at(x, side=Side.RIGHT) == pytest.approx(right_force, abs=1e-7)
+    for cp in result.critical_points:
+        applied = sum(
+            load.horizontal_resultant()
+            for load in loads
+            if isinstance(load, PointLoad) and abs(load.position - cp.x) < 1e-6
+        )
+        assert cp.axial_right - cp.axial_left == pytest.approx(-applied, abs=1e-7)
+    assert result.critical_points[-1].axial_right == 0.0
+    assert all(len(seg.axial) == 1 for seg in result.segments)

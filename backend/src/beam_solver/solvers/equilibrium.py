@@ -37,7 +37,7 @@ def unit_column(unknown: Unknown) -> tuple[float, float, float]:
 
 @dataclass(frozen=True)
 class EquilibriumSystem:
-    """A·r = b with rows (ΣFx, ΣFy, ΣM about 0, and hinge moment releases) and one column per unknown."""
+    """A·r = b: force/moment equilibrium and hinge releases, one column per unknown."""
 
     unknowns: tuple[Unknown, ...]
     a: FloatArray
@@ -72,6 +72,8 @@ class EquilibriumSystem:
         a = np.array(cols, dtype=np.float64).T if cols else np.empty((num_eqs, 0), dtype=np.float64)
 
         b_vec = [0.0] * num_eqs
+        total_fx = sum(load.horizontal_resultant() for load in beam.loads)
+        b_vec[0] = 0.0 if abs(total_fx) < 1e-12 else float(-total_fx)
         b_vec[1] = -sum(load.resultant() for load in beam.loads)
         b_vec[2] = -sum(load.moment_about(0.0) for load in beam.loads)
         for k, h_pos in enumerate(beam.hinges):

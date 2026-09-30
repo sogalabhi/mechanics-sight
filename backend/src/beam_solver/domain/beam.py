@@ -66,7 +66,11 @@ class Beam:
     def _check_loads(self) -> None:
         for load in self.loads:
             owner = f"load {load.id!r}"
-            if isinstance(load, PointLoad | PointMoment):
+            if isinstance(load, PointLoad):
+                if not math.isfinite(load.magnitude) or not math.isfinite(load.fx):
+                    raise InvalidLoadError(f"{owner}: magnitude and fx must be finite")
+                self._check_position(owner, load.position)
+            elif isinstance(load, PointMoment):
                 if not math.isfinite(load.magnitude):
                     raise InvalidLoadError(f"{owner}: magnitude must be finite")
                 self._check_position(owner, load.position)
@@ -85,10 +89,11 @@ class Beam:
                 raise InvalidPositionError(
                     f"hinge: position {x} must be strictly inside (0, {self.length})"
                 )
-            for l in self.loads:
-                if isinstance(l, PointMoment) and same_position(l.position, x):
+            for load in self.loads:
+                if isinstance(load, PointMoment) and same_position(load.position, x):
                     raise InvalidLoadError(
-                        f"cannot place an applied moment couple directly at an internal hinge at x = {x}"
+                        "cannot place an applied moment couple directly at an internal hinge "
+                        f"at x = {x}"
                     )
         for i, a in enumerate(self.hinges):
             for b in self.hinges[i + 1 :]:

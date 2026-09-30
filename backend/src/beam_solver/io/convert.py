@@ -37,7 +37,7 @@ def beam_from_schema(data: BeamIn) -> Beam:
     loads: list[Load] = []
     for ld in data.loads:
         if isinstance(ld, PointLoadIn):
-            loads.append(PointLoad(ld.id, ld.position, ld.magnitude))
+            loads.append(PointLoad(ld.id, ld.position, ld.magnitude, fx=ld.fx))
         elif isinstance(ld, PointMomentIn):
             loads.append(PointMoment(ld.id, ld.position, ld.magnitude))
         else:
@@ -104,7 +104,13 @@ def result_to_schema(result: AnalysisResult) -> AnalysisOut:
             for r in result.reactions
         ],
         segments=[
-            SegmentOut(x_start=s.x_start, x_end=s.x_end, shear=list(s.shear), moment=list(s.moment))
+            SegmentOut(
+                x_start=s.x_start,
+                x_end=s.x_end,
+                shear=list(s.shear),
+                moment=list(s.moment),
+                axial=list(s.axial),
+            )
             for s in result.segments
         ],
         critical_points=[
@@ -114,6 +120,8 @@ def result_to_schema(result: AnalysisResult) -> AnalysisOut:
                 shear_right=p.shear_right,
                 moment_left=p.moment_left,
                 moment_right=p.moment_right,
+                axial_left=p.axial_left,
+                axial_right=p.axial_right,
             )
             for p in result.critical_points
         ],
@@ -123,6 +131,8 @@ def result_to_schema(result: AnalysisResult) -> AnalysisOut:
             max_hogging=_extreme(result.max_hogging),
             max_positive_shear=_extreme(result.max_positive_shear),
             max_negative_shear=_extreme(result.max_negative_shear),
+            max_tension=_extreme(result.max_tension),
+            max_compression=_extreme(result.max_compression),
         ),
         warnings=list(result.warnings),
         canonical=canonical_to_schema(result.canonical),

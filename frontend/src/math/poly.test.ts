@@ -20,6 +20,9 @@ describe('contract fixtures', () => {
     it(`${name}: valueAt matches critical points`, () => {
       expect(path).toMatch(/\.json$/)
       for (const cp of output.critical_points) {
+        const n = valueAt(output, cp.x, 'axial')
+        expect(n.left).toBeCloseTo(cp.axial_left ?? 0, 6)
+        expect(n.right).toBeCloseTo(cp.axial_right ?? 0, 6)
         const v = valueAt(output, cp.x, 'shear')
         const m = valueAt(output, cp.x, 'moment')
         expect(v.left).toBeCloseTo(cp.shear_left, 6)

@@ -59,14 +59,26 @@ def solve_reactions(beam: Beam) -> ReactionSolution:
 
     values = np.zeros(len(system.unknowns))
     values[system.bending_columns()] = r_bending
-    # Axial block: no horizontal loads in Phase 1, so every horizontal reaction is 0.
 
-    residual = float(np.linalg.norm(system.a @ values - system.b))
     scale = load_scale(
-        sum(abs(load.resultant()) for load in beam.loads),
+        sum(abs(load.resultant()) + abs(load.horizontal_resultant()) for load in beam.loads),
         sum(abs(load.moment_about(0.0)) for load in beam.loads),
         beam.length,
     )
+
+    axial_cols = system.axial_columns()
+    if classification.axial_degree > 0:
+        total_applied_fx = sum(abs(load.horizontal_resultant()) for load in beam.loads)
+        if abs(total_applied_fx) > force_tol(scale):
+            raise IndeterminateBeamError(
+                f"Indeterminate to degree {classification.axial_degree} in axial force; "
+                "supported from Phase 4.",
+                classification,
+            )
+    elif len(axial_cols) == 1:
+        values[axial_cols[0]] = float(system.b[0])
+
+    residual = float(np.linalg.norm(system.a @ values - system.b))
     if residual > force_tol(scale) * beam.length * 10:
         raise SolverConsistencyError(f"equilibrium residual too large: {residual}")
 
@@ -76,9 +88,11 @@ def solve_reactions(beam: Beam) -> ReactionSolution:
     reactions = tuple(
         Reaction(
             sid,
-            fx=c.get(Direction.X, 0.0),
-            fy=c.get(Direction.Y, 0.0),
-            moment=c.get(Direction.ROTATION, 0.0),
+            fx=0.0 if abs(c.get(Direction.X, 0.0)) < 1e-12 else float(c.get(Direction.X, 0.0)),
+            fy=0.0 if abs(c.get(Direction.Y, 0.0)) < 1e-12 else float(c.get(Direction.Y, 0.0)),
+            moment=0.0
+            if abs(c.get(Direction.ROTATION, 0.0)) < 1e-12
+            else float(c.get(Direction.ROTATION, 0.0)),
         )
         for sid, c in components.items()
     )

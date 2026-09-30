@@ -87,6 +87,9 @@
           3.0,
           0.0,
           -0.08333333333333333
+        ],
+        "axial": [
+          0.0
         ]
       }
     ],
@@ -96,14 +99,18 @@
         "shear_left": 0.0,
         "shear_right": 3.0,
         "moment_left": 0.0,
-        "moment_right": 0.0
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
       },
       {
         "x": 6.0,
         "shear_left": -6.0,
         "shear_right": 0.0,
         "moment_left": 0.0,
-        "moment_right": 0.0
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
       }
     ],
     "zero_shear_points": [
@@ -122,7 +129,9 @@
       "max_negative_shear": {
         "x": 6.0,
         "value": -6.0
-      }
+      },
+      "max_tension": null,
+      "max_compression": null
     },
     "warnings": [],
     "canonical": {

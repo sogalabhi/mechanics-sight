@@ -36,7 +36,7 @@ export function AreaShading({ kind, width: _width, yOf, height }: Props) {
     return inRange.map(([x, v]) => `${xs(x)},${yOf(v)}`).join(' ')
   }, [data, result, kind, pxPerM, xs, yOf])
 
-  if (!data) return null
+  if (kind === 'axial' || !data) return null
 
   const xA = xs(data.xStart)
   const xB = xs(data.xEnd)

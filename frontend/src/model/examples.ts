@@ -13,6 +13,9 @@ const LABELS: Record<string, string> = {
   '10_cantilever_couple_free_end': 'Cantilever, couple at free end',
   '11_no_loads': 'Simply supported, no loads',
   '12_pin_pin': 'Pin–pin (axial degree 1)',
+  '14_ss_inclined': 'Simply supported, inclined load',
+  '15_cantilever_compression': 'Cantilever, axial compression',
+  '16_axial_tension_compression': 'Axial tension and compression',
 }
 
 const files = import.meta.glob('../../../shared/fixtures/*.json', { eager: true }) as Record<
@@ -31,7 +34,7 @@ const GERBER_PRESET = {
       { id: 's2', type: 'roller' as const, position: 10 },
     ],
     loads: [
-      { id: 'l1', type: 'point' as const, position: 8, magnitude: -10 },
+      { id: 'l1', type: 'point' as const, position: 8, magnitude: -10, fx: 0 },
     ],
     hinges: [6],
   },

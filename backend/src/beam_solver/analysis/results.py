@@ -19,12 +19,13 @@ class Side(Enum):
 
 @dataclass(frozen=True)
 class Segment:
-    """V and M between two critical points, as ascending coefficients in t = x - x_start."""
+    """N, V and M between two critical points, as ascending coefficients in t = x - x_start."""
 
     x_start: float
     x_end: float
     shear: tuple[float, ...]
     moment: tuple[float, ...]
+    axial: tuple[float, ...] = (0.0,)
 
     @property
     def length(self) -> float:
@@ -36,6 +37,9 @@ class Segment:
     def moment_poly(self) -> Polynomial:
         return Polynomial(self.moment)
 
+    def axial_poly(self) -> Polynomial:
+        return Polynomial(self.axial)
+
 
 @dataclass(frozen=True)
 class CriticalPoint:
@@ -46,6 +50,8 @@ class CriticalPoint:
     shear_right: float
     moment_left: float
     moment_right: float
+    axial_left: float = 0.0
+    axial_right: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -61,6 +67,7 @@ class SampledDiagram:
     x: tuple[float, ...]
     shear: tuple[float, ...]
     moment: tuple[float, ...]
+    axial: tuple[float, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -90,6 +97,8 @@ class AnalysisResult:
     max_negative_shear: Extreme | None
     warnings: tuple[str, ...]
     canonical: CanonicalCase | None = None
+    max_tension: Extreme | None = None
+    max_compression: Extreme | None = None
 
     def _critical_point(self, x: float) -> CriticalPoint | None:
         return next((cp for cp in self.critical_points if same_position(cp.x, x)), None)
@@ -116,14 +125,24 @@ class AnalysisResult:
         segment = self._segment(x)
         return float(segment.moment_poly()(x - segment.x_start))
 
+    def axial_at(self, x: float, *, side: Side) -> float:
+        """Axial force N (kN, tension positive) at ``x``, with exact jump values."""
+        cp = self._critical_point(x)
+        if cp is not None:
+            return cp.axial_left if side is Side.LEFT else cp.axial_right
+        segment = self._segment(x)
+        return float(segment.axial_poly()(x - segment.x_start))
+
     def sample(self, points_per_segment: int = 100) -> SampledDiagram:
         """Sample every segment, always including its exact ends."""
         xs: list[float] = []
         vs: list[float] = []
         ms: list[float] = []
+        ns: list[float] = []
         for segment in self.segments:
             t = np.linspace(0.0, segment.length, points_per_segment)
             xs.extend((segment.x_start + t).tolist())
             vs.extend(segment.shear_poly()(t).tolist())
             ms.extend(segment.moment_poly()(t).tolist())
-        return SampledDiagram(tuple(xs), tuple(vs), tuple(ms))
+            ns.extend(segment.axial_poly()(t).tolist())
+        return SampledDiagram(tuple(xs), tuple(vs), tuple(ms), tuple(ns))

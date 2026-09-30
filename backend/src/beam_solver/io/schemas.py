@@ -28,6 +28,7 @@ class PointLoadIn(_Model):
     type: Literal["point"]
     position: float
     magnitude: float = Field(description="kN, upward positive")
+    fx: float = Field(default=0.0, description="kN, rightward positive (horizontal)")
 
 
 class PointMomentIn(_Model):
@@ -87,6 +88,10 @@ class SegmentOut(_Model):
     moment: list[float] = Field(
         description="Ascending coefficients in t = x - x_start; valid strictly inside"
     )
+    axial: list[float] = Field(
+        default_factory=lambda: [0.0],
+        description="Ascending coefficients of N(x) in t = x - x_start (kN, tension positive)",
+    )
 
 
 class CriticalPointOut(_Model):
@@ -95,6 +100,8 @@ class CriticalPointOut(_Model):
     shear_right: float
     moment_left: float
     moment_right: float
+    axial_left: float = 0.0
+    axial_right: float = 0.0
 
 
 class ExtremeOut(_Model):
@@ -107,6 +114,8 @@ class ExtremesOut(_Model):
     max_hogging: ExtremeOut | None
     max_positive_shear: ExtremeOut | None
     max_negative_shear: ExtremeOut | None
+    max_tension: ExtremeOut | None = None
+    max_compression: ExtremeOut | None = None
 
 
 class StepOut(_Model):
@@ -117,6 +126,7 @@ class StepOut(_Model):
         "force_balance",
         "moment_balance",
         "reactions",
+        "axial",
         "shear",
         "moment",
         "zero_shear",

@@ -8,7 +8,7 @@ type Step = components['schemas']['StepOut']
 
 const GROUPS: { id: Step['group']; title: string }[] = [
   { id: 'reactions', title: 'Reactions' },
-  { id: 'diagrams', title: 'Shear force and bending moment' },
+  { id: 'diagrams', title: 'Axial force, shear force and bending moment' },
   { id: 'extremes', title: 'Extreme values' },
 ]
 

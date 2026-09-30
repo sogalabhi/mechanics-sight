@@ -24,6 +24,10 @@ class Load(ABC):
         """Total vertical force, upward positive (kN)."""
 
     @abstractmethod
+    def horizontal_resultant(self) -> float:
+        """Total horizontal force, rightward positive (kN)."""
+
+    @abstractmethod
     def moment_about(self, x0: float) -> float:
         """Moment about ``x0``, anticlockwise positive (kN·m)."""
 
@@ -40,6 +44,10 @@ class Load(ABC):
         """
 
     @abstractmethod
+    def axial_polynomial(self, x0: float) -> Polynomial:
+        """Contribution to N (kN, tension positive) on a segment starting at ``x0``."""
+
+    @abstractmethod
     def split(self, x: float) -> tuple[Load | None, Load | None]:
         """Parts of this load left and right of ``x``. A point load at ``x`` goes left."""
 
@@ -50,14 +58,21 @@ def _is_left(a: float, x: float) -> bool:
 
 @dataclass(frozen=True)
 class PointLoad(Load):
-    """Vertical point load ``magnitude`` (kN, upward positive) at ``position`` (m)."""
+    """Point load at ``position`` (m), with vertical and horizontal components (kN).
+
+    ``magnitude`` is upward positive; ``fx`` is rightward positive.
+    """
 
     id: str
     position: float
     magnitude: float
+    fx: float = 0.0
 
     def resultant(self) -> float:
         return self.magnitude
+
+    def horizontal_resultant(self) -> float:
+        return self.fx
 
     def moment_about(self, x0: float) -> float:
         return self.magnitude * (self.position - x0)
@@ -70,6 +85,11 @@ class PointLoad(Load):
             return _ZERO, _ZERO
         f = self.magnitude
         return Polynomial([f]), Polynomial([f * (x0 - self.position), f])
+
+    def axial_polynomial(self, x0: float) -> Polynomial:
+        if not _is_left(self.position, x0):
+            return _ZERO
+        return Polynomial([-self.fx])
 
     def split(self, x: float) -> tuple[Load | None, Load | None]:
         return (self, None) if _is_left(self.position, x) else (None, self)
@@ -86,6 +106,9 @@ class PointMoment(Load):
     def resultant(self) -> float:
         return 0.0
 
+    def horizontal_resultant(self) -> float:
+        return 0.0
+
     def moment_about(self, x0: float) -> float:
         return self.magnitude
 
@@ -96,6 +119,9 @@ class PointMoment(Load):
         if not _is_left(self.position, x0):
             return _ZERO, _ZERO
         return _ZERO, Polynomial([-self.magnitude])
+
+    def axial_polynomial(self, x0: float) -> Polynomial:
+        return _ZERO
 
     def split(self, x: float) -> tuple[Load | None, Load | None]:
         return (self, None) if _is_left(self.position, x) else (None, self)
@@ -143,6 +169,9 @@ class DistributedLoad(Load):
     def resultant(self) -> float:
         return (self.w_start + self.w_end) * self.length / 2
 
+    def horizontal_resultant(self) -> float:
+        return 0.0
+
     def moment_about(self, x0: float) -> float:
         return sum(force * (pos - x0) for force, pos in self._pieces())
 
@@ -161,6 +190,9 @@ class DistributedLoad(Load):
         shear = Polynomial([0.0, w1, k / 2])(shift)
         moment = Polynomial([0.0, 0.0, w1 / 2, k / 6])(shift)
         return shear, moment
+
+    def axial_polynomial(self, x0: float) -> Polynomial:
+        return _ZERO
 
     def split(self, x: float) -> tuple[Load | None, Load | None]:
         if x <= self.start + POSITION_TOL:

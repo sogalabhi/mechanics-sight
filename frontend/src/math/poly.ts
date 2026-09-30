@@ -1,6 +1,6 @@
 import type { AnalysisResult, Segment } from '@/model/types'
 
-export type Kind = 'shear' | 'moment'
+export type Kind = 'shear' | 'moment' | 'axial'
 
 const EPS = 1e-9
 
@@ -17,7 +17,8 @@ export function degree(c: number[]): number {
   return Math.max(d, 0)
 }
 
-const coeffs = (s: Segment, kind: Kind) => (kind === 'shear' ? s.shear : s.moment)
+const coeffs = (s: Segment, kind: Kind) =>
+  kind === 'shear' ? s.shear : kind === 'moment' ? s.moment : (s.axial ?? [0])
 
 /**
  * Points (x in m, value) of the diagram, starting and ending on the zero line.

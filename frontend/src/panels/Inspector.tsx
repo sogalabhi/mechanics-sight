@@ -111,13 +111,24 @@ export function Inspector({ compact = false }: { compact?: boolean }) {
           {item.type === 'point' && (
             <>
               <Segmented
-                label="Direction"
+                label="Vertical"
                 value={item.magnitude < 0 ? 'down' : 'up'}
                 options={[{ value: 'down', label: '↓ Down' }, { value: 'up', label: '↑ Up' }]}
                 onChange={(d) => apply({ magnitude: Math.abs(item.magnitude) * (d === 'down' ? -1 : 1) })}
               />
-              <NumberField label="Magnitude" unit="kN" value={Math.abs(item.magnitude)}
+              <NumberField label="Fy" unit="kN" value={Math.abs(item.magnitude)}
                 onCommit={positive((v) => apply({ magnitude: v * (item.magnitude < 0 ? -1 : 1) }))} />
+              <Segmented
+                label="Horizontal"
+                value={(item.fx ?? 0) >= 0 ? 'right' : 'left'}
+                options={[{ value: 'right', label: '→ Right' }, { value: 'left', label: '← Left' }]}
+                onChange={(d) => {
+                  const mag = Math.abs(item.fx ?? 0) || 0
+                  apply({ fx: mag * (d === 'left' ? -1 : 1) })
+                }}
+              />
+              <NumberField label="Fx" unit="kN" value={Math.abs(item.fx ?? 0)}
+                onCommit={(v) => apply({ fx: v * ((item.fx ?? 0) < 0 ? -1 : 1) })} />
             </>
           )}
           {item.type === 'moment' && (

@@ -86,3 +86,23 @@ def test_steps_are_opt_in(client: TestClient) -> None:
     assert {s["group"] for s in data["steps"]} == {"reactions", "diagrams", "extremes"}
     # everything else is unchanged by the flag
     assert {k: v for k, v in data.items() if k != "steps"} == approx_json(FIXTURES[0]["output"])
+
+
+def test_balanced_axial_loads_are_indeterminate(client: TestClient) -> None:
+    response = client.post(
+        URL,
+        json={
+            "length": 6,
+            "supports": [
+                {"id": "a", "type": "pin", "position": 0},
+                {"id": "b", "type": "pin", "position": 6},
+            ],
+            "loads": [
+                {"id": "p", "type": "point", "position": 2, "magnitude": 0, "fx": 10},
+                {"id": "q", "type": "point", "position": 4, "magnitude": 0, "fx": -10},
+            ],
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "indeterminate"
+    assert response.json()["error"]["details"]["classification"]["axial_degree"] == 1

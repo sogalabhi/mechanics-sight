@@ -16,6 +16,7 @@ const BOTTOM = 14
 const FONT = 'var(--font-mono)'
 
 const META = {
+  axial: { title: 'AXIAL FORCE  N (kN) · tension +', color: 'var(--axial, #2563eb)', unit: 'kN' },
   shear: { title: 'SHEAR FORCE  V (kN)', color: 'var(--shear)', unit: 'kN' },
   moment: { title: 'BENDING MOMENT  M (kN·m) · sagging +', color: 'var(--moment)', unit: 'kN·m' },
 } as const
@@ -60,22 +61,25 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
     const out: Note[] = []
     const ex = result.extremes
     const add = (id: string, e: { x: number; value: number } | null, label: string, priority: number) => {
-      if (e) out.push({ id, x: e.x, value: e.value, text: `${label} = ${formatQty(e.value, meta.unit, { sign: kind === 'shear' })}`, priority, dot: true })
+      if (e) out.push({ id, x: e.x, value: e.value, text: `${label} = ${formatQty(e.value, meta.unit, { sign: kind === 'shear' || kind === 'axial' })}`, priority, dot: true })
     }
     if (kind === 'shear') {
       add('pv', ex.max_positive_shear, 'V max', 1)
       add('nv', ex.max_negative_shear, 'V min', 1)
-    } else {
+    } else if (kind === 'moment') {
       add('sag', ex.max_sagging, 'M max', 1)
       add('hog', ex.max_hogging, 'M min', 1)
+    } else {
+      add('ten', ex.max_tension ?? null, 'N max (tension)', 1)
+      add('comp', ex.max_compression ?? null, 'N min (compression)', 1)
     }
     const dup = (px: number, v: number) => out.some((o) => Math.abs(o.x - px) < 1e-6 && Math.abs(o.value - v) < 1e-9)
     result.critical_points.forEach((cp, i) => {
-      const l = kind === 'shear' ? cp.shear_left : cp.moment_left
-      const r = kind === 'shear' ? cp.shear_right : cp.moment_right
+      const l = kind === 'shear' ? cp.shear_left : kind === 'moment' ? cp.moment_left : (cp.axial_left ?? 0)
+      const r = kind === 'shear' ? cp.shear_right : kind === 'moment' ? cp.moment_right : (cp.axial_right ?? 0)
       const jump = Math.abs(l - r) > 1e-9
       const push = (id: string, v: number, anchor?: 'start' | 'end') => {
-        if (Math.abs(v) > 1e-9 && !dup(cp.x, v)) out.push({ id, x: cp.x, value: v, text: formatNumber(v, { sign: kind === 'shear' }), priority: 2, anchor })
+        if (Math.abs(v) > 1e-9 && !dup(cp.x, v)) out.push({ id, x: cp.x, value: v, text: formatNumber(v, { sign: kind === 'shear' || kind === 'axial' }), priority: 2, anchor })
       }
       push(`l${i}`, l, jump ? 'end' : undefined)
       if (jump) push(`r${i}`, r, 'start')
@@ -119,16 +123,17 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
       <line x1={GUTTER} x2={width} y1={zero} y2={zero} stroke="var(--ink)" strokeWidth={1} />
 
       <Guides height={DIAGRAM_HEIGHT} />
-      {result?.zero_shear_points.map((z) => {
-        // dashed link: the SFD's zero crossing lines up with the BMD's peak
-        const top = kind === 'shear' ? zero : TOP - 8
-        const bottom = kind === 'shear' ? DIAGRAM_HEIGHT : y(valueAt(result, z, 'moment').right)
-        return <line key={`z${z}`} x1={x(z)} x2={x(z)} y1={top} y2={bottom} stroke={meta.color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} pointerEvents="none" />
-      })}
+      {kind !== 'axial' &&
+        result?.zero_shear_points.map((z) => {
+          // dashed link: the SFD's zero crossing lines up with the BMD's peak
+          const top = kind === 'shear' ? zero : TOP - 8
+          const bottom = kind === 'shear' ? DIAGRAM_HEIGHT : y(valueAt(result, z, 'moment').right)
+          return <line key={`z${z}`} x1={x(z)} x2={x(z)} y1={top} y2={bottom} stroke={meta.color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} pointerEvents="none" />
+        })}
       <g opacity={stale ? 0.35 : 1}>
         {markers.map((r) => (
           <text key={r.sign} x={(x(r.x0) + x(r.x1)) / 2} y={y((r.sign * r.peak) / 2) + 5} textAnchor="middle" fontSize={16} fill="var(--ink-2)" pointerEvents="none">
-            {r.sign > 0 ? '+' : '\u2212'}
+            {r.sign > 0 ? (kind === 'axial' ? '+ (T)' : '+') : (kind === 'axial' ? '\u2212 (C)' : '\u2212')}
           </text>
         ))}
         {pts.length > 0 && (

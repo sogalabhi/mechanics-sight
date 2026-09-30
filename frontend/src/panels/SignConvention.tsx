@@ -6,6 +6,8 @@ const ROWS: [string, string][] = [
   ['Couples, reaction moments', 'Anticlockwise +'],
   ['Shear V(x)', 'Sum of vertical forces left of the cut'],
   ['Bending moment M(x)', 'Sagging +'],
+  ['Horizontal forces Fx', 'Rightward +'],
+  ['Axial force N(x)', 'Tension +, compression −'],
 ]
 
 export function SignConvention() {

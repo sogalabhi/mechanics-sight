@@ -274,6 +274,16 @@
       "CriticalPointOut": {
         "additionalProperties": false,
         "properties": {
+          "axial_left": {
+            "default": 0.0,
+            "title": "Axial Left",
+            "type": "number"
+          },
+          "axial_right": {
+            "default": 0.0,
+            "title": "Axial Right",
+            "type": "number"
+          },
           "moment_left": {
             "title": "Moment Left",
             "type": "number"
@@ -408,6 +418,16 @@
       "ExtremesOut": {
         "additionalProperties": false,
         "properties": {
+          "max_compression": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
           "max_hogging": {
             "anyOf": [
               {
@@ -447,6 +467,16 @@
                 "type": "null"
               }
             ]
+          },
+          "max_tension": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -461,6 +491,12 @@
       "PointLoadIn": {
         "additionalProperties": false,
         "properties": {
+          "fx": {
+            "default": 0.0,
+            "description": "kN, rightward positive (horizontal)",
+            "title": "Fx",
+            "type": "number"
+          },
           "id": {
             "maxLength": 32,
             "minLength": 1,
@@ -556,6 +592,14 @@
       "SegmentOut": {
         "additionalProperties": false,
         "properties": {
+          "axial": {
+            "description": "Ascending coefficients of N(x) in t = x - x_start (kN, tension positive)",
+            "items": {
+              "type": "number"
+            },
+            "title": "Axial",
+            "type": "array"
+          },
           "moment": {
             "description": "Ascending coefficients in t = x - x_start; valid strictly inside",
             "items": {
@@ -621,6 +665,7 @@
               "force_balance",
               "moment_balance",
               "reactions",
+              "axial",
               "shear",
               "moment",
               "zero_shear",

@@ -45,3 +45,35 @@ export function ReactionMoment({ x, value, unit = 'kN·m' }: MProps) {
     </g>
   )
 }
+
+interface HProps {
+  x: number
+  /** Signed: positive = rightward. */
+  value: number
+  unit?: string
+}
+
+/** Horizontal (axial) reaction at a pin or fixed support. */
+export function ReactionAxialForce({ x, value, unit = 'kN' }: HProps) {
+  const right = value > 0
+  const y = 20
+  return (
+    <g transform={`translate(${x},0)`}>
+      {right ? (
+        <>
+          <Arrow x1={-44} y1={y} x2={-10} y2={y} color="var(--reaction)" />
+          <text x={-27} y={y - 6} textAnchor="middle" fontFamily={MONO} fontSize={11} fill="var(--reaction)">
+            {formatLabel(value, unit)}
+          </text>
+        </>
+      ) : (
+        <>
+          <Arrow x1={44} y1={y} x2={10} y2={y} color="var(--reaction)" />
+          <text x={27} y={y - 6} textAnchor="middle" fontFamily={MONO} fontSize={11} fill="var(--reaction)">
+            {formatLabel(value, unit)}
+          </text>
+        </>
+      )}
+    </g>
+  )
+}

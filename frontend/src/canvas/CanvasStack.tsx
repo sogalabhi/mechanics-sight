@@ -19,6 +19,11 @@ export function CanvasStack({ width }: { width: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const length = useStore((s) => s.beam.length)
   const showDeflection = useStore((s) => s.showDeflection)
+  const showAxialPref = useStore((s) => s.showAxial)
+  const hasAxial = useStore((s) =>
+    (s.result?.segments ?? []).some((seg) => seg.axial && seg.axial.some((c) => Math.abs(c) > 1e-12)),
+  )
+  const showAxial = showAxialPref === null ? hasAxial : showAxialPref
   const dragStart = useRef<{ clientX: number; x0: number; isDragging: boolean } | null>(null)
   const { setHover } = useStore.getState()
 
@@ -122,6 +127,11 @@ export function CanvasStack({ width }: { width: number }) {
         <BeamView />
         <Crosshair height={BEAM_PANEL_HEIGHT} />
       </svg>
+      {showAxial && (
+        <svg width={width} height={DIAGRAM_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
+          <DiagramPanel kind="axial" width={width} />
+        </svg>
+      )}
       {(['shear', 'moment'] as const).map((k) => (
         <svg key={k} width={width} height={DIAGRAM_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
           <DiagramPanel kind={k} width={width} />

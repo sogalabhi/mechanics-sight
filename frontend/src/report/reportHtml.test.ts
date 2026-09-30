@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult, BeamInput } from '@/model/types'
+import { formatQty } from '@/math/format'
 import { buildReportHtml, esc } from './reportHtml'
 
 const fixtures = import.meta.glob('../../../shared/fixtures/01_ss_central_point.json', { eager: true }) as Record<
@@ -41,4 +42,19 @@ describe('report html', () => {
     expect(html).not.toMatch(/<link |src="http/)
     expect(esc('a<b')).toBe('a&lt;b')
   })
+})
+
+it('includes axial input, extremes, exact values and AFD in reports', () => {
+  const report = buildReportHtml({
+    beam: { ...input, loads: [{ id: 'p', type: 'point', position: 3, magnitude: -10, fx: 6 }] },
+    result: { ...output, extremes: { ...output.extremes, max_tension: { x: 0, value: 6 } } },
+    steps: [],
+    figures: { beam: '', afd: '<svg id="axial"></svg>', sfd: '', bmd: '' },
+    date: '2026-09-30',
+  })
+  expect(report).toContain('Axial force diagram')
+  expect(report).toContain('id="axial"')
+  expect(report).toContain(`Fx = ${formatQty(6, 'kN')} right`)
+  expect(report).toContain('Max tension')
+  expect(report).toContain('N left (kN)')
 })

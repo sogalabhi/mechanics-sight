@@ -18,6 +18,15 @@ def _draw_beam(ax: "Axes", beam: Beam, title: str) -> None:
         ax.plot(s.position, -0.15, _SUPPORT_MARKERS[s.kind], color="tab:gray", markersize=12)
     for load in beam.loads:
         if isinstance(load, PointLoad):
+            if load.fx != 0.0:
+                ax.annotate(
+                    f"Fx = {load.fx:g} kN",
+                    xy=(load.position, 0),
+                    xytext=(load.position - (0.5 if load.fx > 0 else -0.5), 0.3),
+                    arrowprops={"arrowstyle": "->", "color": "tab:purple"},
+                )
+            if load.magnitude == 0.0:
+                continue
             up = load.magnitude > 0
             ax.annotate(
                 f"{abs(load.magnitude):g} kN",
@@ -47,9 +56,21 @@ def plot_diagrams(beam: Beam, result: AnalysisResult, title: str = "Beam") -> "F
     """Stacked beam / SFD / BMD figure sharing one x-axis."""
     import matplotlib.pyplot as plt
 
-    fig, (ax_beam, ax_v, ax_m) = plt.subplots(3, 1, sharex=True, figsize=(9, 8))
+    has_axial = any(load.horizontal_resultant() != 0.0 for load in beam.loads)
+    count = 4 if has_axial else 3
+    fig, axes = plt.subplots(count, 1, sharex=True, figsize=(9, 10 if has_axial else 8))
+    ax_beam, ax_v, ax_m = axes[0], axes[-2], axes[-1]
     _draw_beam(ax_beam, beam, title)
     sampled = result.sample(100)
+    if has_axial:
+        ax_n = axes[1]
+        ax_n.plot(sampled.x, sampled.axial, color="tab:purple")
+        ax_n.fill_between(sampled.x, sampled.axial, alpha=0.2, color="tab:purple")
+        ax_n.axhline(0, color="black", linewidth=0.8)
+        ax_n.set_ylabel("Axial N (kN), tension +")
+        ax_n.grid(alpha=0.3)
+        for p in result.critical_points:
+            ax_n.plot([p.x, p.x], [p.axial_left, p.axial_right], color="tab:purple")
     for ax, values, label, color in (
         (ax_v, sampled.shear, "Shear V (kN)", "tab:blue"),
         (ax_m, sampled.moment, "Moment M (kN·m)", "tab:green"),

@@ -1,12 +1,10 @@
 """Tests for Phase 2: Internal Hinges (Gerber Beams)."""
 
-import math
 import pytest
 
 from beam_solver.analysis import analyze, build_steps
 from beam_solver.domain import (
     Beam,
-    Direction,
     DistributedLoad,
     PointLoad,
     PointMoment,
@@ -14,30 +12,44 @@ from beam_solver.domain import (
     SupportKind,
 )
 from beam_solver.errors import (
-    BeamError,
     InvalidBeamError,
     InvalidLoadError,
     InvalidPositionError,
     UnstableBeamError,
 )
 from beam_solver.io import beam_from_json, result_to_schema
-from beam_solver.solvers import Determinacy, EquilibriumSystem, classify, solve_reactions
-from beam_solver.tolerances import POSITION_TOL
+from beam_solver.solvers import Determinacy, EquilibriumSystem, classify
 
 
 def test_hinge_domain_validation_boundary():
     """Hinges cannot be at x <= 0 or x >= L."""
     with pytest.raises(InvalidPositionError, match="strictly inside"):
-        Beam(10.0, (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)), hinges=(0.0,))
+        Beam(
+            10.0,
+            (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)),
+            hinges=(0.0,),
+        )
 
     with pytest.raises(InvalidPositionError, match="strictly inside"):
-        Beam(10.0, (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)), hinges=(10.0,))
+        Beam(
+            10.0,
+            (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)),
+            hinges=(10.0,),
+        )
 
     with pytest.raises(InvalidPositionError, match="strictly inside"):
-        Beam(10.0, (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)), hinges=(-1.0,))
+        Beam(
+            10.0,
+            (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)),
+            hinges=(-1.0,),
+        )
 
     with pytest.raises(InvalidPositionError, match="strictly inside"):
-        Beam(10.0, (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)), hinges=(11.0,))
+        Beam(
+            10.0,
+            (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)),
+            hinges=(11.0,),
+        )
 
 
 def test_hinge_domain_validation_fixed_support():
@@ -62,7 +74,10 @@ def test_hinge_domain_validation_duplicate():
 
 def test_hinge_domain_validation_point_moment():
     """Applied moment couple directly at hinge is forbidden."""
-    with pytest.raises(InvalidLoadError, match="cannot place an applied moment couple directly at an internal hinge"):
+    with pytest.raises(
+        InvalidLoadError,
+        match="cannot place an applied moment couple directly at an internal hinge",
+    ):
         Beam(
             10.0,
             (Support("s1", SupportKind.PIN, 0.0), Support("s2", SupportKind.ROLLER, 10.0)),
@@ -209,9 +224,7 @@ def test_hinge_json_roundtrip_and_steps():
             {"id": "A", "type": "fixed", "position": 0.0},
             {"id": "B", "type": "roller", "position": 10.0},
         ],
-        "loads": [
-            {"id": "P", "type": "point", "position": 8.0, "magnitude": -10.0}
-        ],
+        "loads": [{"id": "P", "type": "point", "position": 8.0, "magnitude": -10.0}],
         "hinges": [6.0],
     }
     beam = beam_from_json(payload)

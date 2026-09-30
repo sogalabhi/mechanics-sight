@@ -6,7 +6,7 @@ import { buildReportHtml } from './reportHtml'
 import { ReportFigures } from './ReportFigures'
 
 /** Draw the three figures off-screen with selection, crosshair and reactions cleared. */
-function renderFigures(): { beam: string; sfd: string; bmd: string } {
+function renderFigures(): { beam: string; afd: string; sfd: string; bmd: string } {
   const s = useStore.getState()
   const saved = { selectedId: s.selectedId, hoverX: s.hoverX, pinnedX: s.pinnedX, sawCutX: s.sawCutX, integrationRange: s.integrationRange, showReactions: s.showReactions, showGuides: s.showGuides, showCalculus: s.showCalculus, showDeflection: s.showDeflection }
   useStore.setState({ selectedId: null, hoverX: null, pinnedX: null, sawCutX: null, integrationRange: null, showReactions: false, showGuides: true, showCalculus: false, showDeflection: s.showDeflection })
@@ -15,7 +15,7 @@ function renderFigures(): { beam: string; sfd: string; bmd: string } {
   try {
     flushSync(() => root.render(<ReportFigures />))
     const get = (k: string) => host.querySelector(`svg[data-fig="${k}"]`)?.outerHTML ?? ''
-    return { beam: get('beam'), sfd: get('sfd'), bmd: get('bmd') }
+    return { beam: get('beam'), afd: get('afd'), sfd: get('sfd'), bmd: get('bmd') }
   } finally {
     root.unmount()
     useStore.setState(saved)

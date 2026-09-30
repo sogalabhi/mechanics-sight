@@ -10,19 +10,25 @@ export function ValuesTable() {
   const ref = useRef<HTMLDialogElement>(null)
   if (!result) return null
   const f = (v: number) => formatNumber(v, { sign: true })
+  const hasAxial = result.critical_points.some((p) => (p.axial_left != null && p.axial_left !== 0) || (p.axial_right != null && p.axial_right !== 0))
   return (
     <>
       <button className={`${ui.btn} ${styles.wide}`} onClick={() => ref.current?.showModal()}>Values table</button>
       <dialog ref={ref} className={styles.dialog} aria-label="Values at critical points">
         <table className={`${styles.values} num`}>
-          <caption>V (kN) and M (kN·m) just left and right of each critical point</caption>
+          <caption>V (kN){hasAxial ? ', N (kN),' : ' and'} M (kN·m) just left and right of each critical point</caption>
           <thead>
-            <tr><th>x (m)</th><th>V left</th><th>V right</th><th>M left</th><th>M right</th></tr>
+            <tr>
+              <th>x (m)</th>
+              {hasAxial && <><th>N left</th><th>N right</th></>}
+              <th>V left</th><th>V right</th><th>M left</th><th>M right</th>
+            </tr>
           </thead>
           <tbody>
             {result.critical_points.map((p) => (
               <tr key={p.x}>
                 <td>{formatNumber(p.x)}</td>
+                {hasAxial && <><td>{f(p.axial_left ?? 0)}</td><td>{f(p.axial_right ?? 0)}</td></>}
                 <td>{f(p.shear_left)}</td><td>{f(p.shear_right)}</td>
                 <td>{f(p.moment_left)}</td><td>{f(p.moment_right)}</td>
               </tr>

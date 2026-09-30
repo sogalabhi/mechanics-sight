@@ -18,6 +18,9 @@ export function ReportFigures() {
         <Guides height={BEAM_PANEL_HEIGHT} />
         <BeamView />
       </svg>
+      <svg data-fig="afd" xmlns={NS} width={w} height={DIAGRAM_HEIGHT} viewBox={`0 0 ${w} ${DIAGRAM_HEIGHT}`}>
+        <DiagramPanel kind="axial" width={w} />
+      </svg>
       <svg data-fig="sfd" xmlns={NS} width={w} height={DIAGRAM_HEIGHT} viewBox={`0 0 ${w} ${DIAGRAM_HEIGHT}`}>
         <DiagramPanel kind="shear" width={w} />
       </svg>

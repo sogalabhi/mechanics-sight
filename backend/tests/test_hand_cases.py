@@ -24,6 +24,10 @@ def check_value(result: AnalysisResult, check: dict[str, Any]) -> None:
         assert (r.fx, r.fy, r.moment) == pytest.approx(
             (check["fx"], check["fy"], check["moment"]), abs=TOL
         )
+    elif "axial" in check:
+        assert result.axial_at(check["x"], side=Side(check["side"])) == pytest.approx(
+            check["axial"], abs=TOL
+        )
     elif "shear" in check:
         assert result.shear_at(check["x"], side=Side(check["side"])) == pytest.approx(
             check["shear"], abs=TOL

@@ -78,6 +78,11 @@ export interface components {
         /** BeamIn */
         BeamIn: {
             /**
+             * Hinges
+             * @description Positions of internal moment hinges in m from the left end
+             */
+            hinges?: number[];
+            /**
              * Length
              * @description m
              */
@@ -92,11 +97,6 @@ export interface components {
             schema_version: 1;
             /** Supports */
             supports: components["schemas"]["SupportIn"][];
-            /**
-             * Hinges
-             * @description Positions of internal moment hinges in m from the left end
-             */
-            hinges?: number[];
         };
         /** CanonicalOut */
         CanonicalOut: {
@@ -157,6 +157,16 @@ export interface components {
         };
         /** CriticalPointOut */
         CriticalPointOut: {
+            /**
+             * Axial Left
+             * @default 0
+             */
+            axial_left: number;
+            /**
+             * Axial Right
+             * @default 0
+             */
+            axial_right: number;
             /** Moment Left */
             moment_left: number;
             /** Moment Right */
@@ -216,13 +226,21 @@ export interface components {
         };
         /** ExtremesOut */
         ExtremesOut: {
+            max_compression?: components["schemas"]["ExtremeOut"] | null;
             max_hogging: components["schemas"]["ExtremeOut"] | null;
             max_negative_shear: components["schemas"]["ExtremeOut"] | null;
             max_positive_shear: components["schemas"]["ExtremeOut"] | null;
             max_sagging: components["schemas"]["ExtremeOut"] | null;
+            max_tension?: components["schemas"]["ExtremeOut"] | null;
         };
         /** PointLoadIn */
         PointLoadIn: {
+            /**
+             * Fx
+             * @description kN, rightward positive (horizontal)
+             * @default 0
+             */
+            fx: number;
             /** Id */
             id: string;
             /**
@@ -269,6 +287,11 @@ export interface components {
         /** SegmentOut */
         SegmentOut: {
             /**
+             * Axial
+             * @description Ascending coefficients of N(x) in t = x - x_start (kN, tension positive)
+             */
+            axial?: number[];
+            /**
              * Moment
              * @description Ascending coefficients in t = x - x_start; valid strictly inside
              */
@@ -296,7 +319,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "supports" | "loads" | "resultant" | "force_balance" | "moment_balance" | "reactions" | "shear" | "moment" | "zero_shear" | "moment_at" | "extreme" | "notice";
+            kind: "supports" | "loads" | "resultant" | "force_balance" | "moment_balance" | "reactions" | "axial" | "shear" | "moment" | "zero_shear" | "moment_at" | "extreme" | "notice";
             /**
              * Notes
              * @description Plain-text lines

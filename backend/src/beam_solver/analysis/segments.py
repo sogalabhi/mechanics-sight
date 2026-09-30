@@ -31,14 +31,17 @@ def build_segments(
     for x_start, x_end in pairwise(positions):
         shear = Polynomial([0.0])
         moment = Polynomial([0.0])
+        axial = Polynomial([0.0])
         for load in loads:
             v, m = load.section_polynomials(x_start)
             shear = shear + v
             moment = moment + m
+            axial = axial + load.axial_polynomial(x_start)
         length = x_end - x_start
         shear_coef = _trimmed(shear, length, force_tol)
         moment_coef = _moment_like_shear(moment, shear_coef, moment_tol)
-        segments.append(Segment(x_start, x_end, shear_coef, moment_coef))
+        axial_coef = _trimmed(axial, length, force_tol)
+        segments.append(Segment(x_start, x_end, shear_coef, moment_coef, axial_coef))
     return tuple(segments)
 
 

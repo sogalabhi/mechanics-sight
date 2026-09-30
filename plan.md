@@ -880,8 +880,11 @@ Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but studen
   - Validation: $x_h \in (0, L)$, not at a `FIXED` support, no point couple directly at a hinge (`InvalidLoadError`).
   - Classification: Handled automatically by count and rank ($e = 3 + h$). Badly placed hinges (e.g. fixed at 0, roller at 1, hinge at 3) fail the rank test and report "unstable" with clear diagnostics.
   - Worked Steps: LaTeX equations include $\sum M_{x=x_h}^- = 0$ equilibrium slices.
-- **Horizontal / Inclined Point Loads & AFD:**
-  - `PointLoad` gains `fx: float = 0.0` (in addition to vertical force).
+- **Horizontal / Inclined Point Loads & AFD:** [DONE]
+  - `PointLoad` has `fx: float = 0.0` (in addition to vertical force).
+  - Verified with three shared axial fixtures, exact left/right values, sampled N, randomized right-section and jump checks, API errors, and worked steps.
+  - AFD is available in the UI, HTML reports, and CLI plots; tension/compression extremes are returned by the API.
+  - Equal and opposite horizontal loads still require compatibility when there are multiple axial restraints.
   - Axial equilibrium $\Sigma F_x = 0$ resolves horizontal reactions.
   - Normal force $N(x) = -\Sigma f_x$ left of $x$ (tension positive).
   - Segment polynomials gain axial representation `axial: tuple[float, ...]`.
@@ -937,7 +940,7 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | *Extras*| Packaging | HTML report download, Docker Compose, Vercel deployments | Deployments active, reports download clean | **Done** |
 | M7 | Phase 1.6 Drag & Drop | Canvas pointer drag, 8px snapping, 1-2-5 grid, draft state | Playwright drag tests pass (snap, drag, live update) | *In Progress* |
 | M7.5| Intuition Engine 1 | Qualitative Elastic Curve (smile/frown, tension/compression fibers), Calculus Tangent sync ($dM/dx=V$), Textbook Formula Matcher ($wL^2/8, PL/4$) & proofs | Visual verification on all 12 hand cases | **Done** |
-| M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *In Progress (Gerber hinges engine done)* |
+| M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *Hinges, axial/inclined loads and AFD done; guided supports pending* |
 | M8.5| Intuition Engine 2 | "Virtual Saw" interactive free-body cut, Area-under-SFD shading | Visual cut equilibrium checks pass | **Done** |
 | M9 | Phase 3 Sections & Deflection | Cross-section library (I-beam, T-beam), $EI$ deflection integration, $\sigma$ and $\tau$ stress envelopes | Cross-section and deflection benchmarks pass | *Planned* |
 | M10| Phase 4 Indeterminate | Propped cantilever, fixed-fixed, continuous beams, settlement, spring supports | Classic indeterminate hand cases pass | *Planned* |

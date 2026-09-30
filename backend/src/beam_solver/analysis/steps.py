@@ -99,11 +99,12 @@ class _Labels:
     supports: dict[str, str]  # support id -> "A"
     loads: dict[str, str]  # load id -> "P_{1}"
 
-    def of(self, load: Load) -> str:
+    def of(self, load: Load, kind: str = "shear") -> str:
         if load.id.startswith("reaction-moment:"):
             return f"M_{{{self.supports[load.id.split(':', 1)[1]]}}}"
         if load.id.startswith("reaction:"):
-            return f"R_{{{self.supports[load.id.split(':', 1)[1]]}}}"
+            sup = self.supports[load.id.split(":", 1)[1]]
+            return f"R_{{{sup}\\!x}}" if kind == "axial" else f"R_{{{sup}}}"
         return self.loads[load.id]
 
 
@@ -135,7 +136,7 @@ def _setup_steps(beam: Beam, labels: _Labels) -> list[Step]:
     ]
     if beam.hinges:
         supports_notes.extend(
-            f"H_{i+1}: internal hinge at x = {_num(h)} m (bending moment released: M = 0)"
+            f"H_{i + 1}: internal hinge at x = {_num(h)} m (bending moment released: M = 0)"
             for i, h in enumerate(beam.hinges)
         )
     steps = [
@@ -150,10 +151,15 @@ def _setup_steps(beam: Beam, labels: _Labels) -> list[Step]:
     for load in sorted(beam.loads, key=lambda ld: ld.breakpoints()[0]):
         name = _plain(labels.loads[load.id])
         if isinstance(load, PointLoad):
-            way = "up" if load.magnitude > 0 else "down"
-            notes.append(
-                f"{name}: {_num(abs(load.magnitude))} kN {way} at x = {_num(load.position)} m"
-            )
+            parts = []
+            if abs(load.magnitude) > 1e-9:
+                way = "up" if load.magnitude > 0 else "down"
+                parts.append(f"{_num(abs(load.magnitude))} kN {way}")
+            if abs(load.fx) > 1e-9:
+                h_way = "right" if load.fx > 0 else "left"
+                parts.append(f"{_num(abs(load.fx))} kN {h_way}")
+            desc = " and ".join(parts) if parts else "0 kN"
+            notes.append(f"{name}: {desc} at x = {_num(load.position)} m")
         elif isinstance(load, PointMoment):
             way = "anticlockwise" if load.magnitude > 0 else "clockwise"
             amount = _num(abs(load.magnitude))
@@ -276,24 +282,51 @@ def _reaction_steps(beam: Beam, result: AnalysisResult, labels: _Labels) -> list
             *(moment_term(ld) for ld in beam.loads if ld in forces or ld in couples),
         ]
     )
-    out = [
-        Step(
-            "force_balance",
-            "reactions",
-            "Vertical equilibrium",
-            symbolic=f"\\sum F_y = 0:\\quad {unk_f} + {load_f_sym} = 0",
-            substituted=f"{sub_f} = 0",
-            result=_row_latex(fy_row, names, fy_rhs),
-        ),
-        Step(
-            "moment_balance",
-            "reactions",
-            "Moments about x = 0 (anticlockwise positive)",
-            symbolic=f"\\sum M_0 = 0:\\quad {unk_m} + {load_m_sym} = 0",
-            substituted=f"{sub_m} = 0",
-            result=_row_latex(m_row, names, m_rhs),
-        ),
-    ]
+    out: list[Step] = []
+
+    axial_cols = system.axial_columns()
+    has_axial_loads = any(abs(ld.horizontal_resultant()) > 1e-12 for ld in beam.loads)
+    if axial_cols and (has_axial_loads or any(abs(r.fx) > 1e-12 for r in result.reactions)):
+        ax_unknowns = [system.unknowns[i] for i in axial_cols]
+        ax_names = [f"R_{{{labels.supports[u.support_id]}\\!x}}" for u in ax_unknowns]
+        ax_loads = [ld for ld in beam.loads if abs(ld.horizontal_resultant()) > 1e-12]
+        unk_ax = " + ".join(ax_names)
+        sub_ax = " + ".join(
+            [*ax_names, *(_paren(_num(ld.horizontal_resultant())) for ld in ax_loads)]
+        )
+        out.append(
+            Step(
+                "force_balance",
+                "reactions",
+                "Horizontal equilibrium",
+                symbolic=f"\\sum F_x = 0:\\quad {unk_ax} + \\sum F_x = 0",
+                substituted=f"{sub_ax} = 0",
+                result=f"{unk_ax} = {_num(float(system.b[0]))}"
+                if len(ax_names) == 1
+                else _row_latex(system.a[0, axial_cols], ax_names, float(system.b[0])),
+            )
+        )
+
+    out.extend(
+        [
+            Step(
+                "force_balance",
+                "reactions",
+                "Vertical equilibrium",
+                symbolic=f"\\sum F_y = 0:\\quad {unk_f} + {load_f_sym} = 0",
+                substituted=f"{sub_f} = 0",
+                result=_row_latex(fy_row, names, fy_rhs),
+            ),
+            Step(
+                "moment_balance",
+                "reactions",
+                "Moments about x = 0 (anticlockwise positive)",
+                symbolic=f"\\sum M_0 = 0:\\quad {unk_m} + {load_m_sym} = 0",
+                substituted=f"{sub_m} = 0",
+                result=_row_latex(m_row, names, m_rhs),
+            ),
+        ]
+    )
     for k, h_pos in enumerate(beam.hinges):
         h_row = system.a[3 + k, cols]
         h_rhs = float(system.b[3 + k])
@@ -325,14 +358,23 @@ def _reaction_steps(beam: Beam, result: AnalysisResult, labels: _Labels) -> list
                 at=h_pos,
             )
         )
-    by_name = {(r.support_id, "fy"): r.fy for r in result.reactions} | {
-        (r.support_id, "m"): r.moment for r in result.reactions
-    }
-    solved = ",\\quad ".join(
-        f"{n} = {_num(by_name[(u.support_id, 'm' if u.direction.name == 'ROTATION' else 'fy')])}\\ "
-        f"\\text{{{'kN·m' if u.direction.name == 'ROTATION' else 'kN'}}}"
-        for n, u in zip(names, unknowns, strict=True)
+    by_name = (
+        {(r.support_id, "fy"): r.fy for r in result.reactions}
+        | {(r.support_id, "m"): r.moment for r in result.reactions}
+        | {(r.support_id, "fx"): r.fx for r in result.reactions}
     )
+    all_solved = []
+    if axial_cols and (has_axial_loads or any(abs(r.fx) > 1e-12 for r in result.reactions)):
+        for u in ax_unknowns:
+            all_solved.append(
+                f"R_{{{labels.supports[u.support_id]}\\!x}} = "
+                f"{_num(by_name[(u.support_id, 'fx')])}\\ \\text{{kN}}"
+            )
+    for n, u in zip(names, unknowns, strict=True):
+        val = by_name[(u.support_id, "m" if u.direction.name == "ROTATION" else "fy")]
+        unit = "kN·m" if u.direction.name == "ROTATION" else "kN"
+        all_solved.append(f"{n} = {_num(val)}\\ \\text{{{unit}}}")
+    solved = ",\\quad ".join(all_solved)
     out.append(Step("reactions", "reactions", "Solve for the reactions", result=solved))
     return out
 
@@ -365,25 +407,48 @@ def _segment_steps(
             )
         ]
     steps: list[Step] = []
+    has_axial = any(abs(ld.horizontal_resultant()) > 1e-12 for ld in all_loads)
     for seg in result.segments:
         span = f"{_num(seg.x_start)} < x < {_num(seg.x_end)}"
-        for kind, name, sym, idx in (
-            ("shear", "V", r"V(x) = \sum F_{\text{left of the section}}", 0),
-            ("moment", "M", r"M(x) = -\sum M_{\text{anticlockwise, left of the section}}", 1),
-        ):
+        diagram_kinds = (
+            [
+                ("axial", "N", r"N(x) = -\sum F_{x,\text{left of the section}}", "axial"),
+                ("shear", "V", r"V(x) = \sum F_{\text{left of the section}}", 0),
+                ("moment", "M", r"M(x) = -\sum M_{\text{anticlockwise, left of the section}}", 1),
+            ]
+            if has_axial
+            else [
+                ("shear", "V", r"V(x) = \sum F_{\text{left of the section}}", 0),
+                ("moment", "M", r"M(x) = -\sum M_{\text{anticlockwise, left of the section}}", 1),
+            ]
+        )
+        for kind, name, sym, idx in diagram_kinds:
             terms: list[str] = []
-            for load in all_loads:
-                poly = load.section_polynomials(seg.x_start)[idx]
-                if all(abs(float(c)) < _ZERO_TOL for c in poly.coef):
-                    continue  # the load is to the right of this segment
-                coef = _to_x(list(poly.coef), seg.x_start)
-                terms.append(f"\\underbrace{{{_paren(_poly(coef))}}}_{{{labels.of(load)}}}")
-            final = _to_x(seg.shear if idx == 0 else seg.moment, seg.x_start)
+            if kind == "axial":
+                for load in all_loads:
+                    poly = load.axial_polynomial(seg.x_start)
+                    if all(abs(float(c)) < _ZERO_TOL for c in poly.coef):
+                        continue
+                    coef = _to_x(list(poly.coef), seg.x_start)
+                    terms.append(
+                        f"\\underbrace{{{_paren(_poly(coef))}}}_{{{labels.of(load, kind='axial')}}}"
+                    )
+                final = _to_x(seg.axial, seg.x_start)
+                title = f"Axial normal force for {span}"
+            else:
+                for load in all_loads:
+                    poly = load.section_polynomials(seg.x_start)[0 if kind == "shear" else 1]
+                    if all(abs(float(c)) < _ZERO_TOL for c in poly.coef):
+                        continue
+                    coef = _to_x(list(poly.coef), seg.x_start)
+                    terms.append(f"\\underbrace{{{_paren(_poly(coef))}}}_{{{labels.of(load)}}}")
+                final = _to_x(seg.shear if idx == 0 else seg.moment, seg.x_start)
+                title = f"{'Shear force' if idx == 0 else 'Bending moment'} for {span}"
             steps.append(
                 Step(
                     kind,
                     "diagrams",
-                    f"{'Shear force' if idx == 0 else 'Bending moment'} for {span}",
+                    title,
                     symbolic=sym,
                     substituted=_sum_of(name, terms),
                     result=f"{name}(x) = {_poly(final)}",

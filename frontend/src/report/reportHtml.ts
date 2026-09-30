@@ -11,7 +11,7 @@ export interface ReportInput {
   result: AnalysisResult
   steps: Step[]
   /** Serialized <svg> markup. */
-  figures: { beam: string; sfd: string; bmd: string }
+  figures: { beam: string; afd?: string; sfd: string; bmd: string }
   date: string
 }
 
@@ -35,7 +35,7 @@ function inputTables(beam: BeamInput): string {
   const loads = (beam.loads ?? [])
     .map((l) => {
       if (l.type === 'point')
-        return `<tr><td>Point load</td><td class="n">${formatQty(Math.abs(l.magnitude), 'kN')} ${l.magnitude < 0 ? 'down' : 'up'}</td><td class="n">at ${formatQty(l.position, 'm')}</td></tr>`
+        return `<tr><td>Point load</td><td class="n">${formatQty(Math.abs(l.magnitude), 'kN')} ${l.magnitude < 0 ? 'down' : 'up'}${l.fx ? `; Fx = ${formatQty(Math.abs(l.fx), 'kN')} ${l.fx < 0 ? 'left' : 'right'}` : ''}</td><td class="n">at ${formatQty(l.position, 'm')}</td></tr>`
       if (l.type === 'moment')
         return `<tr><td>Couple</td><td class="n">${formatQty(Math.abs(l.magnitude), 'kN·m')} ${l.magnitude > 0 ? 'anticlockwise' : 'clockwise'}</td><td class="n">at ${formatQty(l.position, 'm')}</td></tr>`
       const w = l.w_start === l.w_end ? formatQty(Math.abs(l.w_start), 'kN/m') : `${formatNumber(Math.abs(l.w_start))} to ${formatQty(Math.abs(l.w_end), 'kN/m')}`
@@ -56,19 +56,19 @@ function results(result: AnalysisResult, beam: BeamInput): string {
     .map((r) => `<tr><td>${name.get(r.support_id) ?? r.support_id}</td><td class="n">${f(r.fx)}</td><td class="n">${f(r.fy)}</td><td class="n">${f(r.moment)}</td></tr>`)
     .join('')
   const cps = result.critical_points
-    .map((p) => `<tr><td class="n">${formatNumber(p.x)}</td><td class="n">${f(p.shear_left)}</td><td class="n">${f(p.shear_right)}</td><td class="n">${f(p.moment_left)}</td><td class="n">${f(p.moment_right)}</td></tr>`)
+    .map((p) => `<tr><td class="n">${formatNumber(p.x)}</td><td class="n">${f(p.axial_left ?? 0)}</td><td class="n">${f(p.axial_right ?? 0)}</td><td class="n">${f(p.shear_left)}</td><td class="n">${f(p.shear_right)}</td><td class="n">${f(p.moment_left)}</td><td class="n">${f(p.moment_right)}</td></tr>`)
     .join('')
   const ex = result.extremes
   const row = (label: string, e: { x: number; value: number } | null, unit: string) =>
     e ? `<tr><td>${label}</td><td class="n">${f(e.value)} ${unit}</td><td class="n">at ${formatQty(e.x, 'm')}</td></tr>` : ''
   return `<div class="two"><table><caption>Reactions (kN, kN·m)</caption><tr><th></th><th>Fx</th><th>Fy</th><th>M</th></tr>${react}</table>
-<table><caption>Extreme values</caption>${row('Max sagging moment', ex.max_sagging, 'kN·m')}${row('Max hogging moment', ex.max_hogging, 'kN·m')}${row('Max positive shear', ex.max_positive_shear, 'kN')}${row('Max negative shear', ex.max_negative_shear, 'kN')}</table></div>
-<table class="wide"><caption>Values at critical points (just left and right of each point)</caption><tr><th>x (m)</th><th>V left (kN)</th><th>V right (kN)</th><th>M left (kN·m)</th><th>M right (kN·m)</th></tr>${cps}</table>`
+<table><caption>Extreme values</caption>${row('Max tension', ex.max_tension ?? null, 'kN')}${row('Max compression', ex.max_compression ?? null, 'kN')}${row('Max sagging moment', ex.max_sagging, 'kN·m')}${row('Max hogging moment', ex.max_hogging, 'kN·m')}${row('Max positive shear', ex.max_positive_shear, 'kN')}${row('Max negative shear', ex.max_negative_shear, 'kN')}</table></div>
+<table class="wide"><caption>Values at critical points (just left and right of each point)</caption><tr><th>x (m)</th><th>N left (kN)</th><th>N right (kN)</th><th>V left (kN)</th><th>V right (kN)</th><th>M left (kN·m)</th><th>M right (kN·m)</th></tr>${cps}</table>`
 }
 
 const GROUPS: [Step['group'], string][] = [
   ['reactions', 'Reactions'],
-  ['diagrams', 'Shear force and bending moment'],
+  ['diagrams', 'Axial force, shear force and bending moment'],
   ['extremes', 'Extreme values'],
 ]
 
@@ -138,6 +138,7 @@ ${inputTables(r.beam)}
 <h2>Results</h2>
 ${results(r.result, r.beam)}
 
+${r.figures.afd ? `<h2>Axial force diagram</h2>${r.figures.afd}` : ''}
 <h2>Shear force diagram</h2>
 ${r.figures.sfd}
 <h2>Bending moment diagram</h2>
@@ -146,7 +147,7 @@ ${r.figures.bmd}
 <h2>Calculation steps</h2>
 ${stepsHtml(r.steps)}
 
-<footer>Sign convention: forces and w upward +, couples anticlockwise +, V(x) = sum of vertical forces left of the cut, M(x) sagging +. Units: m, kN, kN·m, kN/m.</footer>
+<footer>Sign convention: forces and w upward +, couples anticlockwise +, V(x) = sum of vertical forces left of the cut, M(x) sagging +, Fx rightward +, N(x) tension +. Units: m, kN, kN·m, kN/m.</footer>
 </main>
 <script type="application/json" id="beam-input">${esc(JSON.stringify(r.beam))}</script>
 </body></html>`

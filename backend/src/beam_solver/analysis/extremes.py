@@ -17,6 +17,8 @@ class Extremes:
     max_positive_shear: Extreme | None
     max_negative_shear: Extreme | None
     zero_shear_points: tuple[float, ...]
+    max_tension: Extreme | None = None
+    max_compression: Extreme | None = None
 
 
 def interior_roots(poly: Polynomial, length: float) -> list[float]:
@@ -50,14 +52,17 @@ def find_extremes(
 ) -> Extremes:
     moments: list[tuple[float, float]] = []
     shears: list[tuple[float, float]] = []
+    axials: list[tuple[float, float]] = []
     zero_shear: list[float] = []
     for i, p in enumerate(points):
         moments += [(p.x, p.moment_left), (p.x, p.moment_right)]
         # Left of x = 0 and right of x = L lie outside the beam, so skip those values.
         if i > 0:
             shears.append((p.x, p.shear_left))
+            axials.append((p.x, p.axial_left))
         if i < len(points) - 1:
             shears.append((p.x, p.shear_right))
+            axials.append((p.x, p.axial_right))
         if p.shear_left * p.shear_right < 0:
             zero_shear.append(p.x)
     for segment in segments:
@@ -74,4 +79,6 @@ def find_extremes(
         _pick(shears, force_tol, largest=True),
         _pick(shears, force_tol, largest=False),
         tuple(sorted(zero_shear)),
+        _pick(axials, force_tol, largest=True),
+        _pick(axials, force_tol, largest=False),
     )

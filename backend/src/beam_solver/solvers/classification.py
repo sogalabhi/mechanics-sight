@@ -5,7 +5,7 @@ from enum import Enum
 
 import numpy as np
 
-from beam_solver.solvers.equilibrium import AXIAL_ROWS, BENDING_ROWS, EquilibriumSystem
+from beam_solver.solvers.equilibrium import EquilibriumSystem
 
 
 class Determinacy(Enum):

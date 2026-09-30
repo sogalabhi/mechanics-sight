@@ -11,12 +11,12 @@ from beam_solver.tolerances import force_tol, load_scale, moment_tol
 
 
 def reaction_loads(reactions: tuple[Reaction, ...], beam: Beam) -> tuple[Load, ...]:
-    """Reactions as ordinary loads, so V and M treat them like any other load."""
+    """Reactions as ordinary loads, so N, V and M treat them like any other load."""
     positions = {s.id: s.position for s in beam.supports}
     loads: list[Load] = []
     for r in reactions:
         x = positions[r.support_id]
-        loads.append(PointLoad(f"reaction:{r.support_id}", x, r.fy))
+        loads.append(PointLoad(f"reaction:{r.support_id}", x, r.fy, fx=r.fx))
         if r.moment != 0.0:
             loads.append(PointMoment(f"reaction-moment:{r.support_id}", x, r.moment))
     return tuple(loads)
@@ -28,7 +28,7 @@ def analyze(beam: Beam) -> AnalysisResult:
     all_loads = beam.loads + reaction_loads(solution.reactions, beam)
 
     scale = load_scale(
-        sum(abs(load.resultant()) for load in all_loads),
+        sum(abs(load.resultant()) + abs(load.horizontal_resultant()) for load in all_loads),
         sum(abs(load.moment_about(0.0)) for load in all_loads),
         beam.length,
     )
@@ -50,6 +50,8 @@ def analyze(beam: Beam) -> AnalysisResult:
         max_positive_shear=extremes.max_positive_shear,
         max_negative_shear=extremes.max_negative_shear,
         warnings=solution.warnings,
+        max_tension=extremes.max_tension,
+        max_compression=extremes.max_compression,
     )
     canonical = detect_canonical(beam, initial_result)
     if canonical is None:
@@ -67,4 +69,6 @@ def analyze(beam: Beam) -> AnalysisResult:
         max_negative_shear=initial_result.max_negative_shear,
         warnings=initial_result.warnings,
         canonical=canonical,
+        max_tension=initial_result.max_tension,
+        max_compression=initial_result.max_compression,
     )
