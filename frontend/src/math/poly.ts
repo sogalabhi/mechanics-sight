@@ -56,3 +56,40 @@ export function valueAt(result: AnalysisResult, x: number, kind: Kind): { left: 
 }
 
 export const isJump = (v: { left: number; right: number }) => Math.abs(v.left - v.right) > 1e-9
+
+export interface Region {
+  sign: 1 | -1
+  x0: number
+  x1: number
+  peak: number
+}
+
+/** Runs of the curve above / below the zero line, for the + / − markers. */
+export function signRegions(pts: [number, number][]): Region[] {
+  const out: Region[] = []
+  let cur: Region | null = null
+  for (const [x, v] of pts) {
+    const sign = Math.abs(v) < 1e-9 ? 0 : v > 0 ? 1 : -1
+    if (sign === 0) {
+      cur = null
+    } else if (cur && cur.sign === sign) {
+      cur.x1 = x
+      cur.peak = Math.max(cur.peak, Math.abs(v))
+    } else {
+      cur = { sign, x0: x, x1: x, peak: Math.abs(v) }
+      out.push(cur)
+    }
+  }
+  return out
+}
+
+/** The widest-and-tallest region of each sign (largest width × peak). */
+export function largestRegions(regions: Region[]): Region[] {
+  return ([1, -1] as const)
+    .map((sign) =>
+      regions
+        .filter((r) => r.sign === sign && r.x1 > r.x0)
+        .sort((a, b) => (b.x1 - b.x0) * b.peak - (a.x1 - a.x0) * a.peak)[0],
+    )
+    .filter((r): r is Region => r !== undefined)
+}

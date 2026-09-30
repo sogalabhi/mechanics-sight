@@ -7,6 +7,7 @@ import { useStore } from '@/store/store'
 import { NumberField } from '@/ui/NumberField'
 import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
+import { ViewMenu } from './ViewMenu'
 
 export function TopBar() {
   const beam = useStore((s) => s.beam)
@@ -61,6 +62,7 @@ export function TopBar() {
       </select>
       <button className={ui.btn} onClick={share}>Share</button>
       {copied && <span className={styles.toast} role="status">{copied}</span>}
+      <ViewMenu />
       <span className={styles.spacer} />
       <select
         className={ui.btn}

@@ -18,6 +18,10 @@ interface State {
   error: AnalysisError | null
   /** Ask the solver for worked steps too. Off unless the Working panel is open. */
   showWorking: boolean
+  /** The solver answered a steps request without steps (an older server). */
+  stepsUnsupported: boolean
+  showReactions: boolean
+  showGuides: boolean
   hoverX: number | null
   pinnedX: number | null
   /** One call = one undo step. */
@@ -30,6 +34,9 @@ interface State {
   setHover: (x: number | null) => void
   setPinned: (x: number | null) => void
   setShowWorking: (on: boolean) => void
+  setStepsUnsupported: (v: boolean) => void
+  setShowReactions: (v: boolean) => void
+  setShowGuides: (v: boolean) => void
 }
 
 export const useStore = create<State>((set) => ({
@@ -40,6 +47,9 @@ export const useStore = create<State>((set) => ({
   result: null,
   error: null,
   showWorking: false,
+  stepsUnsupported: false,
+  showReactions: true,
+  showGuides: true,
   hoverX: null,
   pinnedX: null,
   commit: (beam, selectId) =>
@@ -58,5 +68,8 @@ export const useStore = create<State>((set) => ({
   setError: (error) => set({ error }),
   setHover: (hoverX) => set({ hoverX }),
   setPinned: (pinnedX) => set({ pinnedX }),
-  setShowWorking: (showWorking) => set({ showWorking }),
+  setShowWorking: (showWorking) => set({ showWorking, stepsUnsupported: false }),
+  setStepsUnsupported: (stepsUnsupported) => set({ stepsUnsupported }),
+  setShowReactions: (showReactions) => set({ showReactions }),
+  setShowGuides: (showGuides) => set({ showGuides }),
 }))

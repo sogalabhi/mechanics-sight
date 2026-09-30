@@ -1,5 +1,7 @@
 """Worked steps (M6.5): they must agree with the hand-solved fixtures and the solver."""
 
+import json
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -85,3 +87,21 @@ def test_triangular_load_keeps_small_coefficients() -> None:
     moment = next(s for s in steps if s.kind == "moment")
     assert moment.result is not None
     assert "0.08333" in moment.result
+
+
+def test_every_fixture_has_a_hand_solution() -> None:
+    docs = Path(__file__).resolve().parents[2] / "docs" / "hand-solutions"
+    missing = [f["name"] for f in FIXTURES if not (docs / f"{f['name']}.md").exists()]
+    assert not missing, f"no hand solution for: {missing}"
+
+
+def test_cli_steps_flag(tmp_path: Path) -> None:
+    from beam_solver.cli import main
+
+    src = tmp_path / "beam.json"
+    src.write_text(json.dumps(FIXTURES[0]["input"]))
+    out = tmp_path / "out.json"
+    assert main(["analyze", str(src), "--json", str(out), "--steps"]) == 0
+    assert json.loads(out.read_text())["steps"]
+    assert main(["analyze", str(src), "--json", str(out)]) == 0
+    assert "steps" not in json.loads(out.read_text())

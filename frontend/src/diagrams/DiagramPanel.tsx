@@ -2,7 +2,8 @@ import { scaleLinear } from 'd3-scale'
 import { useMemo } from 'react'
 import { formatNumber, formatQty, formatTick } from '@/math/format'
 import { placeLabels, type LabelCandidate } from '@/math/labels'
-import { curvePoints, type Kind } from '@/math/poly'
+import { curvePoints, largestRegions, signRegions, valueAt, type Kind } from '@/math/poly'
+import { Guides } from '@/canvas/Guides'
 import { useXScale, GUTTER } from '@/canvas/XScaleContext'
 import { useStore } from '@/store/store'
 import { Crosshair } from './Crosshair'
@@ -90,6 +91,7 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
     return placeLabels(cands)
   }, [notes, x])
 
+  const markers = largestRegions(signRegions(pts)).filter((r) => Math.abs(x(r.x1) - x(r.x0)) >= 24)
   const line = pts.map(([px, v]) => `${x(px)},${y(v)}`).join(' ')
   const ticks = y.ticks(5)
 
@@ -113,7 +115,19 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
       ))}
       <line x1={GUTTER} x2={width} y1={zero} y2={zero} stroke="var(--ink)" strokeWidth={1} />
 
+      <Guides height={DIAGRAM_HEIGHT} />
+      {result?.zero_shear_points.map((z) => {
+        // dashed link: the SFD's zero crossing lines up with the BMD's peak
+        const top = kind === 'shear' ? zero : TOP - 8
+        const bottom = kind === 'shear' ? DIAGRAM_HEIGHT : y(valueAt(result, z, 'moment').right)
+        return <line key={`z${z}`} x1={x(z)} x2={x(z)} y1={top} y2={bottom} stroke={meta.color} strokeWidth={1} strokeDasharray="4 3" opacity={0.6} pointerEvents="none" />
+      })}
       <g opacity={stale ? 0.35 : 1}>
+        {markers.map((r) => (
+          <text key={r.sign} x={(x(r.x0) + x(r.x1)) / 2} y={y((r.sign * r.peak) / 2) + 5} textAnchor="middle" fontSize={16} fill="var(--ink-2)" pointerEvents="none">
+            {r.sign > 0 ? '+' : '\u2212'}
+          </text>
+        ))}
         {pts.length > 0 && (
           <>
             <polygon points={line} fill={meta.color} fillOpacity={0.14} stroke="none" />

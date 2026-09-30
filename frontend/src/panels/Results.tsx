@@ -1,6 +1,7 @@
 import { formatNumber } from '@/math/format'
 import type { AnalysisResult } from '@/model/types'
 import { useStore } from '@/store/store'
+import { ValuesTable } from './ValuesTable'
 import { WorkingPanel } from '@/working/WorkingPanel'
 import styles from './panels.module.css'
 
@@ -67,6 +68,7 @@ export function Results() {
       {result.warnings.map((w) => (
         <p key={w} className={styles.hint}>{w}</p>
       ))}
+      <ValuesTable />
       <WorkingPanel />
     </div>
   )

@@ -3,6 +3,7 @@ import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { Crosshair } from '@/diagrams/Crosshair'
 import { useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
+import { Guides } from './Guides'
 import { useXScale } from './XScaleContext'
 
 const SNAP_PX = 6
@@ -43,6 +44,7 @@ export function CanvasStack({ width }: { width: number }) {
   return (
     <div ref={ref} onPointerMove={move} onPointerLeave={() => setHover(null)}>
       <svg width={width} height={BEAM_PANEL_HEIGHT} style={{ display: 'block' }}>
+        <Guides height={BEAM_PANEL_HEIGHT} />
         <BeamView />
         <Crosshair height={BEAM_PANEL_HEIGHT} />
       </svg>

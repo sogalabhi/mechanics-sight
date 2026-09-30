@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/model/types'
-import { curvePoints, horner, valueAt } from './poly'
+import { curvePoints, horner, largestRegions, signRegions, valueAt } from './poly'
 import { placeLabels } from './labels'
 
 const fixtures = import.meta.glob('../../../shared/fixtures/*.json', { eager: true }) as Record<
@@ -46,5 +46,17 @@ describe('placeLabels', () => {
       { id: 'c', priority: 2, x0: 40, x1: 90, band: 'down' },
     ])
     expect([...shown].sort()).toEqual(['a', 'c'])
+  })
+})
+
+describe('sign regions', () => {
+  it('finds the largest positive and negative regions', () => {
+    const pts: [number, number][] = [[0, 0], [0, 2], [3, 2], [3, -1], [4, -1], [4, 0]]
+    const r = largestRegions(signRegions(pts))
+    expect(r.map((x) => x.sign)).toEqual([1, -1])
+    expect(r[0]).toMatchObject({ x0: 0, x1: 3, peak: 2 })
+  })
+  it('ignores zero-width jumps', () => {
+    expect(largestRegions(signRegions([[0, 0], [1, 1], [1, 0]]))).toEqual([])
   })
 })

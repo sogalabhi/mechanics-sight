@@ -7,9 +7,15 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from beam_solver.analysis import analyze
+from beam_solver.analysis import analyze, build_steps
 from beam_solver.errors import BeamError
-from beam_solver.io import beam_from_schema, error_to_schema, result_to_json
+from beam_solver.io import (
+    beam_from_schema,
+    error_to_schema,
+    result_to_json,
+    result_to_schema,
+    step_to_schema,
+)
 from beam_solver.io.schemas import BeamIn, ErrorBody, ErrorOut
 
 
@@ -19,6 +25,7 @@ def _parser() -> argparse.ArgumentParser:
     run = sub.add_parser("analyze", help="analyze a beam JSON file")
     run.add_argument("input", type=Path)
     run.add_argument("--json", type=Path, help="write the result JSON here ('-' for stdout)")
+    run.add_argument("--steps", action="store_true", help="include the worked steps in the JSON")
     run.add_argument("--plot", type=Path, help="write a PNG/SVG/PDF diagram here")
     return parser
 
@@ -37,7 +44,13 @@ def main(argv: list[str] | None = None) -> int:
         print(error_to_schema(exc).model_dump_json(indent=2), file=sys.stderr)
         return 1
 
-    output = json.dumps(result_to_json(result), indent=2)
+    payload = result_to_json(result)
+    if args.steps:
+        out = result_to_schema(result).model_copy(
+            update={"steps": [step_to_schema(s) for s in build_steps(beam, result)]}
+        )
+        payload = out.model_dump(mode="json")
+    output = json.dumps(payload, indent=2)
     if args.json is None or str(args.json) == "-":
         print(output)
     else:

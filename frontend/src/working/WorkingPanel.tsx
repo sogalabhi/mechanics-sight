@@ -35,12 +35,16 @@ export function WorkingPanel() {
   const on = useStore((s) => s.showWorking)
   const setOn = useStore((s) => s.setShowWorking)
   const steps = useStore((s) => s.result?.steps)
+  const unsupported = useStore((s) => s.stepsUnsupported)
   return (
     <div>
       <button className={styles.toggle} aria-expanded={on} onClick={() => setOn(!on)}>
         {on ? 'Hide working' : 'Show working'}
       </button>
-      {on && !steps && <p className={styles.note}>Loading…</p>}
+      {on && unsupported && (
+        <p className={styles.note} role="alert">This solver did not return steps. Restart the backend so it runs the latest code.</p>
+      )}
+      {on && !steps && !unsupported && <p className={styles.note}>Loading…</p>}
       {on && steps &&
         GROUPS.map((g) => {
           const list = steps.filter((s) => s.group === g.id)

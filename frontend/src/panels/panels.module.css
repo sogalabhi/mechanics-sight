@@ -27,3 +27,25 @@ section + section { margin-top: 16px; }
   .entry { justify-content: center; }
   .title { text-align: center; }
 }
+
+.menu { position: relative; }
+.menu summary { list-style: none; display: inline-flex; align-items: center; }
+.menu summary::-webkit-details-marker { display: none; }
+.menuBody { position: absolute; z-index: 10; top: 34px; left: 0; display: flex; flex-direction: column; gap: 8px; min-width: 240px; padding: 12px; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); }
+.menuBody hr { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--rule); }
+.menuBody label { display: flex; gap: 6px; align-items: center; }
+
+.signWrap { position: relative; margin-left: auto; }
+.link { font: inherit; font-size: 12px; color: var(--ink-2); background: none; border: 0; cursor: pointer; }
+.link:hover { color: var(--ink); }
+.popover { position: absolute; z-index: 10; right: 0; bottom: 28px; width: 300px; padding: 12px; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); font-family: var(--font-ui); }
+.signTable { width: 100%; border-collapse: collapse; }
+.signTable th { padding: 2px 8px 2px 0; text-align: left; font-weight: 400; color: var(--ink-2); vertical-align: top; }
+.formula { margin: 8px 0 0; font-size: 12px; color: var(--ink-2); }
+
+.wide { width: 100%; margin-top: 8px; }
+.dialog { padding: 16px; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); }
+.dialog::backdrop { background: rgba(0, 0, 0, 0.3); }
+.values { border-collapse: collapse; margin-bottom: 12px; }
+.values caption { padding-bottom: 8px; text-align: left; font-family: var(--font-ui); color: var(--ink-2); }
+.values th, .values td { padding: 4px 12px; text-align: right; border-bottom: 1px solid var(--grid); }

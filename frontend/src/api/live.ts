@@ -31,6 +31,7 @@ async function run() {
     if (mine !== seq) return
     retries = 0
     setResult(result)
+    useStore.getState().setStepsUnsupported(showWorking && !result.steps)
   } catch (e) {
     if (mine !== seq || (e instanceof DOMException && e.name === 'AbortError')) return
     if (e instanceof ApiError) {
