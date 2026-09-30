@@ -17,6 +17,23 @@ uv run uvicorn beam_solver.api.app:app --reload   # API on http://127.0.0.1:8000
 uv run ruff check && uv run ruff format --check && uv run mypy && uv run lint-imports
 ```
 
+```bash
+cd frontend
+npm ci
+npm run dev        # http://localhost:5173, proxies /api to http://localhost:8000
+npm test && npm run lint && npm run build
+```
+
+## Docker
+```bash
+docker compose up --build       # app on http://localhost:8080
+WEB_PORT=3000 docker compose up # or pick another port
+docker compose down
+```
+Two containers: `backend` (FastAPI on port 8000, not published) and `frontend` (nginx serving the
+built app and proxying `/api` to the backend, so the browser sees a single origin and needs no CORS).
+The frontend image is built from the repository root because the app bundles `shared/fixtures`.
+
 ## Out of scope
 Moving loads and influence lines; frames, trusses, curved beams; 3D, torsion, biaxial bending;
 dynamics; non-linear behaviour (large deflection, yielding, P-Δ); shear deformation (Timoshenko);

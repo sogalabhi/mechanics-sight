@@ -55,3 +55,25 @@ jobs:
       # reads shared/fixtures, so this also checks the frontend against the contract cases
       - run: npm test
       - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build both images
+        run: docker compose build
+      - name: Start the stack
+        run: docker compose up -d --wait
+      - name: Smoke test through nginx (same path the browser uses)
+        run: |
+          curl -fsS http://localhost:8080/ | grep -q '<div id="root">'
+          curl -fsS http://localhost:8080/api/v1/health
+          curl -fsS -X POST http://localhost:8080/api/v1/analyze \
+            -H 'Content-Type: application/json' \
+            -d '{"schema_version":1,"length":6,"supports":[{"id":"a","type":"pin","position":0},{"id":"b","type":"roller","position":6}],"loads":[{"id":"p","type":"point","position":3,"magnitude":-10}]}' \
+            | grep -q '"fy":5.0'
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - run: docker compose down
+        if: always()

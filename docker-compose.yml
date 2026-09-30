@@ -1,0 +1,17 @@
+# docker compose up --build   ->  http://localhost:8080
+services:
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    # not published: the frontend container reaches it as http://backend:8000
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    ports:
+      - "${WEB_PORT:-8080}:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
