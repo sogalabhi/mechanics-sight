@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { formatNumber, formatQty } from '@/math/format'
 import { computeSectionCut } from '@/math/sectionCut'
+import { computeStressProfile } from '@/math/stressProfile'
 import { useStore } from '@/store/store'
 import styles from './VirtualSawCard.module.css'
 
@@ -14,6 +15,20 @@ export function VirtualSawCard() {
     if (sawCutX === null || !result) return null
     return computeSectionCut(beam, result, sawCutX)
   }, [sawCutX, beam, result])
+
+  const activeSection = useMemo(() => {
+    if (sawCutX === null) return null
+    if (beam.spans && beam.spans.length > 0) {
+      const sp = beam.spans.find((s) => s.x_start - 1e-6 <= sawCutX && sawCutX <= s.x_end + 1e-6)
+      return sp?.section ?? null
+    }
+    return beam.section ?? null
+  }, [sawCutX, beam])
+
+  const stressProfile = useMemo(() => {
+    if (!activeSection || !data) return null
+    return computeStressProfile(activeSection, data.mCut, data.vCut)
+  }, [activeSection, data])
 
   if (!data) return null
 
@@ -319,6 +334,104 @@ export function VirtualSawCard() {
           </div>
         </div>
       </div>
+
+      {/* 3. Through-Depth Cross-Section Stresses */}
+      {stressProfile && (
+        <div className={styles.section} style={{ marginTop: 4 }}>
+          <div className={styles.sectionHead}>
+            <span>Through-Depth Cross-Section Stresses (σ & τ)</span>
+            <span className={styles.badge} style={{ textTransform: 'capitalize' }}>
+              {stressProfile.section.type} section
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', gap: 12, margin: '8px 0', alignItems: 'center' }}>
+            <svg
+              width={160}
+              height={90}
+              viewBox="0 0 160 90"
+              style={{ background: 'var(--paper)', borderRadius: 4, border: '1px solid var(--rule)' }}
+            >
+              <line x1={8} x2={152} y1={45} y2={45} stroke="var(--ink-2)" strokeWidth={1} strokeDasharray="3 2" />
+              <text x={10} y={42} fontSize={7.5} fill="var(--ink-2)" fontFamily="var(--font-mono)">NA (y=0)</text>
+
+              {(() => {
+                const maxSig = Math.max(1, Math.abs(stressProfile.sigmaTop), Math.abs(stressProfile.sigmaBottom))
+                const xTop = 80 + (stressProfile.sigmaTop / maxSig) * 35
+                const xBot = 80 + (stressProfile.sigmaBottom / maxSig) * 35
+                return (
+                  <g>
+                    <line x1={80} x2={80} y1={12} y2={78} stroke="var(--ink-2)" strokeWidth={1} />
+                    <line x1={xTop} x2={xBot} y1={12} y2={78} stroke="var(--moment, #d97706)" strokeWidth={1.8} />
+                    <line x1={80} x2={xTop} y1={12} y2={12} stroke="var(--moment, #d97706)" strokeWidth={1} />
+                    <line x1={80} x2={xBot} y1={78} y2={78} stroke="var(--moment, #d97706)" strokeWidth={1} />
+                    <text
+                      x={xTop >= 80 ? xTop + 3 : xTop - 3}
+                      y={15}
+                      fontSize={7.5}
+                      textAnchor={xTop >= 80 ? 'start' : 'end'}
+                      fill="var(--moment, #d97706)"
+                      fontFamily="var(--font-mono)"
+                    >
+                      σ_top
+                    </text>
+                    <text
+                      x={xBot >= 80 ? xBot + 3 : xBot - 3}
+                      y={81}
+                      fontSize={7.5}
+                      textAnchor={xBot >= 80 ? 'start' : 'end'}
+                      fill="var(--moment, #d97706)"
+                      fontFamily="var(--font-mono)"
+                    >
+                      σ_bot
+                    </text>
+                  </g>
+                )
+              })()}
+            </svg>
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10.5 }}>
+              <div>
+                <span style={{ color: 'var(--ink-2)' }}>Top fibre (σ): </span>
+                <strong style={{ fontFamily: 'var(--font-mono)' }}>
+                  {formatNumber(stressProfile.sigmaTop / 1000, { sign: true })} MPa
+                </strong>
+                <span
+                  style={{
+                    fontSize: 9,
+                    marginLeft: 4,
+                    color: stressProfile.sigmaTop > 0 ? 'var(--axial, #2563eb)' : 'var(--danger, #ef4444)',
+                  }}
+                >
+                  ({stressProfile.sigmaTop > 0 ? 'Tension' : 'Compression'})
+                </span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--ink-2)' }}>Bottom fibre (σ): </span>
+                <strong style={{ fontFamily: 'var(--font-mono)' }}>
+                  {formatNumber(stressProfile.sigmaBottom / 1000, { sign: true })} MPa
+                </strong>
+                <span
+                  style={{
+                    fontSize: 9,
+                    marginLeft: 4,
+                    color: stressProfile.sigmaBottom > 0 ? 'var(--axial, #2563eb)' : 'var(--danger, #ef4444)',
+                  }}
+                >
+                  ({stressProfile.sigmaBottom > 0 ? 'Tension' : 'Compression'})
+                </span>
+              </div>
+              <div>
+                <span style={{ color: 'var(--ink-2)' }}>Max shear (τ_max): </span>
+                <strong style={{ fontFamily: 'var(--font-mono)' }}>
+                  {formatNumber(stressProfile.tauMax / 1000)} MPa
+                </strong>
+                <span style={{ fontSize: 9, marginLeft: 4, color: 'var(--ink-2)' }}>(at NA)</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Physical Fiber Insight */}
       <div

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Crosshair } from '@/diagrams/Crosshair'
 import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { DEFLECTION_PANEL_HEIGHT, ElasticCurvePanel } from '@/diagrams/ElasticCurvePanel'
+import { STRESS_PANEL_HEIGHT, StressPanel } from '@/diagrams/StressPanel'
 import { IntegrationCard } from '@/diagrams/IntegrationCard'
 import { VirtualSawCard } from '@/diagrams/VirtualSawCard'
 import { useStore } from '@/store/store'
@@ -19,6 +20,8 @@ export function CanvasStack({ width }: { width: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const length = useStore((s) => s.beam.length)
   const showDeflection = useStore((s) => s.showDeflection)
+  const showStress = useStore((s) => s.showStress)
+  const hasStress = Boolean(useStore((s) => s.result?.bending_stress))
   const showAxialPref = useStore((s) => s.showAxial)
   const hasAxial = useStore((s) =>
     (s.result?.segments ?? []).some((seg) => seg.axial && seg.axial.some((c) => Math.abs(c) > 1e-12)),
@@ -143,6 +146,11 @@ export function CanvasStack({ width }: { width: number }) {
       {showDeflection && (
         <svg width={width} height={DEFLECTION_PANEL_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
           <ElasticCurvePanel width={width} />
+        </svg>
+      )}
+      {showStress && hasStress && (
+        <svg width={width} height={STRESS_PANEL_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
+          <StressPanel width={width} />
         </svg>
       )}
     </div>

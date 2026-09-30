@@ -2,6 +2,8 @@
 
 Exact axial force (AFD), shear force (SFD), and bending moment (BMD) diagrams for beams, with a web UI.
 Supports internal hinges and horizontal/inclined point loads.
+Optional material and cross-section inputs produce exact Euler-Bernoulli slope and physical
+deflection results for constant-EI determinate beams.
 Axially indeterminate beams with horizontal loads require Phase 4 compatibility and are rejected.
 See [plan.md](plan.md) for the design and [docs/SIGN_CONVENTIONS.md](docs/SIGN_CONVENTIONS.md) for signs.
 
@@ -74,6 +76,13 @@ Positions snap to nearby beam points within 8 pixels, then to a grid. Hold `Alt`
 to bypass snapping (positions still round to millimetres). `Escape` cancels a drag;
 one `Undo` reverses a completed drag. Diagrams update while dragging, and invalid
 arrangements show an error while retaining the last valid diagrams.
+
+## Physical properties and deflection
+
+Enable **Physical properties** in the inspector, enter Young's modulus and yield strength, then
+choose a solid/hollow rectangle, solid/pipe circle, I-section, or T-section. The backend returns
+exact piecewise slope and deflection polynomials. The elastic-curve panel displays deflection in
+millimetres with an exaggerated shape; hover values include physical deflection and rotation.
 
 ## Browser tests
 

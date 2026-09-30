@@ -62,6 +62,46 @@ def test_domain_validation(client: TestClient) -> None:
     assert response.json()["error"]["code"] == "invalid_position"
 
 
+def test_invalid_section_uses_error_envelope(client: TestClient) -> None:
+    response = client.post(
+        URL,
+        json={
+            "length": 6,
+            "supports": [{"id": "a", "type": "fixed", "position": 0}],
+            "material": {"young_modulus_gpa": 200, "yield_strength_mpa": 250},
+            "section": {
+                "type": "rectangle",
+                "width": 0.2,
+                "height": 0.2,
+                "wall_thickness": 0.1,
+            },
+        },
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "invalid_section"
+
+
+def test_physical_properties_add_deflection_result(client: TestClient) -> None:
+    response = client.post(
+        URL,
+        json={
+            "length": 6,
+            "supports": [
+                {"id": "a", "type": "pin", "position": 0},
+                {"id": "b", "type": "roller", "position": 6},
+            ],
+            "loads": [{"id": "p", "type": "point", "position": 3, "magnitude": -10}],
+            "material": {"young_modulus_gpa": 200, "yield_strength_mpa": 250},
+            "section": {"type": "rectangle", "width": 0.2, "height": 0.3},
+        },
+    )
+    assert response.status_code == 200
+    physical = response.json()["deflection"]
+    assert physical["max_downward"]["x"] == pytest.approx(3)
+    assert physical["max_downward"]["value"] < 0
+    assert physical["segments"]
+
+
 def test_schema_validation_uses_envelope(client: TestClient) -> None:
     response = client.post(URL, json={"length": -1})
     assert response.status_code == 422

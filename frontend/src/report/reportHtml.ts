@@ -11,7 +11,7 @@ export interface ReportInput {
   result: AnalysisResult
   steps: Step[]
   /** Serialized <svg> markup. */
-  figures: { beam: string; afd?: string; sfd: string; bmd: string }
+  figures: { beam: string; afd?: string; sfd: string; bmd: string; deflection?: string }
   date: string
 }
 
@@ -45,8 +45,22 @@ function inputTables(beam: BeamInput): string {
   const hingeRows = (beam.hinges ?? [])
     .map((h, i) => `<tr><td>H<sub>${i + 1}</sub></td><td>Internal hinge (M = 0)</td><td class="n">${formatQty(h, 'm')}</td></tr>`)
     .join('')
+  const formatSectionText = (s: any) => {
+    if (!s) return ''
+    if (s.type === 'rectangle') return `${s.wall_thickness == null ? 'Solid' : 'Hollow'} rectangle, ${s.width} × ${s.height} m`
+    if (s.type === 'circle') return `${s.wall_thickness == null ? 'Solid circle' : 'Pipe'}, D = ${s.diameter} m`
+    if (s.type === 'i') return `I-section, h ${s.height} m, bf ${s.flange_width} m, tf ${s.flange_thickness} m, tw ${s.web_thickness} m`
+    return `T-section, bf ${s.flange_width} m, tf ${s.flange_thickness} m, dw ${s.web_depth} m, tw ${s.web_thickness} m`
+  }
+  const sectionText = formatSectionText(beam.section)
+  const material = beam.material
+    ? `<table><caption>Material and section</caption><tr><th>Young's modulus</th><td class="n">${formatQty(beam.material.young_modulus_gpa, 'GPa')}</td></tr><tr><th>Yield strength</th><td class="n">${formatQty(beam.material.yield_strength_mpa, 'MPa')}</td></tr><tr><th>Section</th><td>${sectionText}</td></tr></table>`
+    : ''
+  const spansTable = (beam.spans && beam.spans.length > 0)
+    ? `<table><caption>Stepped property spans</caption><tr><th>Span</th><th>Range</th><th>E (GPa)</th><th>Yield (MPa)</th><th>Section</th></tr>${beam.spans.map((sp, idx) => `<tr><td>${idx + 1}</td><td class="n">${formatQty(sp.x_start, 'm')} to ${formatQty(sp.x_end, 'm')}</td><td class="n">${formatNumber(sp.material.young_modulus_gpa)}</td><td class="n">${formatNumber(sp.material.yield_strength_mpa)}</td><td>${formatSectionText(sp.section)}</td></tr>`).join('')}</table>`
+    : ''
   return `<div class="two"><table><caption>Supports & Releases</caption><tr><th>Label</th><th>Type</th><th>Position</th></tr>${sup}${hingeRows}</table>
-<table><caption>Loads</caption><tr><th>Kind</th><th>Magnitude</th><th>Where</th></tr>${loads || '<tr><td colspan="3">None</td></tr>'}</table></div>`
+<table><caption>Loads</caption><tr><th>Kind</th><th>Magnitude</th><th>Where</th></tr>${loads || '<tr><td colspan="3">None</td></tr>'}</table></div>${material ? `<div class="two">${material}</div>` : ''}${spansTable ? `<div class="two">${spansTable}</div>` : ''}`
 }
 
 function results(result: AnalysisResult, beam: BeamInput): string {
@@ -61,15 +75,28 @@ function results(result: AnalysisResult, beam: BeamInput): string {
   const ex = result.extremes
   const row = (label: string, e: { x: number; value: number } | null, unit: string) =>
     e ? `<tr><td>${label}</td><td class="n">${f(e.value)} ${unit}</td><td class="n">at ${formatQty(e.x, 'm')}</td></tr>` : ''
+  const physical = result.deflection
+    ? `<table><caption>Physical deflection, upward positive</caption>${row('Maximum upward', result.deflection.max_upward ? { ...result.deflection.max_upward, value: result.deflection.max_upward.value * 1000 } : null, 'mm')}${row('Maximum downward', result.deflection.max_downward ? { ...result.deflection.max_downward, value: result.deflection.max_downward.value * 1000 } : null, 'mm')}${row('Maximum absolute deflection', { ...result.deflection.max_absolute, value: result.deflection.max_absolute.value * 1000 }, 'mm')}</table>`
+    : ''
+  const bendingStressRows = result.bending_stress
+    ? `${row('Max bending tension (σ)', result.bending_stress.max_tension ? { ...result.bending_stress.max_tension, value: result.bending_stress.max_tension.value / 1000 } : null, 'MPa')}${row('Max bending compression (σ)', result.bending_stress.max_compression ? { ...result.bending_stress.max_compression, value: result.bending_stress.max_compression.value / 1000 } : null, 'MPa')}<tr><td>Yield check</td><td class="n">${result.bending_stress.yield_exceeded ? 'Yield exceeded' : 'Within elastic limit'}</td><td class="n">ratio ${(result.bending_stress.yield_ratio * 100).toFixed(1)}%</td></tr>`
+    : ''
+  const shearStressRows = result.shear_stress?.max_shear_stress
+    ? `${row('Max transverse shear (τ)', { ...result.shear_stress.max_shear_stress, value: result.shear_stress.max_shear_stress.value / 1000 }, 'MPa')}`
+    : ''
+  const stressTable = (bendingStressRows || shearStressRows)
+    ? `<table><caption>Stresses (extreme fibres & transverse shear)</caption>${bendingStressRows}${shearStressRows}</table>`
+    : ''
   return `<div class="two"><table><caption>Reactions (kN, kN·m)</caption><tr><th></th><th>Fx</th><th>Fy</th><th>M</th></tr>${react}</table>
 <table><caption>Extreme values</caption>${row('Max tension', ex.max_tension ?? null, 'kN')}${row('Max compression', ex.max_compression ?? null, 'kN')}${row('Max sagging moment', ex.max_sagging, 'kN·m')}${row('Max hogging moment', ex.max_hogging, 'kN·m')}${row('Max positive shear', ex.max_positive_shear, 'kN')}${row('Max negative shear', ex.max_negative_shear, 'kN')}</table></div>
-<table class="wide"><caption>Values at critical points (just left and right of each point)</caption><tr><th>x (m)</th><th>N left (kN)</th><th>N right (kN)</th><th>V left (kN)</th><th>V right (kN)</th><th>M left (kN·m)</th><th>M right (kN·m)</th></tr>${cps}</table>`
+${physical ? `<div class="two">${physical}</div>` : ''}${stressTable ? `<div class="two">${stressTable}</div>` : ''}<table class="wide"><caption>Values at critical points (just left and right of each point)</caption><tr><th>x (m)</th><th>N left (kN)</th><th>N right (kN)</th><th>V left (kN)</th><th>V right (kN)</th><th>M left (kN·m)</th><th>M right (kN·m)</th></tr>${cps}</table>`
 }
 
 const GROUPS: [Step['group'], string][] = [
   ['reactions', 'Reactions'],
   ['diagrams', 'Axial force, shear force and bending moment'],
   ['extremes', 'Extreme values'],
+  ['physical', 'Slope and physical deflection'],
 ]
 
 function stepsHtml(steps: Step[]): string {
@@ -139,6 +166,7 @@ ${inputTables(r.beam)}
 ${results(r.result, r.beam)}
 
 ${r.figures.afd ? `<h2>Axial force diagram</h2>${r.figures.afd}` : ''}
+${r.figures.deflection ? `<h2>Physical deflection shape</h2>${r.figures.deflection}<p class="meta">Shape is exaggerated for visibility; values are physical and shown in mm.</p>` : ''}
 <h2>Shear force diagram</h2>
 ${r.figures.sfd}
 <h2>Bending moment diagram</h2>

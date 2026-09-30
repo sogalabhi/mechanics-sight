@@ -49,7 +49,8 @@ def main(argv: list[str] | None = None) -> int:
         out = result_to_schema(result).model_copy(
             update={"steps": [step_to_schema(s) for s in build_steps(beam, result)]}
         )
-        payload = out.model_dump(mode="json")
+        exclude = {"deflection"} if out.deflection is None else None
+        payload = out.model_dump(mode="json", exclude=exclude)
     output = json.dumps(payload, indent=2)
     if args.json is None or str(args.json) == "-":
         print(output)

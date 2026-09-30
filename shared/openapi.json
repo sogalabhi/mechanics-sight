@@ -4,6 +4,17 @@
       "AnalysisOut": {
         "additionalProperties": false,
         "properties": {
+          "bending_stress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BendingStressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Extreme-fibre bending stress when material and section are supplied"
+          },
           "canonical": {
             "anyOf": [
               {
@@ -24,6 +35,17 @@
             },
             "title": "Critical Points",
             "type": "array"
+          },
+          "deflection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/DeflectionOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Physical Euler-Bernoulli result when material and section are supplied"
           },
           "extremes": {
             "$ref": "#/components/schemas/ExtremesOut"
@@ -47,6 +69,17 @@
             },
             "title": "Segments",
             "type": "array"
+          },
+          "shear_stress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ShearStressOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Maximum transverse shear stress when material and section are supplied"
           },
           "steps": {
             "anyOf": [
@@ -135,11 +168,71 @@
             "title": "Loads",
             "type": "array"
           },
+          "material": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/MaterialIn"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Constant linear-elastic material for physical analysis"
+          },
           "schema_version": {
             "const": 1,
             "default": 1,
             "title": "Schema Version",
             "type": "integer"
+          },
+          "section": {
+            "anyOf": [
+              {
+                "discriminator": {
+                  "mapping": {
+                    "circle": "#/components/schemas/CircularSectionIn",
+                    "i": "#/components/schemas/ISectionIn",
+                    "rectangle": "#/components/schemas/RectangularSectionIn",
+                    "t": "#/components/schemas/TSectionIn"
+                  },
+                  "propertyName": "type"
+                },
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/RectangularSectionIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/CircularSectionIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/ISectionIn"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TSectionIn"
+                  }
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Constant cross-section over the complete beam",
+            "title": "Section"
+          },
+          "spans": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/PropertySpanIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Contiguous property spans covering [0, L]; alternative to uniform material/section",
+            "title": "Spans"
           },
           "supports": {
             "items": {
@@ -156,6 +249,103 @@
           "supports"
         ],
         "title": "BeamIn",
+        "type": "object"
+      },
+      "BendingStressOut": {
+        "additionalProperties": false,
+        "properties": {
+          "max_compression": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_tension": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/BendingStressSegmentOut"
+            },
+            "title": "Segments",
+            "type": "array"
+          },
+          "yield_exceeded": {
+            "title": "Yield Exceeded",
+            "type": "boolean"
+          },
+          "yield_location": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "yield_ratio": {
+            "title": "Yield Ratio",
+            "type": "number"
+          }
+        },
+        "required": [
+          "segments",
+          "max_tension",
+          "max_compression",
+          "yield_ratio",
+          "yield_exceeded",
+          "yield_location"
+        ],
+        "title": "BendingStressOut",
+        "type": "object"
+      },
+      "BendingStressSegmentOut": {
+        "additionalProperties": false,
+        "properties": {
+          "sigma_bottom": {
+            "description": "Bottom fibre stress ascending coefficients in t = x - x_start (kN/m\u00b2)",
+            "items": {
+              "type": "number"
+            },
+            "title": "Sigma Bottom",
+            "type": "array"
+          },
+          "sigma_top": {
+            "description": "Top fibre stress ascending coefficients in t = x - x_start (kN/m\u00b2)",
+            "items": {
+              "type": "number"
+            },
+            "title": "Sigma Top",
+            "type": "array"
+          },
+          "x_end": {
+            "title": "X End",
+            "type": "number"
+          },
+          "x_start": {
+            "title": "X Start",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x_start",
+          "x_end",
+          "sigma_top",
+          "sigma_bottom"
+        ],
+        "title": "BendingStressSegmentOut",
         "type": "object"
       },
       "CanonicalOut": {
@@ -214,6 +404,41 @@
           "derivation"
         ],
         "title": "CanonicalOut",
+        "type": "object"
+      },
+      "CircularSectionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "diameter": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Diameter",
+            "type": "number"
+          },
+          "type": {
+            "const": "circle",
+            "title": "Type",
+            "type": "string"
+          },
+          "wall_thickness": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "m; omit for solid",
+            "title": "Wall Thickness"
+          }
+        },
+        "required": [
+          "type",
+          "diameter"
+        ],
+        "title": "CircularSectionIn",
         "type": "object"
       },
       "ClassificationOut": {
@@ -313,6 +538,86 @@
           "moment_right"
         ],
         "title": "CriticalPointOut",
+        "type": "object"
+      },
+      "DeflectionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "max_absolute": {
+            "$ref": "#/components/schemas/ExtremeOut"
+          },
+          "max_downward": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "max_upward": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "segments": {
+            "items": {
+              "$ref": "#/components/schemas/DeflectionSegmentOut"
+            },
+            "title": "Segments",
+            "type": "array"
+          }
+        },
+        "required": [
+          "segments",
+          "max_upward",
+          "max_downward",
+          "max_absolute"
+        ],
+        "title": "DeflectionOut",
+        "type": "object"
+      },
+      "DeflectionSegmentOut": {
+        "additionalProperties": false,
+        "properties": {
+          "deflection": {
+            "description": "Ascending coefficients in t = x - x_start; displacement in m, upward positive",
+            "items": {
+              "type": "number"
+            },
+            "title": "Deflection",
+            "type": "array"
+          },
+          "slope": {
+            "description": "Ascending coefficients in t = x - x_start; rotation in rad",
+            "items": {
+              "type": "number"
+            },
+            "title": "Slope",
+            "type": "array"
+          },
+          "x_end": {
+            "title": "X End",
+            "type": "number"
+          },
+          "x_start": {
+            "title": "X Start",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x_start",
+          "x_end",
+          "slope",
+          "deflection"
+        ],
+        "title": "DeflectionSegmentOut",
         "type": "object"
       },
       "DistributedLoadIn": {
@@ -488,6 +793,72 @@
         "title": "ExtremesOut",
         "type": "object"
       },
+      "ISectionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "flange_thickness": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Flange Thickness",
+            "type": "number"
+          },
+          "flange_width": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Flange Width",
+            "type": "number"
+          },
+          "height": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Height",
+            "type": "number"
+          },
+          "type": {
+            "const": "i",
+            "title": "Type",
+            "type": "string"
+          },
+          "web_thickness": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Web Thickness",
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "height",
+          "flange_width",
+          "flange_thickness",
+          "web_thickness"
+        ],
+        "title": "ISectionIn",
+        "type": "object"
+      },
+      "MaterialIn": {
+        "additionalProperties": false,
+        "properties": {
+          "yield_strength_mpa": {
+            "description": "Yield strength in MPa",
+            "exclusiveMinimum": 0.0,
+            "title": "Yield Strength Mpa",
+            "type": "number"
+          },
+          "young_modulus_gpa": {
+            "description": "Young's modulus in GPa",
+            "exclusiveMinimum": 0.0,
+            "title": "Young Modulus Gpa",
+            "type": "number"
+          }
+        },
+        "required": [
+          "young_modulus_gpa",
+          "yield_strength_mpa"
+        ],
+        "title": "MaterialIn",
+        "type": "object"
+      },
       "PointLoadIn": {
         "additionalProperties": false,
         "properties": {
@@ -560,6 +931,58 @@
         "title": "PointMomentIn",
         "type": "object"
       },
+      "PropertySpanIn": {
+        "additionalProperties": false,
+        "properties": {
+          "material": {
+            "$ref": "#/components/schemas/MaterialIn"
+          },
+          "section": {
+            "discriminator": {
+              "mapping": {
+                "circle": "#/components/schemas/CircularSectionIn",
+                "i": "#/components/schemas/ISectionIn",
+                "rectangle": "#/components/schemas/RectangularSectionIn",
+                "t": "#/components/schemas/TSectionIn"
+              },
+              "propertyName": "type"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/components/schemas/RectangularSectionIn"
+              },
+              {
+                "$ref": "#/components/schemas/CircularSectionIn"
+              },
+              {
+                "$ref": "#/components/schemas/ISectionIn"
+              },
+              {
+                "$ref": "#/components/schemas/TSectionIn"
+              }
+            ],
+            "title": "Section"
+          },
+          "x_end": {
+            "description": "m from the left end",
+            "title": "X End",
+            "type": "number"
+          },
+          "x_start": {
+            "description": "m from the left end",
+            "title": "X Start",
+            "type": "number"
+          }
+        },
+        "required": [
+          "x_start",
+          "x_end",
+          "material",
+          "section"
+        ],
+        "title": "PropertySpanIn",
+        "type": "object"
+      },
       "ReactionOut": {
         "additionalProperties": false,
         "properties": {
@@ -587,6 +1010,48 @@
           "moment"
         ],
         "title": "ReactionOut",
+        "type": "object"
+      },
+      "RectangularSectionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "height": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Height",
+            "type": "number"
+          },
+          "type": {
+            "const": "rectangle",
+            "title": "Type",
+            "type": "string"
+          },
+          "wall_thickness": {
+            "anyOf": [
+              {
+                "exclusiveMinimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "m; omit for solid",
+            "title": "Wall Thickness"
+          },
+          "width": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Width",
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "width",
+          "height"
+        ],
+        "title": "RectangularSectionIn",
         "type": "object"
       },
       "SegmentOut": {
@@ -634,6 +1099,26 @@
         "title": "SegmentOut",
         "type": "object"
       },
+      "ShearStressOut": {
+        "additionalProperties": false,
+        "properties": {
+          "max_shear_stress": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExtremeOut"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "max_shear_stress"
+        ],
+        "title": "ShearStressOut",
+        "type": "object"
+      },
       "StepOut": {
         "additionalProperties": false,
         "properties": {
@@ -652,7 +1137,8 @@
             "enum": [
               "reactions",
               "diagrams",
-              "extremes"
+              "extremes",
+              "physical"
             ],
             "title": "Group",
             "type": "string"
@@ -671,7 +1157,12 @@
               "zero_shear",
               "moment_at",
               "extreme",
-              "notice"
+              "slope",
+              "deflection",
+              "notice",
+              "bending_stress",
+              "shear_stress",
+              "yield_check"
             ],
             "title": "Kind",
             "type": "string"
@@ -785,6 +1276,49 @@
           "position"
         ],
         "title": "SupportIn",
+        "type": "object"
+      },
+      "TSectionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "flange_thickness": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Flange Thickness",
+            "type": "number"
+          },
+          "flange_width": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Flange Width",
+            "type": "number"
+          },
+          "type": {
+            "const": "t",
+            "title": "Type",
+            "type": "string"
+          },
+          "web_depth": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Web Depth",
+            "type": "number"
+          },
+          "web_thickness": {
+            "description": "m",
+            "exclusiveMinimum": 0.0,
+            "title": "Web Thickness",
+            "type": "number"
+          }
+        },
+        "required": [
+          "type",
+          "flange_width",
+          "flange_thickness",
+          "web_depth",
+          "web_thickness"
+        ],
+        "title": "TSectionIn",
         "type": "object"
       }
     }

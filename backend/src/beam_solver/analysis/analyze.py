@@ -1,13 +1,18 @@
 """Entry point: analyze(beam) -> AnalysisResult."""
 
+from dataclasses import replace
+
 from beam_solver.analysis.canonical import detect_canonical
 from beam_solver.analysis.critical_points import build_critical_points
+from beam_solver.analysis.deflection import solve_deflection
 from beam_solver.analysis.extremes import find_extremes
 from beam_solver.analysis.results import AnalysisResult
 from beam_solver.analysis.segments import build_segments, critical_positions
 from beam_solver.domain import Beam, Load, PointLoad, PointMoment
 from beam_solver.solvers import Reaction, solve_reactions
 from beam_solver.tolerances import force_tol, load_scale, moment_tol
+from beam_solver.analysis.bending_stress import solve_bending_stress
+from beam_solver.analysis.shear_stress import solve_shear_stress
 
 
 def reaction_loads(reactions: tuple[Reaction, ...], beam: Beam) -> tuple[Load, ...]:
@@ -39,6 +44,8 @@ def analyze(beam: Beam) -> AnalysisResult:
     points = build_critical_points(segments, all_loads, beam.length, f_tol, m_tol)
     extremes = find_extremes(segments, points, f_tol, m_tol)
 
+    can_do_physical = getattr(beam, 'resolved_spans', None) is not None or (beam.material is not None and beam.section is not None)
+
     initial_result = AnalysisResult(
         classification=solution.classification,
         reactions=solution.reactions,
@@ -52,23 +59,9 @@ def analyze(beam: Beam) -> AnalysisResult:
         warnings=solution.warnings,
         max_tension=extremes.max_tension,
         max_compression=extremes.max_compression,
+        deflection=solve_deflection(beam, segments) if can_do_physical else None,
+        bending_stress=solve_bending_stress(beam, segments) if can_do_physical else None,
+        shear_stress=solve_shear_stress(beam, segments) if can_do_physical else None,
     )
     canonical = detect_canonical(beam, initial_result)
-    if canonical is None:
-        return initial_result
-
-    return AnalysisResult(
-        classification=initial_result.classification,
-        reactions=initial_result.reactions,
-        segments=initial_result.segments,
-        critical_points=initial_result.critical_points,
-        zero_shear_points=initial_result.zero_shear_points,
-        max_sagging=initial_result.max_sagging,
-        max_hogging=initial_result.max_hogging,
-        max_positive_shear=initial_result.max_positive_shear,
-        max_negative_shear=initial_result.max_negative_shear,
-        warnings=initial_result.warnings,
-        canonical=canonical,
-        max_tension=initial_result.max_tension,
-        max_compression=initial_result.max_compression,
-    )
+    return initial_result if canonical is None else replace(initial_result, canonical=canonical)

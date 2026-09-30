@@ -7,6 +7,7 @@ import {
   type Hinge,
   type Item,
   type Load,
+  type SectionInput,
   type Support,
 } from './types'
 
@@ -130,10 +131,64 @@ export function moveItem(beam: BeamInput, id: string, dx: number): BeamInput {
   return updateItem(beam, id, { position: round3(item.position + dx) })
 }
 
+export function validateSection(section: SectionInput): string | null {
+  const positive = (values: number[]) => values.every((v) => Number.isFinite(v) && v > 0)
+  if (section.type === 'rectangle') {
+    if (!positive([section.width, section.height])) return 'Section dimensions must be greater than 0'
+    if (section.wall_thickness != null && (!positive([section.wall_thickness]) || 2 * section.wall_thickness >= Math.min(section.width, section.height)))
+      return 'Wall thickness must leave a positive inner opening'
+  } else if (section.type === 'circle') {
+    if (!positive([section.diameter])) return 'Section dimensions must be greater than 0'
+    if (section.wall_thickness != null && (!positive([section.wall_thickness]) || 2 * section.wall_thickness >= section.diameter))
+      return 'Wall thickness must leave a positive inner opening'
+  } else if (section.type === 'i') {
+    if (!positive([section.height, section.flange_width, section.flange_thickness, section.web_thickness]))
+      return 'Section dimensions must be greater than 0'
+    if (2 * section.flange_thickness >= section.height) return 'Flanges must leave a positive web depth'
+    if (section.web_thickness > section.flange_width) return 'Web thickness cannot exceed flange width'
+  } else {
+    if (!positive([section.flange_width, section.flange_thickness, section.web_depth, section.web_thickness]))
+      return 'Section dimensions must be greater than 0'
+    if (section.web_thickness > section.flange_width) return 'Web thickness cannot exceed flange width'
+  }
+  return null
+}
+
 /** Returns a message if the beam is invalid, otherwise null. */
 export function validateBeam(beam: BeamInput): string | null {
   const L = beam.length
   if (!(L >= MIN_LENGTH && L <= MAX_LENGTH)) return `Length must be between ${MIN_LENGTH} and ${MAX_LENGTH} m`
+  const spans = beam.spans ?? []
+  const hasUniform = beam.material != null || beam.section != null
+  if (hasUniform && spans.length > 0) return 'Provide either uniform material/section or property spans, not both'
+  if ((beam.material == null) !== (beam.section == null)) return 'Material and section must be supplied together'
+  if (beam.material && beam.section) {
+    const materialValues = [beam.material.young_modulus_gpa, beam.material.yield_strength_mpa]
+    if (materialValues.some((v) => !Number.isFinite(v) || v <= 0)) return 'Material values must be greater than 0'
+    const err = validateSection(beam.section)
+    if (err) return err
+  }
+  if (spans.length > 0) {
+    const sorted = [...spans].sort((a, b) => a.x_start - b.x_start)
+    if (Math.abs(sorted[0].x_start - 0) > TOL) return `Property spans must start at x = 0, got ${sorted[0].x_start}`
+    if (Math.abs(sorted[sorted.length - 1].x_end - L) > TOL) return `Property spans must end at x = L = ${L}`
+    for (let k = 0; k < sorted.length - 1; k++) {
+      if (Math.abs(sorted[k].x_end - sorted[k + 1].x_start) > TOL) {
+        return `Property spans have a gap or overlap between ${sorted[k].x_end} and ${sorted[k + 1].x_start}`
+      }
+    }
+    for (const span of sorted) {
+      if (!Number.isFinite(span.x_start) || !Number.isFinite(span.x_end) || span.x_end <= span.x_start) {
+        return 'Span boundaries must be finite and x_end > x_start'
+      }
+      const mat = span.material
+      if (!mat || !Number.isFinite(mat.young_modulus_gpa) || mat.young_modulus_gpa <= 0 || !Number.isFinite(mat.yield_strength_mpa) || mat.yield_strength_mpa <= 0) {
+        return 'Span material values must be greater than 0'
+      }
+      const err = validateSection(span.section)
+      if (err) return err
+    }
+  }
   for (const i of allItems(beam)) {
     for (const p of itemPositions(i)) {
       if (p < -TOL || p > L + TOL) return `Position must be between 0 and ${L} m`
@@ -189,12 +244,14 @@ export function setLength(beam: BeamInput, requested: number): BeamInput {
       l.type === 'distributed' ? ({ ...l, end: move(l.end) } as DistributedLoad) : { ...l, position: move(l.position) },
     ),
     hinges: (beam.hinges ?? []).map((h) => (h >= L - TOL ? round3(L - 0.05) : h)),
+    spans: (beam.spans ?? []).map((s, idx, arr) => (idx === arr.length - 1 ? { ...s, x_end: L } : s)),
   }
 }
 
-/** Sorted, de-duplicated key positions (m): 0, L, supports, load positions and ends. */
+/** Sorted, de-duplicated key positions (m): 0, L, supports, load positions, ends, and span boundaries. */
 export function keyPoints(beam: BeamInput): number[] {
-  const all = [0, beam.length, ...allItems(beam).flatMap(itemPositions)].sort((a, b) => a - b)
+  const spanPoints = (beam.spans ?? []).flatMap((s) => [s.x_start, s.x_end])
+  const all = [0, beam.length, ...allItems(beam).flatMap(itemPositions), ...spanPoints].sort((a, b) => a - b)
   return all.filter((p, k) => k === 0 || p - all[k - 1] > TOL)
 }
 

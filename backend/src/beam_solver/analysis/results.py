@@ -61,6 +61,73 @@ class Extreme:
 
 
 @dataclass(frozen=True)
+class BendingStressSegment:
+    """Top and bottom fibre bending stress polynomials in local t (kN/m²)."""
+
+    x_start: float
+    x_end: float
+    sigma_top: tuple[float, ...]     # positive = tension
+    sigma_bottom: tuple[float, ...]  # positive = tension
+
+    def sigma_top_poly(self) -> Polynomial:
+        return Polynomial(self.sigma_top)
+
+    def sigma_bottom_poly(self) -> Polynomial:
+        return Polynomial(self.sigma_bottom)
+
+
+@dataclass(frozen=True)
+class BendingStressResult:
+    """Extreme-fibre bending stress results along the beam."""
+
+    segments: tuple[BendingStressSegment, ...]
+    max_tension: Extreme | None       # most positive σ (tension), kN/m²
+    max_compression: Extreme | None   # most negative σ (compression), kN/m²
+    yield_ratio: float                # max |σ| / σ_y
+    yield_exceeded: bool
+    yield_location: Extreme | None    # where max |σ| occurs
+
+
+@dataclass(frozen=True)
+class ShearStressProfile:
+    """Through-depth transverse shear stress distribution at a specific x."""
+
+    y_values: tuple[float, ...]
+    tau_values: tuple[float, ...]
+
+
+@dataclass(frozen=True)
+class ShearStressResult:
+    """Maximum transverse shear stress along the beam."""
+
+    max_shear_stress: Extreme | None  # max |τ| location and value (kN/m²)
+
+
+@dataclass(frozen=True)
+class DeflectionSegment:
+    """Physical rotation and displacement polynomials in local ``t`` (rad and m)."""
+
+    x_start: float
+    x_end: float
+    slope: tuple[float, ...]
+    deflection: tuple[float, ...]
+
+    def slope_poly(self) -> Polynomial:
+        return Polynomial(self.slope)
+
+    def deflection_poly(self) -> Polynomial:
+        return Polynomial(self.deflection)
+
+
+@dataclass(frozen=True)
+class DeflectionResult:
+    segments: tuple[DeflectionSegment, ...]
+    max_upward: Extreme | None
+    max_downward: Extreme | None
+    max_absolute: Extreme
+
+
+@dataclass(frozen=True)
 class SampledDiagram:
     """Points for plotting; a jump appears as two samples at the same x."""
 
@@ -99,6 +166,9 @@ class AnalysisResult:
     canonical: CanonicalCase | None = None
     max_tension: Extreme | None = None
     max_compression: Extreme | None = None
+    deflection: DeflectionResult | None = None
+    bending_stress: BendingStressResult | None = None
+    shear_stress: ShearStressResult | None = None
 
     def _critical_point(self, x: float) -> CriticalPoint | None:
         return next((cp for cp in self.critical_points if same_position(cp.x, x)), None)

@@ -7,6 +7,16 @@ export type Support = S['SupportIn']
 export type PointLoad = S['PointLoadIn']
 export type PointMoment = S['PointMomentIn']
 export type DistributedLoad = S['DistributedLoadIn']
+export type MaterialInput = S['MaterialIn']
+export type RectangularSectionInput = S['RectangularSectionIn']
+export type CircularSectionInput = S['CircularSectionIn']
+export type ISectionInput = S['ISectionIn']
+export type TSectionInput = S['TSectionIn']
+export type SectionInput =
+  | RectangularSectionInput
+  | CircularSectionInput
+  | ISectionInput
+  | TSectionInput
 export type Load = PointLoad | PointMoment | DistributedLoad
 export interface Hinge {
   id: string
@@ -21,3 +31,8 @@ export const isHinge = (i: Item): i is Hinge => i.type === 'hinge'
 export type AnalysisResult = components['schemas']['AnalysisOut']
 export type Segment = components['schemas']['SegmentOut']
 export type CriticalPoint = components['schemas']['CriticalPointOut']
+export type PropertySpanInput = S['PropertySpanIn']
+export type BendingStressResult = S['BendingStressOut']
+export type ShearStressResult = S['ShearStressOut']
+export type BendingStressSegment = S['BendingStressSegmentOut']
+

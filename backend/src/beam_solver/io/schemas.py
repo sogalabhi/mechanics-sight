@@ -2,7 +2,7 @@
 
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 SCHEMA_VERSION: Literal[1] = 1
 MAX_LENGTH = 1000.0
@@ -50,6 +50,53 @@ class DistributedLoadIn(_Model):
 LoadIn = Annotated[PointLoadIn | PointMomentIn | DistributedLoadIn, Field(discriminator="type")]
 
 
+class MaterialIn(_Model):
+    young_modulus_gpa: float = Field(gt=0, description="Young's modulus in GPa")
+    yield_strength_mpa: float = Field(gt=0, description="Yield strength in MPa")
+
+
+class RectangularSectionIn(_Model):
+    type: Literal["rectangle"]
+    width: float = Field(gt=0, description="m")
+    height: float = Field(gt=0, description="m")
+    wall_thickness: float | None = Field(default=None, gt=0, description="m; omit for solid")
+
+
+class CircularSectionIn(_Model):
+    type: Literal["circle"]
+    diameter: float = Field(gt=0, description="m")
+    wall_thickness: float | None = Field(default=None, gt=0, description="m; omit for solid")
+
+
+class ISectionIn(_Model):
+    type: Literal["i"]
+    height: float = Field(gt=0, description="m")
+    flange_width: float = Field(gt=0, description="m")
+    flange_thickness: float = Field(gt=0, description="m")
+    web_thickness: float = Field(gt=0, description="m")
+
+
+class TSectionIn(_Model):
+    type: Literal["t"]
+    flange_width: float = Field(gt=0, description="m")
+    flange_thickness: float = Field(gt=0, description="m")
+    web_depth: float = Field(gt=0, description="m")
+    web_thickness: float = Field(gt=0, description="m")
+
+
+SectionIn = Annotated[
+    RectangularSectionIn | CircularSectionIn | ISectionIn | TSectionIn,
+    Field(discriminator="type"),
+]
+
+
+class PropertySpanIn(_Model):
+    x_start: float = Field(description="m from the left end")
+    x_end: float = Field(description="m from the left end")
+    material: MaterialIn
+    section: SectionIn
+
+
 class BeamIn(_Model):
     schema_version: Literal[1] = SCHEMA_VERSION
     length: float = Field(gt=0, le=MAX_LENGTH, description="m")
@@ -60,6 +107,26 @@ class BeamIn(_Model):
         max_length=MAX_HINGES,
         description="Positions of internal moment hinges in m from the left end",
     )
+    material: MaterialIn | None = Field(
+        default=None, description="Constant linear-elastic material for physical analysis"
+    )
+    section: SectionIn | None = Field(
+        default=None, description="Constant cross-section over the complete beam"
+    )
+    spans: list[PropertySpanIn] | None = Field(
+        default=None,
+        description="Contiguous property spans covering [0, L]; alternative to uniform material/section",
+    )
+
+    @model_validator(mode="after")
+    def physical_properties_are_complete(self) -> "BeamIn":
+        has_uniform = self.material is not None or self.section is not None
+        has_spans = self.spans is not None and len(self.spans) > 0
+        if has_uniform and has_spans:
+            raise ValueError("provide either uniform material/section or property spans, not both")
+        if (self.material is None) != (self.section is None):
+            raise ValueError("material and section must be supplied together")
+        return self
 
 
 class ClassificationOut(_Model):
@@ -109,6 +176,24 @@ class ExtremeOut(_Model):
     value: float
 
 
+class DeflectionSegmentOut(_Model):
+    x_start: float
+    x_end: float
+    slope: list[float] = Field(
+        description="Ascending coefficients in t = x - x_start; rotation in rad"
+    )
+    deflection: list[float] = Field(
+        description="Ascending coefficients in t = x - x_start; displacement in m, upward positive"
+    )
+
+
+class DeflectionOut(_Model):
+    segments: list[DeflectionSegmentOut]
+    max_upward: ExtremeOut | None
+    max_downward: ExtremeOut | None
+    max_absolute: ExtremeOut
+
+
 class ExtremesOut(_Model):
     max_sagging: ExtremeOut | None
     max_hogging: ExtremeOut | None
@@ -116,6 +201,30 @@ class ExtremesOut(_Model):
     max_negative_shear: ExtremeOut | None
     max_tension: ExtremeOut | None = None
     max_compression: ExtremeOut | None = None
+
+
+class BendingStressSegmentOut(_Model):
+    x_start: float
+    x_end: float
+    sigma_top: list[float] = Field(
+        description="Top fibre stress ascending coefficients in t = x - x_start (kN/m²)"
+    )
+    sigma_bottom: list[float] = Field(
+        description="Bottom fibre stress ascending coefficients in t = x - x_start (kN/m²)"
+    )
+
+
+class BendingStressOut(_Model):
+    segments: list[BendingStressSegmentOut]
+    max_tension: ExtremeOut | None
+    max_compression: ExtremeOut | None
+    yield_ratio: float
+    yield_exceeded: bool
+    yield_location: ExtremeOut | None
+
+
+class ShearStressOut(_Model):
+    max_shear_stress: ExtremeOut | None
 
 
 class StepOut(_Model):
@@ -132,9 +241,14 @@ class StepOut(_Model):
         "zero_shear",
         "moment_at",
         "extreme",
+        "slope",
+        "deflection",
         "notice",
+        "bending_stress",
+        "shear_stress",
+        "yield_check",
     ]
-    group: Literal["reactions", "diagrams", "extremes"]
+    group: Literal["reactions", "diagrams", "extremes", "physical"]
     title: str
     symbolic: str | None = Field(default=None, description="LaTeX")
     substituted: str | None = Field(default=None, description="LaTeX")
@@ -167,6 +281,18 @@ class AnalysisOut(_Model):
     warnings: list[str]
     canonical: CanonicalOut | None = Field(
         default=None, description="Recognized standard textbook case if applicable"
+    )
+    deflection: DeflectionOut | None = Field(
+        default=None,
+        description="Physical Euler-Bernoulli result when material and section are supplied",
+    )
+    bending_stress: BendingStressOut | None = Field(
+        default=None,
+        description="Extreme-fibre bending stress when material and section are supplied",
+    )
+    shear_stress: ShearStressOut | None = Field(
+        default=None,
+        description="Maximum transverse shear stress when material and section are supplied",
     )
     steps: list[StepOut] | None = Field(
         default=None, description="Worked steps; only present when requested with ?steps=true"

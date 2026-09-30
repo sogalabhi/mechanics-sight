@@ -28,6 +28,7 @@ interface State {
   showCalculus: boolean
   showAxial: boolean | null
   showDeflection: boolean
+  showStress: boolean
   hoverX: number | null
   pinnedX: number | null
   sawCutX: number | null
@@ -50,6 +51,7 @@ interface State {
   setShowCalculus: (v: boolean) => void
   setShowAxial: (v: boolean | null) => void
   setShowDeflection: (v: boolean) => void
+  setShowStress: (v: boolean) => void
 }
 
 export const useStore = create<State>((set) => ({
@@ -73,6 +75,7 @@ export const useStore = create<State>((set) => ({
   showCalculus: true,
   showAxial: null,
   showDeflection: true,
+  showStress: true,
   hoverX: null,
   pinnedX: null,
   sawCutX: null,
@@ -103,4 +106,5 @@ export const useStore = create<State>((set) => ({
   setShowCalculus: (showCalculus) => set({ showCalculus }),
   setShowAxial: (showAxial) => set({ showAxial }),
   setShowDeflection: (showDeflection) => set({ showDeflection }),
+  setShowStress: (showStress) => set({ showStress }),
 }))

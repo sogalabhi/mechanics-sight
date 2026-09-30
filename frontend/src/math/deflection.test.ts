@@ -8,6 +8,23 @@ const fixtures = import.meta.glob('../../../shared/fixtures/*.json', { eager: tr
 >
 
 describe('solveElasticCurve (Qualitative Elastic Curve & Fiber Stresses)', () => {
+  it('uses physical backend polynomials when present', () => {
+    const beam = { schema_version: 1 as const, length: 2, supports: [], loads: [] }
+    const result = {
+      segments: [{ x_start: 0, x_end: 2, moment: [1], shear: [0], axial: [0] }],
+      critical_points: [],
+      deflection: {
+        segments: [{ x_start: 0, x_end: 2, slope: [0, 1], deflection: [0, 0, 0.5] }],
+        max_upward: { x: 2, value: 2 },
+        max_downward: null,
+        max_absolute: { x: 2, value: 2 },
+      },
+    } as unknown as AnalysisResult
+    const curve = solveElasticCurve(beam, result, 5)
+    expect(curve?.isPhysical).toBe(true)
+    expect(curve?.maxDeflection).toEqual({ x: 2, yRaw: 2, yNorm: -1 })
+    expect(curve?.points.at(-1)).toMatchObject({ x: 2, yRaw: 2, yNorm: -1, slope: 2 })
+  })
   it('02_ss_full_udl: zero at supports, peak sagging at midspan', () => {
     const fixture = Object.values(fixtures).find((f) => f.default.name.includes('full_udl'))?.default
     expect(fixture).toBeDefined()

@@ -8,8 +8,10 @@ from beam_solver.domain import (
     Beam,
     Direction,
     DistributedLoad,
+    Material,
     PointLoad,
     PointMoment,
+    RectangularSection,
     Support,
     SupportKind,
 )
@@ -17,6 +19,7 @@ from beam_solver.errors import (
     InvalidBeamError,
     InvalidLoadError,
     InvalidPositionError,
+    InvalidSectionError,
     InvalidSupportError,
 )
 
@@ -105,3 +108,15 @@ def test_beam_is_immutable() -> None:
     beam = Beam(6.0, ss())
     with pytest.raises(AttributeError):
         beam.length = 3.0  # type: ignore[misc]
+
+
+def test_physical_properties_are_optional_but_supplied_together() -> None:
+    material = Material(200.0, 250.0)
+    section = RectangularSection(0.2, 0.3)
+    beam = Beam(6.0, ss(), material=material, section=section)
+    assert beam.material is material
+    assert beam.section is section
+    with pytest.raises(InvalidSectionError, match="supplied together"):
+        Beam(6.0, ss(), material=material)
+    with pytest.raises(InvalidSectionError, match="supplied together"):
+        Beam(6.0, ss(), section=section)

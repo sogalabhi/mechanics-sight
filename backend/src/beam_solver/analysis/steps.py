@@ -14,7 +14,7 @@ from numpy.polynomial import Polynomial
 
 from beam_solver.analysis.analyze import reaction_loads
 from beam_solver.analysis.results import AnalysisResult, Segment, Side
-from beam_solver.domain import Beam, DistributedLoad, Load, PointLoad, PointMoment
+from beam_solver.domain import Beam, DistributedLoad, Load, PointLoad, PointMoment, PropertySpan
 from beam_solver.solvers import EquilibriumSystem
 
 _ZERO_TOL = 5e-4  # below this a value prints as 0 (3 decimals)
@@ -56,12 +56,12 @@ def _paren(s: str) -> str:
     return f"({s})" if s.startswith("-") or " + " in s or " - " in s else s
 
 
-def _poly(coef: list[float], var: str = "x") -> str:
+def _poly(coef: list[float], var: str = "x", zero_tol: float = _ZERO_TOL) -> str:
     """LaTeX for a polynomial with ascending coefficients, highest power first."""
     parts: list[tuple[str, str]] = []
     for k in range(len(coef) - 1, -1, -1):
         c = coef[k]
-        if abs(c) < _ZERO_TOL:
+        if abs(c) < zero_tol:
             continue
         mag = _coef(c)
         if k == 0:
@@ -536,6 +536,180 @@ def _extreme_steps(result: AnalysisResult) -> list[Step]:
     return steps
 
 
+def _span_for_segment(spans: tuple[PropertySpan, ...], seg: Segment) -> PropertySpan:
+    mid = (seg.x_start + seg.x_end) / 2.0
+    for sp in spans:
+        if sp.x_start - 1e-6 <= mid <= sp.x_end + 1e-6:
+            return sp
+    return spans[0]
+
+
+def _physical_steps(beam: Beam, result: AnalysisResult) -> list[Step]:
+    """Show bending rigidity, integrated polynomials, physical extreme, and stress results."""
+    spans = beam.resolved_spans
+    if spans is None:
+        return []
+
+    steps: list[Step] = []
+
+    # 1. Rigidity
+    if len(spans) == 1:
+        ei = spans[0].ei
+        steps.append(
+            Step(
+                "deflection",
+                "physical",
+                "Physical bending rigidity",
+                symbolic=r"EI = E I_x",
+                substituted=(
+                    f"E = {_num(spans[0].material.young_modulus_gpa)}\\,\\text{{GPa}},\\quad "
+                    f"I_x = {_num(spans[0].section.second_moment)}\\,\\text{{m}}^4"
+                ),
+                result=f"EI = {_num(ei)}\\,\\text{{kN}}\\cdot\\text{{m}}^2",
+            )
+        )
+    else:
+        steps.append(
+            Step(
+                "deflection",
+                "physical",
+                "Stepped bending rigidities",
+                notes=tuple(
+                    f"Span {i + 1} ({_num(s.x_start)} to {_num(s.x_end)} m): "
+                    f"E = {_num(s.material.young_modulus_gpa)} GPa, "
+                    f"I_x = {_num(s.section.second_moment)} m⁴, "
+                    f"EI = {_num(s.ei)} kN·m²"
+                    for i, s in enumerate(spans)
+                ),
+                result=",\\quad ".join(
+                    f"EI_{{{i + 1}}} = {_num(s.ei)}\\,\\text{{kN}}\\cdot\\text{{m}}^2"
+                    for i, s in enumerate(spans)
+                ),
+            )
+        )
+
+    # 2. Deflection & slope integration
+    if result.deflection is not None:
+        if len(result.deflection.segments) > MAX_STEP_SEGMENTS:
+            steps.append(
+                Step(
+                    "notice",
+                    "physical",
+                    "Physical integration polynomials are omitted",
+                    notes=(f"This beam has more than {MAX_STEP_SEGMENTS} segments.",),
+                )
+            )
+        else:
+            for force_segment, physical_segment in zip(
+                result.segments, result.deflection.segments, strict=True
+            ):
+                seg_span = _span_for_segment(spans, force_segment)
+                span = f"{_num(force_segment.x_start)} < x < {_num(force_segment.x_end)}"
+                moment = _poly(list(force_segment.moment), "t")
+                slope = _poly(list(physical_segment.slope), "t", 1e-15)
+                displacement = _poly(list(physical_segment.deflection), "t", 1e-15)
+                steps.append(
+                    Step(
+                        "slope",
+                        "physical",
+                        f"Integrate curvature for slope over {span}",
+                        symbolic=r"\theta'(t) = \frac{M(t)}{EI},\quad t=x-x_{\text{start}}",
+                        substituted=f"\\theta'(t) = \\frac{{{moment}}}{{{_num(seg_span.ei)}}}",
+                        result=f"\\theta(t) = {slope}\\ \\text{{rad}}",
+                        x_start=force_segment.x_start,
+                        x_end=force_segment.x_end,
+                    )
+                )
+                steps.append(
+                    Step(
+                        "deflection",
+                        "physical",
+                        f"Integrate slope for deflection over {span}",
+                        symbolic=r"y'(t) = \theta(t),\quad y\text{ is upward positive}",
+                        substituted=f"y'(t) = {slope}",
+                        result=f"y(t) = {displacement}\\ \\text{{m}}",
+                        x_start=force_segment.x_start,
+                        x_end=force_segment.x_end,
+                    )
+                )
+            extreme = result.deflection.max_absolute
+            steps.append(
+                Step(
+                    "extreme",
+                    "physical",
+                    "Maximum absolute physical deflection",
+                    symbolic=r"\theta(x)=0 \quad \text{or a segment endpoint}",
+                    result=(
+                        f"y({_num(extreme.x)}) = {_num(extreme.value * 1000)}\\ \\text{{mm}}"
+                        f"\\quad \\text{{at}}\\quad x={_num(extreme.x)}\\ \\text{{m}}"
+                    ),
+                    at=extreme.x,
+                )
+            )
+
+    # 3. Normal bending stress and yield check
+    if result.bending_stress is not None:
+        b_stress = result.bending_stress
+        sub_stress_parts = []
+        if b_stress.max_tension is not None:
+            sub_stress_parts.append(
+                f"\\sigma_{{\\max,\\text{{tension}}}} = {_num(b_stress.max_tension.value)}\\,\\text{{kPa}}"
+                f"\\ \\text{{at}}\\ x={_num(b_stress.max_tension.x)}\\,\\text{{m}}"
+            )
+        if b_stress.max_compression is not None:
+            sub_stress_parts.append(
+                f"\\sigma_{{\\max,\\text{{compression}}}} = {_num(b_stress.max_compression.value)}\\,\\text{{kPa}}"
+                f"\\ \\text{{at}}\\ x={_num(b_stress.max_compression.x)}\\,\\text{{m}}"
+            )
+        steps.append(
+            Step(
+                "bending_stress",
+                "physical",
+                "Extreme-fibre normal bending stress",
+                symbolic=r"\sigma(x, y) = -\frac{M(x)\,y}{I_x},\quad \text{positive} = \text{tension}",
+                result=",\\quad ".join(sub_stress_parts) if sub_stress_parts else r"\sigma \equiv 0",
+                at=b_stress.yield_location.x if b_stress.yield_location else None,
+            )
+        )
+        if b_stress.yield_location is not None:
+            steps.append(
+                Step(
+                    "yield_check",
+                    "physical",
+                    "Elastic yield strength check",
+                    symbolic=r"\text{Yield ratio} = \frac{\max |\sigma|}{f_y} \le 1.0",
+                    substituted=(
+                        f"\\frac{{{_num(abs(b_stress.yield_location.value))}\\,\\text{{kPa}}}}"
+                        f"{{f_y}} = {_num(b_stress.yield_ratio)}"
+                    ),
+                    result=(
+                        f"\\text{{{ 'Yield exceeded!' if b_stress.yield_exceeded else 'Within elastic limit' }}}"
+                        f"\\quad (\\text{{ratio}} = {_num(b_stress.yield_ratio)})"
+                    ),
+                    at=b_stress.yield_location.x,
+                )
+            )
+
+    # 4. Transverse shear stress
+    if result.shear_stress is not None and result.shear_stress.max_shear_stress is not None:
+        tau_max = result.shear_stress.max_shear_stress
+        steps.append(
+            Step(
+                "shear_stress",
+                "physical",
+                "Maximum transverse shear stress",
+                symbolic=r"\tau(x, y) = \frac{V(x)\,Q(y)}{I_x\,b(y)},\quad \tau_{\max} \text{ at neutral axis } y=0",
+                result=(
+                    f"\\tau_{{\\max}} = {_num(tau_max.value)}\\,\\text{{kPa}}"
+                    f"\\quad \\text{{at}}\\quad x={_num(tau_max.x)}\\,\\text{{m}}"
+                ),
+                at=tau_max.x,
+            )
+        )
+
+    return steps
+
+
 def build_steps(beam: Beam, result: AnalysisResult) -> tuple[Step, ...]:
     """Worked steps for an already-analysed beam."""
     labels = _make_labels(beam)
@@ -546,4 +720,5 @@ def build_steps(beam: Beam, result: AnalysisResult) -> tuple[Step, ...]:
         + _reaction_steps(beam, result, labels)
         + _segment_steps(beam, all_loads, result, labels)
         + _extreme_steps(result)
+        + _physical_steps(beam, result)
     )

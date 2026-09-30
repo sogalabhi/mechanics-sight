@@ -5,31 +5,63 @@ from typing import Any
 from beam_solver.analysis import AnalysisResult, CanonicalCase, Extreme, Step
 from beam_solver.domain import (
     Beam,
+    CircularSection,
     DistributedLoad,
+    ISection,
     Load,
+    Material,
     PointLoad,
     PointMoment,
+    PropertySpan,
+    RectangularSection,
+    Section,
     Support,
     SupportKind,
+    TSection,
 )
 from beam_solver.errors import BeamError, ClassifiedBeamError
 from beam_solver.io.schemas import (
     AnalysisOut,
     BeamIn,
+    BendingStressOut,
+    BendingStressSegmentOut,
     CanonicalOut,
+    CircularSectionIn,
     ClassificationOut,
     CriticalPointOut,
+    DeflectionOut,
+    DeflectionSegmentOut,
     ErrorBody,
     ErrorOut,
     ExtremeOut,
     ExtremesOut,
+    ISectionIn,
     PointLoadIn,
     PointMomentIn,
+    PropertySpanIn,
     ReactionOut,
+    RectangularSectionIn,
+    SectionIn,
     SegmentOut,
+    ShearStressOut,
     StepOut,
+    TSectionIn,
 )
 from beam_solver.solvers import Classification
+
+
+def _section_from_schema(data: SectionIn | None) -> Section | None:
+    if data is None:
+        return None
+    if isinstance(data, RectangularSectionIn):
+        return RectangularSection(data.width, data.height, data.wall_thickness)
+    elif isinstance(data, CircularSectionIn):
+        return CircularSection(data.diameter, data.wall_thickness)
+    elif isinstance(data, ISectionIn):
+        return ISection(data.height, data.flange_width, data.flange_thickness, data.web_thickness)
+    elif isinstance(data, TSectionIn):
+        return TSection(data.flange_width, data.flange_thickness, data.web_depth, data.web_thickness)
+    return None
 
 
 def beam_from_schema(data: BeamIn) -> Beam:
@@ -42,7 +74,23 @@ def beam_from_schema(data: BeamIn) -> Beam:
             loads.append(PointMoment(ld.id, ld.position, ld.magnitude))
         else:
             loads.append(DistributedLoad(ld.id, ld.start, ld.end, ld.w_start, ld.w_end))
-    return Beam(data.length, supports, tuple(loads), tuple(data.hinges))
+    material = (
+        None
+        if data.material is None
+        else Material(data.material.young_modulus_gpa, data.material.yield_strength_mpa)
+    )
+    section = _section_from_schema(data.section)
+    spans_domain: tuple[PropertySpan, ...] = ()
+    if data.spans:
+        spans_domain = tuple(
+            PropertySpan(
+                sp.x_start, sp.x_end,
+                Material(sp.material.young_modulus_gpa, sp.material.yield_strength_mpa),
+                _section_from_schema(sp.section),  # type: ignore[arg-type]
+            )
+            for sp in data.spans
+        )
+    return Beam(data.length, supports, tuple(loads), tuple(data.hinges), material, section, spans_domain)
 
 
 def beam_from_json(data: dict[str, Any]) -> Beam:
@@ -136,12 +184,67 @@ def result_to_schema(result: AnalysisResult) -> AnalysisOut:
         ),
         warnings=list(result.warnings),
         canonical=canonical_to_schema(result.canonical),
+        deflection=(
+            None
+            if result.deflection is None
+            else DeflectionOut(
+                segments=[
+                    DeflectionSegmentOut(
+                        x_start=s.x_start,
+                        x_end=s.x_end,
+                        slope=list(s.slope),
+                        deflection=list(s.deflection),
+                    )
+                    for s in result.deflection.segments
+                ],
+                max_upward=_extreme(result.deflection.max_upward),
+                max_downward=_extreme(result.deflection.max_downward),
+                max_absolute=ExtremeOut(
+                    x=result.deflection.max_absolute.x,
+                    value=result.deflection.max_absolute.value,
+                ),
+            )
+        ),
+        bending_stress=(
+            None
+            if result.bending_stress is None
+            else BendingStressOut(
+                segments=[
+                    BendingStressSegmentOut(
+                        x_start=s.x_start,
+                        x_end=s.x_end,
+                        sigma_top=list(s.sigma_top),
+                        sigma_bottom=list(s.sigma_bottom),
+                    )
+                    for s in result.bending_stress.segments
+                ],
+                max_tension=_extreme(result.bending_stress.max_tension),
+                max_compression=_extreme(result.bending_stress.max_compression),
+                yield_ratio=result.bending_stress.yield_ratio,
+                yield_exceeded=result.bending_stress.yield_exceeded,
+                yield_location=_extreme(result.bending_stress.yield_location),
+            )
+        ),
+        shear_stress=(
+            None
+            if result.shear_stress is None
+            else ShearStressOut(
+                max_shear_stress=_extreme(result.shear_stress.max_shear_stress),
+            )
+        ),
     )
 
 
 def result_to_json(result: AnalysisResult) -> dict[str, Any]:
     out = result_to_schema(result)
-    return out.model_dump(mode="json", exclude=None if out.steps is not None else {"steps"})
+    exclude = set() if out.steps is not None else {"steps"}
+    if out.deflection is None:
+        exclude.add("deflection")
+    if out.bending_stress is None:
+        exclude.add("bending_stress")
+    if out.shear_stress is None:
+        exclude.add("shear_stress")
+    return out.model_dump(mode="json", exclude=exclude)
 
 
 def error_to_schema(error: BeamError) -> ErrorOut:

@@ -36,6 +36,12 @@ class InvalidSupportError(InvalidBeamError):
     code = "invalid_support"
 
 
+class InvalidSectionError(InvalidBeamError):
+    """A material or cross-section definition is invalid."""
+
+    code = "invalid_section"
+
+
 class ClassifiedBeamError(BeamError):
     """An error that carries the beam's classification (unstable or indeterminate)."""
 

@@ -4,11 +4,13 @@ import math
 from dataclasses import dataclass
 
 from beam_solver.domain.loads import DistributedLoad, Load, PointLoad, PointMoment
+from beam_solver.domain.sections import Material, PropertySpan, Section
 from beam_solver.domain.supports import Support, SupportKind
 from beam_solver.errors import (
     InvalidBeamError,
     InvalidLoadError,
     InvalidPositionError,
+    InvalidSectionError,
     InvalidSupportError,
 )
 from beam_solver.tolerances import POSITION_TOL, same_position
@@ -22,6 +24,9 @@ class Beam:
     supports: tuple[Support, ...]
     loads: tuple[Load, ...] = ()
     hinges: tuple[float, ...] = ()
+    material: Material | None = None
+    section: Section | None = None
+    spans: tuple[PropertySpan, ...] = ()
 
     def __post_init__(self) -> None:
         if not math.isfinite(self.length) or self.length <= 0:
@@ -33,6 +38,7 @@ class Beam:
         self._check_supports()
         self._check_loads()
         self._check_hinges()
+        self._check_physical_properties()
 
     def _check_ids(self) -> None:
         ids = [s.id for s in self.supports] + [load.id for load in self.loads]
@@ -99,3 +105,42 @@ class Beam:
             for b in self.hinges[i + 1 :]:
                 if same_position(a, b):
                     raise InvalidBeamError(f"duplicate hinges at position {a}")
+
+    def _check_physical_properties(self) -> None:
+        has_uniform = self.material is not None or self.section is not None
+        has_spans = len(self.spans) > 0
+        if has_uniform and has_spans:
+            raise InvalidSectionError(
+                "provide either uniform material/section or property spans, not both"
+            )
+        if (self.material is None) != (self.section is None):
+            raise InvalidSectionError("material and section must be supplied together")
+        if has_spans:
+            self._check_spans()
+
+    def _check_spans(self) -> None:
+        sorted_spans = sorted(self.spans, key=lambda s: s.x_start)
+        if not same_position(sorted_spans[0].x_start, 0.0):
+            raise InvalidSectionError(
+                f"property spans must start at x = 0, got {sorted_spans[0].x_start}"
+            )
+        if not same_position(sorted_spans[-1].x_end, self.length):
+            raise InvalidSectionError(
+                f"property spans must end at x = L = {self.length}, got {sorted_spans[-1].x_end}"
+            )
+        for i in range(len(sorted_spans) - 1):
+            if not same_position(sorted_spans[i].x_end, sorted_spans[i + 1].x_start):
+                raise InvalidSectionError(
+                    f"property spans have a gap or overlap between "
+                    f"x = {sorted_spans[i].x_end} and x = {sorted_spans[i + 1].x_start}"
+                )
+
+    @property
+    def resolved_spans(self) -> tuple["PropertySpan", ...] | None:
+        """Return spans if physical properties are defined, else None."""
+        if self.spans:
+            return self.spans
+        if self.material is not None and self.section is not None:
+            from beam_solver.domain.sections import PropertySpan
+            return (PropertySpan(0.0, self.length, self.material, self.section),)
+        return None

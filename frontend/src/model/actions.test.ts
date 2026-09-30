@@ -49,6 +49,21 @@ describe('setLength', () => {
 })
 
 describe('validateBeam', () => {
+  it('requires material and section together', () => {
+    const b = emptyBeam(6)
+    b.material = { young_modulus_gpa: 200, yield_strength_mpa: 250 }
+    expect(validateBeam(b)).toMatch(/supplied together/)
+  })
+  it('validates physical properties and hollow section geometry', () => {
+    const b = emptyBeam(6)
+    b.material = { young_modulus_gpa: 200, yield_strength_mpa: 250 }
+    b.section = { type: 'rectangle', width: 0.2, height: 0.3, wall_thickness: 0.11 }
+    expect(validateBeam(b)).toMatch(/positive inner opening/)
+    b.section = { type: 'i', height: 0.3, flange_width: 0.15, flange_thickness: 0.15, web_thickness: 0.01 }
+    expect(validateBeam(b)).toMatch(/positive web depth/)
+    b.section = { type: 'circle', diameter: 0.1 }
+    expect(validateBeam(b)).toBeNull()
+  })
   it('rejects two supports at the same place', () => {
     let b = addItem(emptyBeam(6), 'pin', 2).beam
     b = addItem(b, 'roller', 2).beam
@@ -74,6 +89,37 @@ describe('validateBeam', () => {
     b.hinges = [3]
     b.loads = [{ id: 'm', type: 'moment', position: 3, magnitude: 10 }]
     expect(validateBeam(b)).toMatch(/Cannot place an applied moment couple directly at an internal hinge/)
+  })
+  it('validates stepped property spans covering [0, L]', () => {
+    const b = emptyBeam(6)
+    b.spans = [
+      { x_start: 0, x_end: 3, material: { young_modulus_gpa: 200, yield_strength_mpa: 250 }, section: { type: 'rectangle', width: 0.2, height: 0.3 } },
+      { x_start: 3, x_end: 6, material: { young_modulus_gpa: 200, yield_strength_mpa: 250 }, section: { type: 'rectangle', width: 0.2, height: 0.4 } },
+    ]
+    expect(validateBeam(b)).toBeNull()
+
+    // Gap
+    b.spans[1].x_start = 3.5
+    expect(validateBeam(b)).toMatch(/gap or overlap/)
+
+    // Not starting at 0
+    b.spans[0].x_start = 1
+    b.spans[1].x_start = 3
+    expect(validateBeam(b)).toMatch(/start at x = 0/)
+
+    // Not ending at L
+    b.spans[0].x_start = 0
+    b.spans[1].x_end = 5
+    expect(validateBeam(b)).toMatch(/end at x = L/)
+  })
+  it('rejects both uniform properties and property spans together', () => {
+    const b = emptyBeam(6)
+    b.material = { young_modulus_gpa: 200, yield_strength_mpa: 250 }
+    b.section = { type: 'rectangle', width: 0.2, height: 0.3 }
+    b.spans = [
+      { x_start: 0, x_end: 6, material: { young_modulus_gpa: 200, yield_strength_mpa: 250 }, section: { type: 'rectangle', width: 0.2, height: 0.3 } },
+    ]
+    expect(validateBeam(b)).toMatch(/either uniform material\/section or property spans/)
   })
 })
 

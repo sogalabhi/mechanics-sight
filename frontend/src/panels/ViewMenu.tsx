@@ -14,6 +14,7 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
     showGuides,
     showCalculus,
     showDeflection,
+    showStress,
     showAxial,
     sawCutX,
     pinnedX,
@@ -22,6 +23,7 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
     setShowGuides,
     setShowCalculus,
     setShowDeflection,
+    setShowStress,
     setShowAxial,
     setSawCutX,
     commit,
@@ -54,6 +56,7 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
       <label><input type="checkbox" checked={showGuides} onChange={(e) => setShowGuides(e.target.checked)} /> Show critical-point guides</label>
       <label><input type="checkbox" checked={showCalculus} onChange={(e) => setShowCalculus(e.target.checked)} /> Show calculus tangent (dM/dx = V)</label>
       <label><input type="checkbox" checked={showDeflection} onChange={(e) => setShowDeflection(e.target.checked)} /> Show deflected shape (elastic curve)</label>
+      <label><input type="checkbox" checked={showStress} onChange={(e) => setShowStress(e.target.checked)} /> Show bending stress diagram (σ)</label>
       <label><input type="checkbox" checked={showAxial === true || showAxial === null} onChange={(e) => setShowAxial(e.target.checked)} /> Show axial force diagram (AFD){showAxial === null ? ' (auto)' : ''}</label>
       <button
         className={ui.btn}

@@ -10,6 +10,7 @@ const GROUPS: { id: Step['group']; title: string }[] = [
   { id: 'reactions', title: 'Reactions' },
   { id: 'diagrams', title: 'Axial force, shear force and bending moment' },
   { id: 'extremes', title: 'Extreme values' },
+  { id: 'physical', title: 'Slope and physical deflection' },
 ]
 
 function StepView({ step }: { step: Step }) {

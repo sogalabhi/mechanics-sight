@@ -49,11 +49,15 @@ export interface components {
     schemas: {
         /** AnalysisOut */
         AnalysisOut: {
+            /** @description Extreme-fibre bending stress when material and section are supplied */
+            bending_stress?: components["schemas"]["BendingStressOut"] | null;
             /** @description Recognized standard textbook case if applicable */
             canonical?: components["schemas"]["CanonicalOut"] | null;
             classification: components["schemas"]["ClassificationOut"];
             /** Critical Points */
             critical_points: components["schemas"]["CriticalPointOut"][];
+            /** @description Physical Euler-Bernoulli result when material and section are supplied */
+            deflection?: components["schemas"]["DeflectionOut"] | null;
             extremes: components["schemas"]["ExtremesOut"];
             /** Reactions */
             reactions: components["schemas"]["ReactionOut"][];
@@ -65,6 +69,8 @@ export interface components {
             schema_version: 1;
             /** Segments */
             segments: components["schemas"]["SegmentOut"][];
+            /** @description Maximum transverse shear stress when material and section are supplied */
+            shear_stress?: components["schemas"]["ShearStressOut"] | null;
             /**
              * Steps
              * @description Worked steps; only present when requested with ?steps=true
@@ -89,14 +95,55 @@ export interface components {
             length: number;
             /** Loads */
             loads?: (components["schemas"]["PointLoadIn"] | components["schemas"]["PointMomentIn"] | components["schemas"]["DistributedLoadIn"])[];
+            /** @description Constant linear-elastic material for physical analysis */
+            material?: components["schemas"]["MaterialIn"] | null;
             /**
              * Schema Version
              * @default 1
              * @constant
              */
             schema_version: 1;
+            /**
+             * Section
+             * @description Constant cross-section over the complete beam
+             */
+            section?: (components["schemas"]["RectangularSectionIn"] | components["schemas"]["CircularSectionIn"] | components["schemas"]["ISectionIn"] | components["schemas"]["TSectionIn"]) | null;
+            /**
+             * Spans
+             * @description Contiguous property spans covering [0, L]; alternative to uniform material/section
+             */
+            spans?: components["schemas"]["PropertySpanIn"][] | null;
             /** Supports */
             supports: components["schemas"]["SupportIn"][];
+        };
+        /** BendingStressOut */
+        BendingStressOut: {
+            max_compression: components["schemas"]["ExtremeOut"] | null;
+            max_tension: components["schemas"]["ExtremeOut"] | null;
+            /** Segments */
+            segments: components["schemas"]["BendingStressSegmentOut"][];
+            /** Yield Exceeded */
+            yield_exceeded: boolean;
+            yield_location: components["schemas"]["ExtremeOut"] | null;
+            /** Yield Ratio */
+            yield_ratio: number;
+        };
+        /** BendingStressSegmentOut */
+        BendingStressSegmentOut: {
+            /**
+             * Sigma Bottom
+             * @description Bottom fibre stress ascending coefficients in t = x - x_start (kN/m²)
+             */
+            sigma_bottom: number[];
+            /**
+             * Sigma Top
+             * @description Top fibre stress ascending coefficients in t = x - x_start (kN/m²)
+             */
+            sigma_top: number[];
+            /** X End */
+            x_end: number;
+            /** X Start */
+            x_start: number;
         };
         /** CanonicalOut */
         CanonicalOut: {
@@ -134,6 +181,24 @@ export interface components {
              * @description Reactions formula (LaTeX)
              */
             symbolic_reactions: string;
+        };
+        /** CircularSectionIn */
+        CircularSectionIn: {
+            /**
+             * Diameter
+             * @description m
+             */
+            diameter: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "circle";
+            /**
+             * Wall Thickness
+             * @description m; omit for solid
+             */
+            wall_thickness?: number | null;
         };
         /** ClassificationOut */
         ClassificationOut: {
@@ -177,6 +242,31 @@ export interface components {
             shear_right: number;
             /** X */
             x: number;
+        };
+        /** DeflectionOut */
+        DeflectionOut: {
+            max_absolute: components["schemas"]["ExtremeOut"];
+            max_downward: components["schemas"]["ExtremeOut"] | null;
+            max_upward: components["schemas"]["ExtremeOut"] | null;
+            /** Segments */
+            segments: components["schemas"]["DeflectionSegmentOut"][];
+        };
+        /** DeflectionSegmentOut */
+        DeflectionSegmentOut: {
+            /**
+             * Deflection
+             * @description Ascending coefficients in t = x - x_start; displacement in m, upward positive
+             */
+            deflection: number[];
+            /**
+             * Slope
+             * @description Ascending coefficients in t = x - x_start; rotation in rad
+             */
+            slope: number[];
+            /** X End */
+            x_end: number;
+            /** X Start */
+            x_start: number;
         };
         /** DistributedLoadIn */
         DistributedLoadIn: {
@@ -233,6 +323,47 @@ export interface components {
             max_sagging: components["schemas"]["ExtremeOut"] | null;
             max_tension?: components["schemas"]["ExtremeOut"] | null;
         };
+        /** ISectionIn */
+        ISectionIn: {
+            /**
+             * Flange Thickness
+             * @description m
+             */
+            flange_thickness: number;
+            /**
+             * Flange Width
+             * @description m
+             */
+            flange_width: number;
+            /**
+             * Height
+             * @description m
+             */
+            height: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "i";
+            /**
+             * Web Thickness
+             * @description m
+             */
+            web_thickness: number;
+        };
+        /** MaterialIn */
+        MaterialIn: {
+            /**
+             * Yield Strength Mpa
+             * @description Yield strength in MPa
+             */
+            yield_strength_mpa: number;
+            /**
+             * Young Modulus Gpa
+             * @description Young's modulus in GPa
+             */
+            young_modulus_gpa: number;
+        };
         /** PointLoadIn */
         PointLoadIn: {
             /**
@@ -273,6 +404,22 @@ export interface components {
              */
             type: "moment";
         };
+        /** PropertySpanIn */
+        PropertySpanIn: {
+            material: components["schemas"]["MaterialIn"];
+            /** Section */
+            section: components["schemas"]["RectangularSectionIn"] | components["schemas"]["CircularSectionIn"] | components["schemas"]["ISectionIn"] | components["schemas"]["TSectionIn"];
+            /**
+             * X End
+             * @description m from the left end
+             */
+            x_end: number;
+            /**
+             * X Start
+             * @description m from the left end
+             */
+            x_start: number;
+        };
         /** ReactionOut */
         ReactionOut: {
             /** Fx */
@@ -283,6 +430,29 @@ export interface components {
             moment: number;
             /** Support Id */
             support_id: string;
+        };
+        /** RectangularSectionIn */
+        RectangularSectionIn: {
+            /**
+             * Height
+             * @description m
+             */
+            height: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "rectangle";
+            /**
+             * Wall Thickness
+             * @description m; omit for solid
+             */
+            wall_thickness?: number | null;
+            /**
+             * Width
+             * @description m
+             */
+            width: number;
         };
         /** SegmentOut */
         SegmentOut: {
@@ -306,6 +476,10 @@ export interface components {
             /** X Start */
             x_start: number;
         };
+        /** ShearStressOut */
+        ShearStressOut: {
+            max_shear_stress: components["schemas"]["ExtremeOut"] | null;
+        };
         /** StepOut */
         StepOut: {
             /** At */
@@ -314,12 +488,12 @@ export interface components {
              * Group
              * @enum {string}
              */
-            group: "reactions" | "diagrams" | "extremes";
+            group: "reactions" | "diagrams" | "extremes" | "physical";
             /**
              * Kind
              * @enum {string}
              */
-            kind: "supports" | "loads" | "resultant" | "force_balance" | "moment_balance" | "reactions" | "axial" | "shear" | "moment" | "zero_shear" | "moment_at" | "extreme" | "notice";
+            kind: "supports" | "loads" | "resultant" | "force_balance" | "moment_balance" | "reactions" | "axial" | "shear" | "moment" | "zero_shear" | "moment_at" | "extreme" | "slope" | "deflection" | "notice" | "bending_stress" | "shear_stress" | "yield_check";
             /**
              * Notes
              * @description Plain-text lines
@@ -361,6 +535,34 @@ export interface components {
              * @enum {string}
              */
             type: "pin" | "roller" | "fixed";
+        };
+        /** TSectionIn */
+        TSectionIn: {
+            /**
+             * Flange Thickness
+             * @description m
+             */
+            flange_thickness: number;
+            /**
+             * Flange Width
+             * @description m
+             */
+            flange_width: number;
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            type: "t";
+            /**
+             * Web Depth
+             * @description m
+             */
+            web_depth: number;
+            /**
+             * Web Thickness
+             * @description m
+             */
+            web_thickness: number;
         };
     };
     responses: never;

@@ -81,6 +81,7 @@ export function ElasticCurvePanel({ width }: { width: number }) {
   const points = useMemo(() => curveResult?.points ?? [], [curveResult])
   const inflectionPoints = useMemo(() => curveResult?.inflectionPoints ?? [], [curveResult])
   const maxDeflection = curveResult?.maxDeflection ?? null
+  const isPhysical = curveResult?.isPhysical ?? false
 
   const zones = useMemo(() => partitionZones(points), [points])
 
@@ -115,7 +116,11 @@ export function ElasticCurvePanel({ width }: { width: number }) {
     <g>
       {/* Title */}
       <text x={8} y={16} fontSize={11} letterSpacing="0.08em" fill="var(--ink-2)" fontWeight={500}>
-        {compact ? 'ELASTIC CURVE' : 'QUALITATIVE DEFLECTED SHAPE & FIBER STRESSES'}
+        {compact
+          ? 'ELASTIC CURVE'
+          : isPhysical
+            ? 'PHYSICAL DEFLECTION (mm) · EXAGGERATED SHAPE'
+            : 'QUALITATIVE DEFLECTED SHAPE & FIBER STRESSES'}
       </text>
 
       {/* Legend */}
@@ -429,7 +434,9 @@ export function ElasticCurvePanel({ width }: { width: number }) {
                       fontSize={9.5}
                       fill="var(--ink-2)"
                     >
-                      δ_max (x = {formatNumber(maxDeflection.x)} m)
+                      {isPhysical
+                        ? `δ = ${formatNumber(maxDeflection.yRaw * 1000, { sign: true })} mm @ ${formatNumber(maxDeflection.x)} m`
+                        : `δ_max (x = ${formatNumber(maxDeflection.x)} m)`}
                     </text>
                   </g>
                 )
@@ -497,7 +504,7 @@ export function ElasticCurvePanel({ width }: { width: number }) {
             const hy = BASE_Y + hoverPt.yNorm * MAX_DISP_PX
             const isSag = hoverPt.moment > 1e-4
             const isHog = hoverPt.moment < -1e-4
-            const label = isSag
+            const stressLabel = isSag
               ? 'Sagging: Top C | Bot T'
               : isHog
               ? 'Hogging: Top T | Bot C'
@@ -525,7 +532,9 @@ export function ElasticCurvePanel({ width }: { width: number }) {
                   fontSize={9}
                   fill="var(--ink)"
                 >
-                  {label}
+                  {isPhysical
+                    ? `y ${formatNumber(hoverPt.yRaw * 1000, { sign: true })} mm · θ ${formatNumber(hoverPt.slope, { sign: true })} rad`
+                    : stressLabel}
                 </text>
               </g>
             )

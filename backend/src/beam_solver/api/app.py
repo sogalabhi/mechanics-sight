@@ -47,7 +47,14 @@ def create_app(allowed_origins: list[str] | None = None) -> FastAPI:
         if steps:
             worked = [step_to_schema(s) for s in build_steps(domain_beam, result)]
             out = out.model_copy(update={"steps": worked})
-        return JSONResponse(out.model_dump(mode="json", exclude=None if steps else {"steps"}))
+        exclude = set() if steps else {"steps"}
+        if out.deflection is None:
+            exclude.add("deflection")
+        if out.bending_stress is None:
+            exclude.add("bending_stress")
+        if out.shear_stress is None:
+            exclude.add("shear_stress")
+        return JSONResponse(out.model_dump(mode="json", exclude=exclude))
 
     @app.get("/api/v1/health")
     def health() -> dict[str, str]:

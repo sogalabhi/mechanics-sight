@@ -899,22 +899,88 @@ Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but studen
   - Modeled as a collar with vertical rails. Useful for symmetry boundary conditions.
 
 ### Phase 3 — deflection, cross-section library, and stresses
-- **Cross-Section Library:**
-  - Parametric sections:
-    - `ISection`: total depth $h$, flange width $b_f$, flange thickness $t_f$, web thickness $t_w$.
-    - `TSection`: flange width $b_f$, flange thickness $t_f$, web depth $d_w$, web thickness $t_w$.
-    - `RectangularSection`: width $b$, height $h$ (solid or hollow box).
-    - `CircularSection`: outer diameter $D$, wall thickness $t$ (solid or pipe).
-  - Automated geometric properties: Area $A$, centroid / neutral axis location $\bar{y}$, moment of inertia $I_x$, extreme fiber distances $y_{\text{top}}, y_{\text{bottom}}$, section modulus $Z = I/y_{\max}$, and first moment of area function $Q(y)$.
-  - Material input: Young's modulus $E$ (GPa) and yield strength $\sigma_y$ (MPa).
-- **Deflection & Slope Integration:**
-  - Method: integrate each segment's polynomial with Macaulay segment boundary matching.
-  - $\theta(t) = \theta_0 + \int \frac{M(t)}{EI} \, dt$ and $y(t) = y_0 + \int \theta(t) \, dt$.
-  - Unknowns: $(\theta_0, y_0)$ per segment. Boundary equations: continuity of $y$, continuity of $\theta$ (except at hinges), $y = 0$ at supports, $\theta = 0$ at fixed supports.
-  - Output: exact slope and deflection polynomials, max deflection $y_{\max}$ in mm.
-- **Bending & Shear Stresses:**
-  - Normal bending stress: $\sigma(x, y) = \frac{M(x) \cdot y}{I_x}$. Graphs top and bottom fiber stresses along $x$, and linear depth profile at any cut $x$. Highlights yielding ($\sigma > \sigma_y$).
-  - Transverse shear stress: $\tau(x, y) = \frac{V(x) \cdot Q(y)}{I_x \cdot b(y)}$. Shows classic parabolic distribution across depth, visually proving that the thin web carries 90–95% of vertical shear while flanges resist bending moment.
+- **P3.0 — Contract and benchmarks [DONE]**
+  - Fix the unit conversions, centroid based section coordinates, signs, output ownership, and
+    compatibility conditions before extending physical analysis.
+  - Keep physical properties optional so existing beams and shared links remain valid.
+  - Define hand-checkable deflection cases for simply supported beams, cantilevers, overhangs, and
+    Gerber beams; define representative geometry and stress cases for every supported shape.
+  - Acceptance: documented equations and conventions agree across solver, API, UI, and benchmark
+    expectations.
+- **P3.1 — Cross-section geometry [DONE]**
+  - Support solid and hollow rectangles, solid circles and pipes, I-sections, and T-sections.
+  - Calculate area, centroid, second moment of area, signed extreme-fibre distances, section
+    moduli, material width at a height, and first moment of area above that height.
+  - Validate positive dimensions and feasible wall, flange, and web proportions; reject impossible
+    shapes with a clear input error.
+  - Acceptance: geometry values match independent calculations, including non-symmetric T-sections
+    and hollow sections.
+- **P3.2 — Physical properties input [DONE]**
+  - Let users enable material and section properties, choose a supported shape, and enter its
+    dimensions, Young's modulus, and yield strength.
+  - Require material and section data together and validate shape geometry before analysis.
+  - Preserve the inputs in shared links and include them in the analysis request.
+  - Acceptance: old links still open, new links round-trip physical data, and invalid dimensions
+    give an actionable message.
+- **P3.3 — Constant-EI deflection solver [DONE]**
+  - Integrate each exact bending-moment segment using $EI y''=M$ and retain physical slope and
+    displacement in SI units.
+  - Solve support and segment conditions together: $y=0$ at pin/roller supports; $y=0$ and
+    $\theta=0$ at fixed supports; both quantities continuous at ordinary boundaries; displacement
+    continuous but rotation released at internal hinges.
+  - Find exact displacement extrema from stationary points and segment ends.
+  - Acceptance: signs, slopes, support conditions, hinge conditions, and extrema agree with the
+    closed-form cases in the contract.
+- **P3.4 — Physical deflection presentation [DONE]**
+  - Show the physical displaced shape with an explicit visual exaggeration, and display values in
+    millimetres and slope in radians while retaining upward positive as the sign convention.
+  - Include the physical maximum in the results view, and include material/section inputs,
+    deflection results, a deflection figure, and derivation steps in the downloadable report.
+  - Explain the integration and boundary result in the worked steps, including segment slope and
+    displacement polynomials.
+  - Acceptance: plotted shape, hover values, result summary, worked steps, and report agree with
+    the solver values; statics only beams continue to use the qualitative curve.
+- **P3.5 — Stepped material and section properties [DONE]**
+  - Allow a beam to be divided into contiguous property spans. Each span carries one supported
+    material and section definition, with boundaries covering the full beam and no gaps or overlaps.
+  - Make every property boundary an analysis boundary. Use the local $EI$ for curvature in that
+    span; preserve displacement and rotation across a normal property boundary, and preserve
+    displacement while allowing rotation release at an internal hinge.
+  - Show span boundaries and their properties in the editor, shared link, result, and report. Keep
+    stress and deflection values associated with the correct span at a boundary.
+  - Acceptance: constant properties expressed as one span reproduce P3.3 results; stepped beams
+    match hand-integrated cases with a change in stiffness and maintain the required continuity.
+- **P3.6 — Bending stress [DONE]**
+  - Calculate $\sigma(x,y)=-M(x)y/I_x$ using the local section centroid and inertia. Report top and
+    bottom fibre stress along the beam and the linear stress profile through the depth at a selected
+    cut.
+  - Use the correct local section on stepped beams and preserve left/right values at moment jumps
+    and property changes.
+  - Compare absolute stress with material yield strength; identify the first and greatest yield
+    exceedance and show the ratio to yield. Treat this as an elastic stress comparison, not a
+    nonlinear post-yield analysis.
+  - Acceptance: sagging and hogging put tension/compression on the expected fibres; results match
+    $M/Z$ at extreme fibres and the full $-My/I$ profile.
+- **P3.7 — Transverse shear stress [DONE]**
+  - Calculate $\tau(x,y)=V(x)Q(y)/(I_x b(y))$ from each section's geometry and the local shear
+    force. Show the through-depth distribution at a selected cut and report the maximum absolute
+    shear stress and its position.
+  - Use the actual section width and first moment for solid, hollow, circular, I-, and T-sections;
+    handle flange/web changes and section boundaries without invalid divisions at zero-width
+    edges.
+  - Acceptance: zero shear force gives zero shear stress; rectangular, circular, and web/flange
+    profiles agree with independent benchmarks, including maxima and limiting edge values.
+- **P3.8 — Phase 3 hardening and release [DONE]**
+  - Collect the section, constant-EI, stepped-property, bending-stress, and shear-stress benchmarks
+    into shared contract cases where applicable. Add independent checks for equilibrium, boundary
+    conditions, continuity, dimensions, and stress sign/units.
+  - Exercise the complete user journey in a browser: enter physical properties, inspect deflection
+    and stress outputs, change property spans, share/reopen the beam, and download a complete
+    report. Confirm old statics-only links and reports remain usable.
+  - Review empty, zero-load, jump, hinge, transition, and invalid-geometry cases; make limits clear
+    in the UI and documentation.
+  - Acceptance: all phase checks pass, API documentation and generated types match, the report
+    includes the physical inputs and outputs, and README/contract/plan describe the delivered scope.
 
 ### Phase 4 — indeterminate beams
 - Solved via unified stiffness/flexibility integration constants and reaction unknowns together in one linear system:
@@ -945,7 +1011,7 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | M7.5| Intuition Engine 1 | Qualitative Elastic Curve (smile/frown, tension/compression fibers), Calculus Tangent sync ($dM/dx=V$), Textbook Formula Matcher ($wL^2/8, PL/4$) & proofs | Visual verification on all 12 hand cases | **Done** |
 | M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *Hinges, axial/inclined loads and AFD done; guided supports pending* |
 | M8.5| Intuition Engine 2 | "Virtual Saw" interactive free-body cut, Area-under-SFD shading | Visual cut equilibrium checks pass | **Done** |
-| M9 | Phase 3 Sections & Deflection | Cross-section library (I-beam, T-beam), $EI$ deflection integration, $\sigma$ and $\tau$ stress envelopes | Cross-section and deflection benchmarks pass | *Planned* |
+| M9 | Phase 3 Sections & Deflection | Cross-section library (I-beam, T-beam), $EI$ deflection integration, $\sigma$ and $\tau$ stress envelopes | Cross-section, deflection, and stress benchmarks pass | **Done** |
 | M10| Phase 4 Indeterminate | Propped cantilever, fixed-fixed, continuous beams, settlement, spring supports | Classic indeterminate hand cases pass | *Planned* |
 
 ---

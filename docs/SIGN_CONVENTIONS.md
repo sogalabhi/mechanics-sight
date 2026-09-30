@@ -36,3 +36,12 @@ Consequences:
 
 ## Tolerances
 Defined only in `beam_solver/tolerances.py`. Positions within 1e-6 m are the same point.
+
+## Physical properties and stresses (Phase 3)
+
+Cross-section coordinates use a centroidal y-axis, positive upward. Top-fibre coordinates are
+positive and bottom-fibre coordinates are negative. Section dimensions are metres, E is entered
+in GPa, yield strength in MPa, and physical deflection is returned in metres for display in mm.
+
+With deflection upward positive and slope anticlockwise positive, `EI y'' = M`. Bending stress is
+`σ = -My/I`: a positive sagging moment compresses the top fibre and tensions the bottom fibre.

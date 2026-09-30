@@ -3,8 +3,8 @@ import { degree, horner } from './poly'
 
 export interface DeflectionPoint {
   x: number // m
-  yRaw: number // raw analytical deflection (EI = 1, sagging/downward positive)
-  yNorm: number // normalized in [-1, 1] relative to max deflection
+  yRaw: number // physical y in m when isPhysical; otherwise qualitative EI = 1
+  yNorm: number // normalized screen displacement: positive is drawn downward
   slope: number // dy/dx
   moment: number // M(x) in kN·m
   isSagging: boolean // M > 0
@@ -18,6 +18,7 @@ export interface InflectionPoint {
 }
 
 export interface ElasticCurveResult {
+  isPhysical: boolean
   points: DeflectionPoint[]
   inflectionPoints: InflectionPoint[]
   maxDeflection: { x: number; yRaw: number; yNorm: number } | null
@@ -42,6 +43,49 @@ export function solveElasticCurve(
   beam: BeamInput,
   result: AnalysisResult,
   nPoints: number = 200,
+): ElasticCurveResult | null {
+  const qualitative = solveQualitativeCurve(beam, result, nPoints)
+  if (!qualitative || !result.deflection) return qualitative
+
+  const physical = result.deflection
+  const evaluate = (x: number) => {
+    const segments = physical.segments
+    const segment =
+      segments.find((s, i) => x < s.x_end - 1e-9 || (i === segments.length - 1 && x <= s.x_end + 1e-9)) ??
+      segments[segments.length - 1]
+    const t = Math.min(segment.x_end - segment.x_start, Math.max(0, x - segment.x_start))
+    return { y: horner(segment.deflection, t), theta: horner(segment.slope, t) }
+  }
+  const maxAbs = Math.abs(physical.max_absolute.value)
+  const normalized = (y: number) => (maxAbs > 1e-15 ? -y / maxAbs : 0)
+  const points = qualitative.points.map((point) => {
+    const value = evaluate(point.x)
+    return { ...point, yRaw: value.y, yNorm: normalized(value.y), slope: value.theta }
+  })
+  const inflectionPoints = qualitative.inflectionPoints.map((point) => {
+    const { y } = evaluate(point.x)
+    return { ...point, yRaw: y, yNorm: normalized(y) }
+  })
+  const exact = physical.max_absolute
+  return {
+    ...qualitative,
+    isPhysical: true,
+    points,
+    inflectionPoints,
+    maxDeflection: { x: exact.x, yRaw: exact.value, yNorm: normalized(exact.value) },
+    maxSagging: physical.max_downward
+      ? { x: physical.max_downward.x, yRaw: physical.max_downward.value }
+      : null,
+    maxHogging: physical.max_upward
+      ? { x: physical.max_upward.x, yRaw: physical.max_upward.value }
+      : null,
+  }
+}
+
+function solveQualitativeCurve(
+  beam: BeamInput,
+  result: AnalysisResult,
+  nPoints: number,
 ): ElasticCurveResult | null {
   const segs = result.segments
   if (!segs.length) return null
@@ -267,6 +311,7 @@ export function solveElasticCurve(
   }
 
   return {
+    isPhysical: false,
     points,
     inflectionPoints,
     maxDeflection: maxPt,

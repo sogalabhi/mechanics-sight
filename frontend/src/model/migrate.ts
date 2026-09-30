@@ -12,5 +12,7 @@ export function migrate(raw: unknown): BeamInput | null {
     supports: b.supports,
     loads: Array.isArray(b.loads) ? b.loads : [],
     hinges: Array.isArray(b.hinges) ? b.hinges : [],
+    material: b.material ?? undefined,
+    section: b.section ?? undefined,
   }
 }
