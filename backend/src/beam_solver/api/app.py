@@ -36,16 +36,21 @@ def create_app(allowed_origins: list[str] | None = None) -> FastAPI:
         response_model=AnalysisOut,
         responses={422: {"model": ErrorOut}, 500: {"model": ErrorOut}},
     )
-    def analyze_beam(beam: BeamIn, steps: bool = False) -> Response:
+    def analyze_beam(
+        beam: BeamIn, steps: bool = False, method: str | None = None
+    ) -> Response:
         """Classify the beam, solve its reactions, and return exact SFD/BMD data.
 
         With ``?steps=true`` the response also carries the worked steps (LaTeX).
+        ``?method=...`` selects the classical solution method for indeterminate beams.
         """
         domain_beam = beam_from_schema(beam)
         result = analyze(domain_beam)
-        out = result_to_schema(result)
+        out = result_to_schema(result, beam=domain_beam, selected_method=method)
         if steps:
-            worked = [step_to_schema(s) for s in build_steps(domain_beam, result)]
+            worked = [
+                step_to_schema(s) for s in build_steps(domain_beam, result, method=method)
+            ]
             out = out.model_copy(update={"steps": worked})
         exclude = set() if steps else {"steps"}
         if out.deflection is None:
@@ -54,6 +59,9 @@ def create_app(allowed_origins: list[str] | None = None) -> FastAPI:
             exclude.add("bending_stress")
         if out.shear_stress is None:
             exclude.add("shear_stress")
+        if not out.available_methods:
+            exclude.add("available_methods")
+            exclude.add("selected_method")
         return JSONResponse(out.model_dump(mode="json", exclude=exclude))
 
     @app.get("/api/v1/health")

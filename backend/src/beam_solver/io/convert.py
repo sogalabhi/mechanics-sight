@@ -153,7 +153,19 @@ def step_to_schema(step: Step) -> StepOut:
     )
 
 
-def result_to_schema(result: AnalysisResult) -> AnalysisOut:
+def result_to_schema(
+    result: AnalysisResult,
+    beam: Beam | None = None,
+    selected_method: str | None = None,
+) -> AnalysisOut:
+    methods: list[str] = []
+    if beam is not None:
+        from beam_solver.analysis.methods.router import available_methods, default_method_for
+
+        methods = list(available_methods(beam, result))
+        if selected_method is None and methods:
+            selected_method = default_method_for(beam, result)
+
     return AnalysisOut(
         classification=classification_to_schema(result.classification),
         reactions=[
@@ -241,6 +253,8 @@ def result_to_schema(result: AnalysisResult) -> AnalysisOut:
                 max_shear_stress=_extreme(result.shear_stress.max_shear_stress),
             )
         ),
+        available_methods=methods,
+        selected_method=selected_method,
     )
 
 
@@ -253,6 +267,9 @@ def result_to_json(result: AnalysisResult) -> dict[str, Any]:
         exclude.add("bending_stress")
     if out.shear_stress is None:
         exclude.add("shear_stress")
+    if not out.available_methods:
+        exclude.add("available_methods")
+        exclude.add("selected_method")
     return out.model_dump(mode="json", exclude=exclude)
 
 

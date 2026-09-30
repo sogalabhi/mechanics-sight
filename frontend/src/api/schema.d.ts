@@ -18,6 +18,7 @@ export interface paths {
          * @description Classify the beam, solve its reactions, and return exact SFD/BMD data.
          *
          *     With ``?steps=true`` the response also carries the worked steps (LaTeX).
+         *     ``?method=...`` selects the classical solution method for indeterminate beams.
          */
         post: operations["analyze_beam_api_v1_analyze_post"];
         delete?: never;
@@ -49,6 +50,11 @@ export interface components {
     schemas: {
         /** AnalysisOut */
         AnalysisOut: {
+            /**
+             * Available Methods
+             * @description Available classical solution methods for indeterminate beams
+             */
+            available_methods?: string[];
             /** @description Extreme-fibre bending stress when material and section are supplied */
             bending_stress?: components["schemas"]["BendingStressOut"] | null;
             /** @description Recognized standard textbook case if applicable */
@@ -69,6 +75,11 @@ export interface components {
             schema_version: 1;
             /** Segments */
             segments: components["schemas"]["SegmentOut"][];
+            /**
+             * Selected Method
+             * @description Currently selected solution method for worked steps
+             */
+            selected_method?: string | null;
             /** @description Maximum transverse shear stress when material and section are supplied */
             shear_stress?: components["schemas"]["ShearStressOut"] | null;
             /**
@@ -592,6 +603,7 @@ export interface operations {
         parameters: {
             query?: {
                 steps?: boolean;
+                method?: string | null;
             };
             header?: never;
             path?: never;

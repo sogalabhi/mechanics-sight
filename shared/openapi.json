@@ -4,6 +4,14 @@
       "AnalysisOut": {
         "additionalProperties": false,
         "properties": {
+          "available_methods": {
+            "description": "Available classical solution methods for indeterminate beams",
+            "items": {
+              "type": "string"
+            },
+            "title": "Available Methods",
+            "type": "array"
+          },
           "bending_stress": {
             "anyOf": [
               {
@@ -69,6 +77,18 @@
             },
             "title": "Segments",
             "type": "array"
+          },
+          "selected_method": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Currently selected solution method for worked steps",
+            "title": "Selected Method"
           },
           "shear_stress": {
             "anyOf": [
@@ -1368,7 +1388,7 @@
   "paths": {
     "/api/v1/analyze": {
       "post": {
-        "description": "Classify the beam, solve its reactions, and return exact SFD/BMD data.\n\nWith ``?steps=true`` the response also carries the worked steps (LaTeX).",
+        "description": "Classify the beam, solve its reactions, and return exact SFD/BMD data.\n\nWith ``?steps=true`` the response also carries the worked steps (LaTeX).\n``?method=...`` selects the classical solution method for indeterminate beams.",
         "operationId": "analyze_beam_api_v1_analyze_post",
         "parameters": [
           {
@@ -1379,6 +1399,22 @@
               "default": false,
               "title": "Steps",
               "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "method",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Method"
             }
           }
         ],

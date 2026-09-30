@@ -302,6 +302,13 @@ class AnalysisOut(_Model):
     steps: list[StepOut] | None = Field(
         default=None, description="Worked steps; only present when requested with ?steps=true"
     )
+    available_methods: list[str] = Field(
+        default_factory=list,
+        description="Available classical solution methods for indeterminate beams",
+    )
+    selected_method: str | None = Field(
+        default=None, description="Currently selected solution method for worked steps"
+    )
 
 
 class ErrorBody(_Model):

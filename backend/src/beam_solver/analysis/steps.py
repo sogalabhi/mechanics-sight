@@ -15,7 +15,7 @@ from numpy.polynomial import Polynomial
 from beam_solver.analysis.analyze import reaction_loads
 from beam_solver.analysis.results import AnalysisResult, Segment, Side
 from beam_solver.domain import Beam, DistributedLoad, Load, PointLoad, PointMoment, PropertySpan
-from beam_solver.solvers import EquilibriumSystem
+from beam_solver.solvers import Determinacy, EquilibriumSystem
 
 _ZERO_TOL = 5e-4  # below this a value prints as 0 (3 decimals)
 MAX_STEP_SEGMENTS = 60  # beyond this the per-segment working is left out
@@ -226,7 +226,14 @@ def _row_latex(row: np.ndarray, names: list[str], rhs: float) -> str:
     return f"{lhs} = {_num(rhs)}"
 
 
-def _reaction_steps(beam: Beam, result: AnalysisResult, labels: _Labels) -> list[Step]:
+def _reaction_steps(
+    beam: Beam, result: AnalysisResult, labels: _Labels, method: str | None = None
+) -> list[Step]:
+    if result.classification.bending_degree > 0:
+        from beam_solver.analysis.methods.router import build_indeterminate_steps
+
+        return build_indeterminate_steps(beam, result, method=method)
+
     system = EquilibriumSystem.from_beam(beam)
     cols = system.bending_columns()
     if not cols:
@@ -710,14 +717,16 @@ def _physical_steps(beam: Beam, result: AnalysisResult) -> list[Step]:
     return steps
 
 
-def build_steps(beam: Beam, result: AnalysisResult) -> tuple[Step, ...]:
+def build_steps(
+    beam: Beam, result: AnalysisResult, method: str | None = None
+) -> tuple[Step, ...]:
     """Worked steps for an already-analysed beam."""
     labels = _make_labels(beam)
     all_loads = beam.loads + reaction_loads(result.reactions, beam)
     return tuple(
         _setup_steps(beam, labels)
         + _resultant_steps(beam, labels)
-        + _reaction_steps(beam, result, labels)
+        + _reaction_steps(beam, result, labels, method=method)
         + _segment_steps(beam, all_loads, result, labels)
         + _extreme_steps(result)
         + _physical_steps(beam, result)
