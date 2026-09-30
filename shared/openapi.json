@@ -93,6 +93,15 @@
       "BeamIn": {
         "additionalProperties": false,
         "properties": {
+          "hinges": {
+            "description": "Positions of internal moment hinges in m from the left end",
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 10,
+            "title": "Hinges",
+            "type": "array"
+          },
           "length": {
             "description": "m",
             "exclusiveMinimum": 0.0,

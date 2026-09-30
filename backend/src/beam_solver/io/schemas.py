@@ -8,6 +8,7 @@ SCHEMA_VERSION: Literal[1] = 1
 MAX_LENGTH = 1000.0
 MAX_SUPPORTS = 20
 MAX_LOADS = 100
+MAX_HINGES = 10
 
 Id = Annotated[str, Field(min_length=1, max_length=32)]
 
@@ -53,6 +54,11 @@ class BeamIn(_Model):
     length: float = Field(gt=0, le=MAX_LENGTH, description="m")
     supports: list[SupportIn] = Field(min_length=1, max_length=MAX_SUPPORTS)
     loads: list[LoadIn] = Field(default_factory=list, max_length=MAX_LOADS)
+    hinges: list[float] = Field(
+        default_factory=list,
+        max_length=MAX_HINGES,
+        description="Positions of internal moment hinges in m from the left end",
+    )
 
 
 class ClassificationOut(_Model):

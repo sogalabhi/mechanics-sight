@@ -42,8 +42,10 @@ function inputTables(beam: BeamInput): string {
       const dir = (l.w_start || l.w_end) < 0 ? 'down' : 'up'
       return `<tr><td>Distributed load</td><td class="n">${w} ${dir}</td><td class="n">${formatQty(l.start, 'm')} to ${formatQty(l.end, 'm')}</td></tr>`
     })
+  const hingeRows = (beam.hinges ?? [])
+    .map((h, i) => `<tr><td>H<sub>${i + 1}</sub></td><td>Internal hinge (M = 0)</td><td class="n">${formatQty(h, 'm')}</td></tr>`)
     .join('')
-  return `<div class="two"><table><caption>Supports</caption><tr><th>Label</th><th>Type</th><th>Position</th></tr>${sup}</table>
+  return `<div class="two"><table><caption>Supports & Releases</caption><tr><th>Label</th><th>Type</th><th>Position</th></tr>${sup}${hingeRows}</table>
 <table><caption>Loads</caption><tr><th>Kind</th><th>Magnitude</th><th>Where</th></tr>${loads || '<tr><td colspan="3">None</td></tr>'}</table></div>`
 }
 

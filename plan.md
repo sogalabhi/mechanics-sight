@@ -830,7 +830,7 @@ Even before user input of $E$ and $I$ in Phase 3, determinate beam deformation s
 - **Analytical Engine (`frontend/src/math/sectionCut.ts`):**
   - Exact closed-form static equilibrium equations across all support types, trapezoid/triangle distributed load slices, point loads, and couples. Tested across 5 fixture test suites in `sectionCut.test.ts`.
 
-### 11.5.5 Symbolic Formula Matcher & First-Principles Proofs
+### 11.5.5 Symbolic Formula Matcher & First-Principles Proofs [x] (Implemented & Verified)
 Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but students struggle to connect them to computer outputs.
 
 1. **Pattern Matcher:**
@@ -872,13 +872,14 @@ Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but studen
 ## 12. Later phases: design
 
 ### Phase 2 — hinges, horizontal loads, guided support, and AFD
-- **Internal Hinges (Gerber Beams):** `Beam.hinges: tuple[float, ...] = ()`.
+- **Internal Hinges (Gerber Beams):** `Beam.hinges: tuple[float, ...] = ()` [DONE].
   - Mechanics: A hinge releases the bending moment restraint while transmitting vertical shear force ($V$ is continuous across the hinge unless an external load sits there, but $M(x_h) = 0$).
   - Equation assembly in `EquilibriumSystem`: Each hinge adds the row $M(x_h^-) = 0$ to the bending block ($e = 3 + h$ equations).
-    - For each unit reaction column $j$: evaluate its section polynomial for $M$ at $x_h^-$.
-    - The RHS vector $b$ receives $b_h = \sum \text{moment about } x_h \text{ of all applied loads left of } x_h$.
+    - For each unit reaction column $j$: evaluate its moment arm $(x_s - x_h)$ or rotational unit $1.0$ for all unknowns to the left of the hinge.
+    - The RHS vector $b$ receives $b_h = -\sum \text{moment about } x_h \text{ of all applied loads left of } x_h$.
   - Validation: $x_h \in (0, L)$, not at a `FIXED` support, no point couple directly at a hinge (`InvalidLoadError`).
   - Classification: Handled automatically by count and rank ($e = 3 + h$). Badly placed hinges (e.g. fixed at 0, roller at 1, hinge at 3) fail the rank test and report "unstable" with clear diagnostics.
+  - Worked Steps: LaTeX equations include $\sum M_{x=x_h}^- = 0$ equilibrium slices.
 - **Horizontal / Inclined Point Loads & AFD:**
   - `PointLoad` gains `fx: float = 0.0` (in addition to vertical force).
   - Axial equilibrium $\Sigma F_x = 0$ resolves horizontal reactions.
@@ -935,9 +936,9 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | M6.5| Worked Steps | Backend LaTeX steps generator, KaTeX Working panel | Steps match hand solutions for all 12 cases | **Done** |
 | *Extras*| Packaging | HTML report download, Docker Compose, Vercel deployments | Deployments active, reports download clean | **Done** |
 | M7 | Phase 1.6 Drag & Drop | Canvas pointer drag, 8px snapping, 1-2-5 grid, draft state | Playwright drag tests pass (snap, drag, live update) | *In Progress* |
-| M7.5| Intuition Engine 1 | Qualitative Elastic Curve (smile/frown, tension/compression fibers), Calculus Tangent sync ($dM/dx=V$), Textbook Formula Matcher ($wL^2/8, PL/4$) & proofs | Visual verification on all 12 hand cases | *Planned* |
-| M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *Planned* |
-| M8.5| Intuition Engine 2 | "Virtual Saw" interactive free-body cut, Area-under-SFD shading | Visual cut equilibrium checks pass | *Planned* |
+| M7.5| Intuition Engine 1 | Qualitative Elastic Curve (smile/frown, tension/compression fibers), Calculus Tangent sync ($dM/dx=V$), Textbook Formula Matcher ($wL^2/8, PL/4$) & proofs | Visual verification on all 12 hand cases | **Done** |
+| M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *In Progress (Gerber hinges engine done)* |
+| M8.5| Intuition Engine 2 | "Virtual Saw" interactive free-body cut, Area-under-SFD shading | Visual cut equilibrium checks pass | **Done** |
 | M9 | Phase 3 Sections & Deflection | Cross-section library (I-beam, T-beam), $EI$ deflection integration, $\sigma$ and $\tau$ stress envelopes | Cross-section and deflection benchmarks pass | *Planned* |
 | M10| Phase 4 Indeterminate | Propped cantilever, fixed-fixed, continuous beams, settlement, spring supports | Classic indeterminate hand cases pass | *Planned* |
 

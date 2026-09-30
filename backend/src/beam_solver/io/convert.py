@@ -42,7 +42,7 @@ def beam_from_schema(data: BeamIn) -> Beam:
             loads.append(PointMoment(ld.id, ld.position, ld.magnitude))
         else:
             loads.append(DistributedLoad(ld.id, ld.start, ld.end, ld.w_start, ld.w_end))
-    return Beam(data.length, supports, tuple(loads))
+    return Beam(data.length, supports, tuple(loads), tuple(data.hinges))
 
 
 def beam_from_json(data: dict[str, Any]) -> Beam:

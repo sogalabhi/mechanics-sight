@@ -1,7 +1,25 @@
 import { newId } from './ids'
-import { isSupport, type BeamInput, type DistributedLoad, type Item, type Load, type Support } from './types'
+import {
+  isHinge,
+  isSupport,
+  type BeamInput,
+  type DistributedLoad,
+  type Hinge,
+  type Item,
+  type Load,
+  type Support,
+} from './types'
 
-export type PaletteKind = 'pin' | 'roller' | 'fixed' | 'point' | 'moment' | 'udl' | 'uvl' | 'trapezoidal'
+export type PaletteKind =
+  | 'pin'
+  | 'roller'
+  | 'fixed'
+  | 'hinge'
+  | 'point'
+  | 'moment'
+  | 'udl'
+  | 'uvl'
+  | 'trapezoidal'
 
 export const MIN_LENGTH = 0.1
 export const MAX_LENGTH = 1000
@@ -11,9 +29,19 @@ const MIN_SPAN = 0.001
 export const round3 = (v: number) => Math.round(v * 1000) / 1000
 const clamp = (v: number, lo: number, hi: number) => Math.min(hi, Math.max(lo, v))
 
-export const emptyBeam = (length = 6): BeamInput => ({ schema_version: 1, length, supports: [], loads: [] })
+export const emptyBeam = (length = 6): BeamInput => ({
+  schema_version: 1,
+  length,
+  supports: [],
+  loads: [],
+  hinges: [],
+})
 
-export const allItems = (b: BeamInput): Item[] => [...b.supports, ...(b.loads ?? [])]
+export const allItems = (b: BeamInput): Item[] => [
+  ...b.supports,
+  ...(b.loads ?? []),
+  ...(b.hinges ?? []).map((x, i) => ({ id: `hinge-${i}`, type: 'hinge' as const, position: x })),
+]
 export const findItem = (b: BeamInput, id: string): Item | undefined => allItems(b).find((i) => i.id === id)
 
 /** Every position an item occupies, for key points and length limits. */
@@ -36,6 +64,13 @@ export function addItem(beam: BeamInput, kind: PaletteKind, x?: number): { beam:
     const s: Support = { id: newId('s'), type: kind, position: round3(pos) }
     return { beam: { ...beam, supports: [...beam.supports, s] }, id: s.id }
   }
+  if (kind === 'hinge') {
+    const hinges = beam.hinges ?? []
+    const at = round3(clamp(x ?? L / 2, 0.1, L - 0.1))
+    const nextHinges = [...hinges, at]
+    const id = `hinge-${nextHinges.length - 1}`
+    return { beam: { ...beam, hinges: nextHinges }, id }
+  }
   const at = round3(clamp(x ?? L / 2, 0, L))
   let load: Load
   if (kind === 'point') load = { id: newId('l'), type: 'point', position: at, magnitude: -10 }
@@ -49,7 +84,19 @@ export function addItem(beam: BeamInput, kind: PaletteKind, x?: number): { beam:
   return { beam: { ...beam, loads: [...loads, load] }, id: load.id }
 }
 
-export function updateItem(beam: BeamInput, id: string, patch: Partial<Support> | Partial<Load>): BeamInput {
+export function updateItem(
+  beam: BeamInput,
+  id: string,
+  patch: Partial<Support> | Partial<Load> | Partial<Hinge>,
+): BeamInput {
+  if (id.startsWith('hinge-')) {
+    const index = parseInt(id.replace('hinge-', ''), 10)
+    const hinges = [...(beam.hinges ?? [])]
+    if (index >= 0 && index < hinges.length && 'position' in patch && typeof patch.position === 'number') {
+      hinges[index] = round3(patch.position)
+    }
+    return { ...beam, hinges }
+  }
   return {
     ...beam,
     supports: beam.supports.map((s) => (s.id === id ? ({ ...s, ...patch } as Support) : s)),
@@ -58,6 +105,11 @@ export function updateItem(beam: BeamInput, id: string, patch: Partial<Support> 
 }
 
 export function removeItem(beam: BeamInput, id: string): BeamInput {
+  if (id.startsWith('hinge-')) {
+    const index = parseInt(id.replace('hinge-', ''), 10)
+    const hinges = (beam.hinges ?? []).filter((_, i) => i !== index)
+    return { ...beam, hinges }
+  }
   return {
     ...beam,
     supports: beam.supports.filter((s) => s.id !== id),
@@ -71,6 +123,9 @@ export function moveItem(beam: BeamInput, id: string, dx: number): BeamInput {
   if (!item || item.type === 'fixed') return beam
   if (item.type === 'distributed') {
     return updateItem(beam, id, { start: round3(item.start + dx), end: round3(item.end + dx) })
+  }
+  if (item.type === 'hinge') {
+    return updateItem(beam, id, { position: round3(clamp(item.position + dx, 0.05, beam.length - 0.05)) })
   }
   return updateItem(beam, id, { position: round3(item.position + dx) })
 }
@@ -91,6 +146,24 @@ export function validateBeam(beam: BeamInput): string | null {
   for (let k = 1; k < sup.length; k++) {
     if (sup[k].position - sup[k - 1].position < TOL)
       return `A support is already at ${sup[k].position.toFixed(3)} m`
+  }
+  const hinges = beam.hinges ?? []
+  for (let k = 0; k < hinges.length; k++) {
+    const h = hinges[k]
+    if (h <= TOL || h >= L - TOL) return 'Internal hinges must be strictly inside (0, L)'
+    for (let j = k + 1; j < hinges.length; j++) {
+      if (Math.abs(h - hinges[j]) < TOL) return `Duplicate internal hinges at ${h.toFixed(3)} m`
+    }
+    for (const s of beam.supports) {
+      if (s.type === 'fixed' && Math.abs(s.position - h) < TOL) {
+        return 'Cannot place an internal hinge at a fixed support'
+      }
+    }
+    for (const l of beam.loads ?? []) {
+      if (l.type === 'moment' && Math.abs(l.position - h) < TOL) {
+        return 'Cannot place an applied moment couple directly at an internal hinge'
+      }
+    }
   }
   return null
 }
@@ -115,6 +188,7 @@ export function setLength(beam: BeamInput, requested: number): BeamInput {
     loads: (beam.loads ?? []).map((l) =>
       l.type === 'distributed' ? ({ ...l, end: move(l.end) } as DistributedLoad) : { ...l, position: move(l.position) },
     ),
+    hinges: (beam.hinges ?? []).map((h) => (h >= L - TOL ? round3(L - 0.05) : h)),
   }
 }
 
@@ -124,4 +198,4 @@ export function keyPoints(beam: BeamInput): number[] {
   return all.filter((p, k) => k === 0 || p - all[k - 1] > TOL)
 }
 
-export { isSupport }
+export { isHinge, isSupport }

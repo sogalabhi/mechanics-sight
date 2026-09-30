@@ -129,15 +129,21 @@ def _plain(label: str) -> str:
 
 
 def _setup_steps(beam: Beam, labels: _Labels) -> list[Step]:
+    supports_notes = [
+        f"{labels.supports[s.id]}: {s.kind.value} support at x = {_num(s.position)} m"
+        for s in sorted(beam.supports, key=lambda s: s.position)
+    ]
+    if beam.hinges:
+        supports_notes.extend(
+            f"H_{i+1}: internal hinge at x = {_num(h)} m (bending moment released: M = 0)"
+            for i, h in enumerate(beam.hinges)
+        )
     steps = [
         Step(
             "supports",
             "reactions",
-            "Supports",
-            notes=tuple(
-                f"{labels.supports[s.id]}: {s.kind.value} support at x = {_num(s.position)} m"
-                for s in sorted(beam.supports, key=lambda s: s.position)
-            ),
+            "Supports and hinges" if beam.hinges else "Supports",
+            notes=tuple(supports_notes),
         )
     ]
     notes: list[str] = []
@@ -288,6 +294,37 @@ def _reaction_steps(beam: Beam, result: AnalysisResult, labels: _Labels) -> list
             result=_row_latex(m_row, names, m_rhs),
         ),
     ]
+    for k, h_pos in enumerate(beam.hinges):
+        h_row = system.a[3 + k, cols]
+        h_rhs = float(system.b[3 + k])
+        unk_terms = []
+        for n, c, u in zip(names, h_row, unknowns, strict=True):
+            if abs(c) > 1e-9:
+                if u.direction.name == "ROTATION":
+                    unk_terms.append(f"{n}")
+                else:
+                    unk_terms.append(f"{n}\\,({_num(c)})")
+        load_terms = []
+        for ld in beam.loads:
+            left, _ = ld.split(h_pos)
+            if left is not None and abs(left.resultant()) > 1e-12:
+                w = left.resultant()
+                arm = left.moment_about(h_pos) / w
+                load_terms.append(f"{_paren(_num(w))}\\,({_num(arm)})")
+            elif left is not None and isinstance(left, PointMoment):
+                load_terms.append(_paren(_num(left.magnitude)))
+        sub_h = " + ".join(unk_terms + load_terms) or "0"
+        out.append(
+            Step(
+                "moment_balance",
+                "reactions",
+                f"Internal hinge condition at x = {_num(h_pos)} m (left segment)",
+                symbolic=f"\\sum M_{{x={_num(h_pos)}}}^{{-}} = 0",
+                substituted=f"{sub_h} = 0",
+                result=_row_latex(h_row, names, h_rhs),
+                at=h_pos,
+            )
+        )
     by_name = {(r.support_id, "fy"): r.fy for r in result.reactions} | {
         (r.support_id, "m"): r.moment for r in result.reactions
     }

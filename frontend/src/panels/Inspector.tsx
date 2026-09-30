@@ -12,6 +12,7 @@ function typeName(i: Item): string {
     case 'pin': return 'Pin support'
     case 'roller': return 'Roller support'
     case 'fixed': return 'Fixed support'
+    case 'hinge': return 'Internal hinge'
     case 'point': return 'Point load'
     case 'moment': return 'Moment'
     case 'distributed':
@@ -130,6 +131,11 @@ export function Inspector({ compact = false }: { compact?: boolean }) {
               <NumberField label="Magnitude" unit="kN·m" value={Math.abs(item.magnitude)}
                 onCommit={positive((v) => apply({ magnitude: v * (item.magnitude > 0 ? 1 : -1) }))} />
             </>
+          )}
+          {item.type === 'hinge' && (
+            <p className={styles.hint} style={{ marginTop: '0.75rem', fontSize: '0.75rem', lineHeight: 1.4 }}>
+              Releases bending moment (<em>M</em> = 0) while transmitting vertical shear force (<em>V</em>).
+            </p>
           )}
         </>
       )}

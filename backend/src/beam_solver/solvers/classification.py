@@ -36,8 +36,8 @@ def classify(system: EquilibriumSystem) -> Classification:
     e = system.equations
     r_axial = len(system.axial_columns())
     r_bending = len(system.bending_columns())
-    e_axial = len(AXIAL_ROWS)
-    e_bending = len(BENDING_ROWS)
+    e_axial = len(system.axial_rows)
+    e_bending = len(system.bending_rows)
 
     def unstable(reason: str) -> Classification:
         return Classification(Determinacy.UNSTABLE, r, e, 0, 0, reason)

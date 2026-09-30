@@ -6,11 +6,22 @@ const p = <T,>(v: T) => v
 
 export const ENTRIES: { group: string; items: { kind: PaletteKind; name: string; box: string; art: ReactNode }[] }[] = [
   {
-    group: 'Supports',
+    group: 'Supports & Releases',
     items: [
       { kind: 'pin', name: 'Pin', box: '-18 0 36 34', art: <PinSupport x={0} /> },
       { kind: 'roller', name: 'Roller', box: '-18 0 36 34', art: <RollerSupport x={0} /> },
       { kind: 'fixed', name: 'Fixed', box: '-10 -26 36 52', art: <FixedSupport x={0} end="left" /> },
+      {
+        kind: 'hinge',
+        name: 'Hinge',
+        box: '-16 -12 32 24',
+        art: (
+          <g>
+            <line x1={-14} y1={0} x2={14} y2={0} stroke="var(--ink)" strokeWidth={2.5} />
+            <circle cx={0} cy={0} r={5} fill="var(--paper)" stroke="var(--ink)" strokeWidth={2} />
+          </g>
+        ),
+      },
     ],
   },
   {

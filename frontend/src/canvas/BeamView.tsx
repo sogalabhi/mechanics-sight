@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react'
 import {
-  Beam, Couple, DimensionChain, DistributedLoad, FixedSupport, PinSupport, PointLoad, RollerSupport,
+  Beam, Couple, DimensionChain, DistributedLoad, FixedSupport, Hinge, PinSupport, PointLoad, RollerSupport,
   loadHeight, ReactionForce, ReactionMoment,
 } from '@/drawing'
 import { formatNumber, formatQty } from '@/math/format'
@@ -106,6 +106,15 @@ export function BeamView() {
             <Selectable key={item.id} item={item} bounds={[x(item.position) - 26, -38, x(item.position) + 26, 22]}
               label={`Moment ${Math.abs(item.magnitude)} kN·m at ${formatQty(item.position, 'm')}`}>
               <Couple x={x(item.position)} magnitude={item.magnitude} state={st} />
+            </Selectable>
+          )
+        }
+        if (item.type === 'hinge') {
+          const px = x(item.position)
+          return (
+            <Selectable key={item.id} item={item} bounds={[px - 10, -10, px + 10, 10]}
+              label={`Internal hinge at ${formatQty(item.position, 'm')}`}>
+              <Hinge x={px} state={st} />
             </Selectable>
           )
         }

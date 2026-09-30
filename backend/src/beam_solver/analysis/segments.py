@@ -12,7 +12,7 @@ from beam_solver.tolerances import POSITION_TOL
 
 def critical_positions(beam: Beam, loads: Iterable[Load]) -> tuple[float, ...]:
     """Sorted positions of 0, L, supports and load breakpoints, merged within tolerance."""
-    raw = [0.0, beam.length, *(s.position for s in beam.supports)]
+    raw = [0.0, beam.length, *(s.position for s in beam.supports), *beam.hinges]
     raw.extend(x for load in loads for x in load.breakpoints())
     merged: list[float] = []
     for x in sorted(min(max(x, 0.0), beam.length) for x in raw):

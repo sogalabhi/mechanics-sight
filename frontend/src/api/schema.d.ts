@@ -92,6 +92,11 @@ export interface components {
             schema_version: 1;
             /** Supports */
             supports: components["schemas"]["SupportIn"][];
+            /**
+             * Hinges
+             * @description Positions of internal moment hinges in m from the left end
+             */
+            hinges?: number[];
         };
         /** CanonicalOut */
         CanonicalOut: {

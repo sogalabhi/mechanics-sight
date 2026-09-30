@@ -15,6 +15,11 @@ describe('addItem', () => {
     const l = addItem(emptyBeam(6), 'udl', 0).beam.loads![0]
     expect(l).toMatchObject({ start: 0, end: 2, w_start: -5, w_end: -5 })
   })
+  it('creates an internal hinge at specified or center position', () => {
+    const res = addItem(emptyBeam(10), 'hinge', 4)
+    expect(res.beam.hinges).toEqual([4])
+    expect(res.id).toBe('hinge-0')
+  })
 })
 
 describe('setLength', () => {
@@ -54,12 +59,29 @@ describe('validateBeam', () => {
     b.supports = [{ id: 's', type: 'fixed', position: 3 }]
     expect(validateBeam(b)).toMatch(/beam end/)
   })
+  it('rejects hinges at boundaries or duplicate hinges', () => {
+    let b = emptyBeam(6)
+    b.hinges = [0]
+    expect(validateBeam(b)).toMatch(/strictly inside/)
+    b.hinges = [3, 3]
+    expect(validateBeam(b)).toMatch(/Duplicate internal hinges/)
+  })
+  it('rejects hinges at fixed supports or point moments at hinges', () => {
+    let b = emptyBeam(6)
+    b.supports = [{ id: 's', type: 'fixed', position: 0 }]
+    b.hinges = [0]
+    expect(validateBeam(b)).toMatch(/strictly inside/)
+    b.hinges = [3]
+    b.loads = [{ id: 'm', type: 'moment', position: 3, magnitude: 10 }]
+    expect(validateBeam(b)).toMatch(/Cannot place an applied moment couple directly at an internal hinge/)
+  })
 })
 
 describe('keyPoints', () => {
-  it('is sorted and unique', () => {
-    const b = addItem(addItem(emptyBeam(6), 'pin').beam, 'point', 0).beam
-    expect(keyPoints(b)).toEqual([0, 6])
+  it('is sorted and unique and includes hinges', () => {
+    let b = addItem(addItem(emptyBeam(6), 'pin').beam, 'point', 0).beam
+    b = addItem(b, 'hinge', 3).beam
+    expect(keyPoints(b)).toEqual([0, 3, 6])
   })
 })
 
@@ -72,5 +94,10 @@ describe('moveItem', () => {
   it('leaves fixed supports alone', () => {
     const r = addItem(emptyBeam(6), 'fixed')
     expect(moveItem(r.beam, r.id, 1)).toBe(r.beam)
+  })
+  it('moves a hinge within bounds', () => {
+    const r = addItem(emptyBeam(6), 'hinge', 3)
+    const b = moveItem(r.beam, r.id, 0.5)
+    expect(b.hinges).toEqual([3.5])
   })
 })

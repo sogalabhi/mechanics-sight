@@ -20,6 +20,28 @@ const files = import.meta.glob('../../../shared/fixtures/*.json', { eager: true 
   { default: { name: string; input: BeamInput } }
 >
 
-export const EXAMPLES = Object.values(files)
-  .map((m) => ({ key: m.default.name, label: LABELS[m.default.name] ?? m.default.name, beam: m.default.input }))
-  .sort((a, b) => a.key.localeCompare(b.key))
+const GERBER_PRESET = {
+  key: '13_gerber_beam',
+  label: 'Gerber beam (internal hinge, M = 0)',
+  beam: {
+    schema_version: 1 as const,
+    length: 10,
+    supports: [
+      { id: 's1', type: 'fixed' as const, position: 0 },
+      { id: 's2', type: 'roller' as const, position: 10 },
+    ],
+    loads: [
+      { id: 'l1', type: 'point' as const, position: 8, magnitude: -10 },
+    ],
+    hinges: [6],
+  },
+}
+
+export const EXAMPLES = [
+  ...Object.values(files).map((m) => ({
+    key: m.default.name,
+    label: LABELS[m.default.name] ?? m.default.name,
+    beam: m.default.input,
+  })),
+  GERBER_PRESET,
+].sort((a, b) => a.key.localeCompare(b.key))
