@@ -6,6 +6,7 @@ import { curvePoints, largestRegions, signRegions, valueAt, type Kind } from '@/
 import { Guides } from '@/canvas/Guides'
 import { useLayout, useXScale } from '@/canvas/xscale'
 import { useStore } from '@/store/store'
+import { CalculusTangent } from './CalculusTangent'
 import { Crosshair } from './Crosshair'
 
 export const DIAGRAM_HEIGHT = 190
@@ -167,6 +168,7 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
           )
         })}
       </g>
+      {kind === 'moment' && <CalculusTangent yOf={y} height={DIAGRAM_HEIGHT} />}
       <Crosshair kind={kind} yOf={y} height={DIAGRAM_HEIGHT} color={meta.color} unit={meta.unit} />
     </g>
   )

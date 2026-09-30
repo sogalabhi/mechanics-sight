@@ -22,6 +22,7 @@ interface State {
   stepsUnsupported: boolean
   showReactions: boolean
   showGuides: boolean
+  showCalculus: boolean
   hoverX: number | null
   pinnedX: number | null
   /** One call = one undo step. */
@@ -37,6 +38,7 @@ interface State {
   setStepsUnsupported: (v: boolean) => void
   setShowReactions: (v: boolean) => void
   setShowGuides: (v: boolean) => void
+  setShowCalculus: (v: boolean) => void
 }
 
 export const useStore = create<State>((set) => ({
@@ -50,6 +52,7 @@ export const useStore = create<State>((set) => ({
   stepsUnsupported: false,
   showReactions: true,
   showGuides: true,
+  showCalculus: true,
   hoverX: null,
   pinnedX: null,
   commit: (beam, selectId) =>
@@ -72,4 +75,5 @@ export const useStore = create<State>((set) => ({
   setStepsUnsupported: (stepsUnsupported) => set({ stepsUnsupported }),
   setShowReactions: (showReactions) => set({ showReactions }),
   setShowGuides: (showGuides) => set({ showGuides }),
+  setShowCalculus: (showCalculus) => set({ showCalculus }),
 }))

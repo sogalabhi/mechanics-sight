@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/model/types'
-import { curvePoints, horner, largestRegions, signRegions, valueAt } from './poly'
+import { curvePoints, horner, largestRegions, signRegions, tangentAt, valueAt } from './poly'
 import { placeLabels } from './labels'
 
 const fixtures = import.meta.glob('../../../shared/fixtures/*.json', { eager: true }) as Record<
@@ -60,3 +60,77 @@ describe('sign regions', () => {
     expect(largestRegions(signRegions([[0, 0], [1, 1], [1, 0]]))).toEqual([])
   })
 })
+
+describe('tangentAt (Calculus Tangent Visualizer)', () => {
+  const xs = (x: number) => 50 + x * 100 // 100 px per m
+  const ys = (m: number) => 150 - m * 2 // sagging positive is up (decreasing Y)
+
+  it('ss_full_udl: midspan tangent is perfectly horizontal at peak moment', () => {
+    const udlFixture = Object.values(fixtures).find((f) => f.default.name.includes('full_udl'))?.default.output
+    expect(udlFixture).toBeDefined()
+    if (!udlFixture) return
+
+    const t = tangentAt(udlFixture, 3.0, xs, ys, 40)
+    expect(t).not.toBeNull()
+    if (!t) return
+
+    expect(t.isZeroShear).toBe(true)
+    expect(t.isKink).toBe(false)
+    expect(t.leftRay.slope).toBe(0)
+    expect(t.rightRay.slope).toBe(0)
+    expect(t.fullSegment.y1).toBe(t.fullSegment.y2) // Perfectly horizontal
+    expect(t.fullSegment.x2 - t.fullSegment.x1).toBeCloseTo(80, 5) // 2 * radius
+  })
+
+  it('ss_full_udl: non-zero shear point has slope exactly matching V(x)', () => {
+    const udlFixture = Object.values(fixtures).find((f) => f.default.name.includes('full_udl'))?.default.output
+    if (!udlFixture) return
+
+    const t = tangentAt(udlFixture, 1.0, xs, ys, 40)
+    expect(t).not.toBeNull()
+    if (!t) return
+
+    expect(t.isZeroShear).toBe(false)
+    expect(t.isKink).toBe(false)
+    // dM/dx = V(1)
+    const vAt1 = valueAt(udlFixture, 1.0, 'shear').right
+    expect(t.leftRay.slope).toBeCloseTo(vAt1, 6)
+    expect(t.rightRay.slope).toBeCloseTo(vAt1, 6)
+    // In SVG space: since V(1) > 0 and ys has negative scale, dy/dx in screen pixels is negative (slopes up-right)
+    expect(t.fullSegment.y2).toBeLessThan(t.fullSegment.y1)
+  })
+
+  it('ss_central_point: peak moment under point load forms kink meeting at apex', () => {
+    const pointFixture = Object.values(fixtures).find((f) => f.default.name.includes('central_point'))?.default.output
+    expect(pointFixture).toBeDefined()
+    if (!pointFixture) return
+
+    const t = tangentAt(pointFixture, 3.0, xs, ys, 40)
+    expect(t).not.toBeNull()
+    if (!t) return
+
+    expect(t.isKink).toBe(true)
+    expect(t.isZeroCrossing).toBe(true)
+    expect(t.isZeroShear).toBe(true)
+    expect(t.leftRay.slope).toBeGreaterThan(0)
+    expect(t.rightRay.slope).toBeLessThan(0)
+    expect(t.leftRay.x2).toBe(t.px)
+    expect(t.leftRay.y2).toBe(t.py)
+    expect(t.rightRay.x1).toBe(t.px)
+    expect(t.rightRay.y1).toBe(t.py)
+  })
+
+  it('handles beam boundaries cleanly at x = 0 and x = L', () => {
+    const udlFixture = Object.values(fixtures).find((f) => f.default.name.includes('full_udl'))?.default.output
+    if (!udlFixture) return
+
+    const t0 = tangentAt(udlFixture, 0, xs, ys, 40)
+    expect(t0).not.toBeNull()
+    expect(t0?.px).toBe(xs(0))
+
+    const tL = tangentAt(udlFixture, 6, xs, ys, 40)
+    expect(tL).not.toBeNull()
+    expect(tL?.px).toBe(xs(6))
+  })
+})
+

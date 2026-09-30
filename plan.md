@@ -766,12 +766,15 @@ Even before user input of $E$ and $I$ in Phase 3, determinate beam deformation s
   - Highlighted with a visual landmark on the curve where the beam switches between concave up and concave down.
 
 ### 11.5.2 Calculus & Curvature Visualizer ("Slope is Value")
-- **Dynamic Tangent Line:**
-  - When hovering along the BMD at $x$, a tangent line is drawn on the moment curve.
-  - The numerical slope of this tangent line dynamically lights up on the SFD directly above:
-    $$\text{Slope of BMD} = \frac{dM}{dx} = V(x)$$
-  - When the cursor reaches a zero-shear point ($V = 0$), the tangent line becomes perfectly horizontal ($\text{slope} = 0$), proving visually why extreme moments occur at zero shear.
-- **Curvature / Concavity Badges:**
+- **Dynamic Tangent Line [x] (Implemented & Verified):**
+  - Live tangent line rendered on the Bending Moment Diagram (`frontend/src/diagrams/CalculusTangent.tsx`).
+  - Screen geometry derived rigorously from analytical polynomial derivative:
+    $$\frac{dY_{\text{px}}}{dX_{\text{px}}} = \frac{S_y \cdot V(x)}{\text{pxPerM}}$$
+  - At zero shear points ($V = 0$), tangent line becomes identically horizontal ($\text{slope} = 0$), highlights in vibrant emerald green (`#10b981`), and presents a glowing peak indicator badge.
+  - Linked across SFD and BMD: SFD crosshair simultaneously reports `$V = \dots \implies \text{Slope of BMD}$` and green zero-crossing status.
+  - Cursor snaps automatically to zero-shear roots within 6 px in `CanvasStack.tsx`.
+  - User-configurable toggle in `ViewMenu.tsx` (persisted in Zustand store, defaults to ON).
+- **Curvature / Concavity Badges (Phase 2):**
   - Under a downward distributed load ($w < 0$), the badge explains:
     $$\frac{d^2M}{dx^2} = \frac{dV}{dx} = w < 0 \implies \text{Concave Downwards (Frowning Parabola)}$$
 

@@ -16,32 +16,131 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
   const pinned = useStore((s) => s.pinnedX)
   const hover = useStore((s) => s.hoverX)
   const result = useStore((s) => s.result)
+  const showCalculus = useStore((s) => s.showCalculus)
   const xs = useXScale()
+
   const mx = pinned ?? hover
   if (mx === null) return null
   const px = xs(mx)
+
   const v = kind && result && yOf ? valueAt(result, mx, kind) : null
   const jump = v ? isJump(v) : false
   const sign = kind === 'shear'
   const name = kind === 'shear' ? 'V' : 'M'
+
+  // Calculus intuition derivation: V(x) = dM/dx
+  let subText: string | null = null
+  let isZeroShear = false
+
+  if (showCalculus && result && kind) {
+    const vShear = valueAt(result, mx, 'shear')
+    const zTol = 1e-4
+    const isZeroShearPoint = result.zero_shear_points.some((z) => Math.abs(z - mx) < zTol)
+    const isSmoothZero = Math.abs(vShear.right) < zTol || Math.abs(vShear.left) < zTol
+    const isZeroCrossing = vShear.left * vShear.right < -1e-9
+    isZeroShear = isZeroShearPoint || isSmoothZero || isZeroCrossing
+
+    if (kind === 'shear') {
+      if (isZeroShear) {
+        subText = 'dM/dx = 0 → Peak Moment'
+      } else {
+        subText = '= Slope dM/dx of BMD'
+      }
+    } else if (kind === 'moment') {
+      if (isZeroShear && !isZeroCrossing) {
+        subText = 'Slope dM/dx = 0 (Peak M)'
+      } else if (isJump(vShear)) {
+        subText = `dM/dx = ${formatNumber(vShear.left, { sign: true })} / ${formatNumber(vShear.right, { sign: true })} kN`
+      } else {
+        subText = `Slope dM/dx = ${formatNumber(vShear.right, { sign: true })} kN`
+      }
+    }
+  }
+
   const text = v
     ? jump
       ? `${name} = ${formatNumber(v.left, { sign })} / ${formatNumber(v.right, { sign })} ${unit}`
       : `${name} = ${formatNumber(v.right, { sign })} ${unit}`
     : ''
-  const flip = px > xs.range()[1] - 150
+
+  const badgeHeight = subText ? 34 : 18
+  const maxChars = Math.max(text.length, subText ? subText.length : 0)
+  const badgeWidth = maxChars * 6.8 + 16
+  const flip = px > xs.range()[1] - badgeWidth - 12
+  const badgeX = flip ? px - 8 - badgeWidth : px + 8
+  const textX = flip ? badgeX + badgeWidth - 8 : badgeX + 8
+  const textAnchor = flip ? 'end' : 'start'
+
   const py = v && yOf ? yOf(v.right) : 0
+  const badgeY = py < 44 ? py + 8 : py - badgeHeight - 4
+
+  const activeColor = isZeroShear ? '#10b981' : color
+
   return (
     <g pointerEvents="none">
-      <line x1={px} x2={px} y1={0} y2={height} stroke="var(--ink-2)" strokeWidth={1} strokeDasharray={pinned === null ? '3 3' : undefined} />
+      <line
+        x1={px}
+        x2={px}
+        y1={0}
+        y2={height}
+        stroke="var(--ink-2)"
+        strokeWidth={1}
+        strokeDasharray={pinned === null ? '3 3' : undefined}
+      />
       {v && yOf && (
         <>
-          <circle cx={px} cy={yOf(v.right)} r={4} fill={color} />
-          {jump && <circle cx={px} cy={yOf(v.left)} r={4} fill={color} />}
-          <rect x={flip ? px - 8 - text.length * 6.6 - 8 : px + 8} y={py - 22} width={text.length * 6.6 + 8} height={18} rx={3} fill="var(--panel)" stroke="var(--rule)" />
-          <text x={flip ? px - 12 : px + 12} y={py - 9} textAnchor={flip ? 'end' : 'start'} fontFamily="var(--font-mono)" fontSize={11} fill="var(--ink)">
+          <circle
+            cx={px}
+            cy={yOf(v.right)}
+            r={isZeroShear ? 5 : 4}
+            fill={activeColor}
+            stroke={isZeroShear ? 'var(--panel)' : undefined}
+            strokeWidth={isZeroShear ? 1.5 : 0}
+          />
+          {jump && (
+            <circle
+              cx={px}
+              cy={yOf(v.left)}
+              r={isZeroShear ? 5 : 4}
+              fill={activeColor}
+              stroke={isZeroShear ? 'var(--panel)' : undefined}
+              strokeWidth={isZeroShear ? 1.5 : 0}
+            />
+          )}
+          <rect
+            x={badgeX}
+            y={badgeY}
+            width={badgeWidth}
+            height={badgeHeight}
+            rx={4}
+            fill="var(--panel)"
+            stroke={isZeroShear ? '#10b981' : 'var(--rule)'}
+            strokeWidth={isZeroShear ? 1.5 : 1}
+          />
+          <text
+            x={textX}
+            y={badgeY + (subText ? 14 : 13)}
+            textAnchor={textAnchor}
+            fontFamily="var(--font-mono)"
+            fontSize={11}
+            fontWeight={isZeroShear ? 600 : 400}
+            fill="var(--ink)"
+          >
             {text}
           </text>
+          {subText && (
+            <text
+              x={textX}
+              y={badgeY + 27}
+              textAnchor={textAnchor}
+              fontFamily="var(--font-mono)"
+              fontSize={10}
+              fontWeight={isZeroShear ? 600 : 400}
+              fill={isZeroShear ? '#10b981' : 'var(--ink-2)'}
+            >
+              {subText}
+            </text>
+          )}
         </>
       )}
     </g>

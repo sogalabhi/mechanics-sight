@@ -93,3 +93,129 @@ export function largestRegions(regions: Region[]): Region[] {
     )
     .filter((r): r is Region => r !== undefined)
 }
+
+export interface TangentRay {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+  slope: number // dM/dx in kN
+  angleRad: number
+}
+
+export interface TangentInfo {
+  x: number
+  px: number
+  py: number
+  moment: { left: number; right: number }
+  shear: { left: number; right: number }
+  isKink: boolean
+  isMomentJump: boolean
+  isZeroShear: boolean
+  isZeroCrossing: boolean
+  leftRay: TangentRay
+  rightRay: TangentRay
+  fullSegment: { x1: number; y1: number; x2: number; y2: number }
+}
+
+function computeTangentRay(
+  anchorX: number,
+  anchorY: number,
+  shearValue: number,
+  side: 'left' | 'right',
+  forceZero: boolean,
+  pxPerM: number,
+  sy: number,
+  radius: number,
+): TangentRay {
+  if (forceZero || Math.abs(shearValue) < 1e-6) {
+    return side === 'left'
+      ? { x1: anchorX - radius, y1: anchorY, x2: anchorX, y2: anchorY, slope: 0, angleRad: 0 }
+      : { x1: anchorX, y1: anchorY, x2: anchorX + radius, y2: anchorY, slope: 0, angleRad: 0 }
+  }
+
+  const dx = pxPerM
+  const dy = sy * shearValue
+  const len = Math.hypot(dx, dy)
+  const ux = dx / len
+  const uy = dy / len
+  const angleRad = Math.atan2(dy, dx)
+
+  return side === 'left'
+    ? { x1: anchorX - radius * ux, y1: anchorY - radius * uy, x2: anchorX, y2: anchorY, slope: shearValue, angleRad }
+    : { x1: anchorX, y1: anchorY, x2: anchorX + radius * ux, y2: anchorY + radius * uy, slope: shearValue, angleRad }
+}
+
+/**
+ * Computes exact tangent line geometry on the Bending Moment Diagram.
+ * Physical slope dM/dx is strictly evaluated from analytical polynomials (V(x)).
+ */
+export function tangentAt(
+  result: AnalysisResult,
+  x: number,
+  xScale: (x: number) => number,
+  yScale: (m: number) => number,
+  radius: number = 42,
+): TangentInfo | null {
+  const segs = result.segments
+  if (!segs.length) return null
+
+  const L = segs[segs.length - 1].x_end
+  const clampedX = Math.min(Math.max(x, 0), L)
+
+  const mVal = valueAt(result, clampedX, 'moment')
+  const vVal = valueAt(result, clampedX, 'shear')
+
+  const zTol = 1e-4
+  const isZeroShearPoint = result.zero_shear_points.some((z) => Math.abs(z - clampedX) < zTol)
+  const isSmoothZero = Math.abs(vVal.right) < zTol || Math.abs(vVal.left) < zTol
+  const isZeroCrossing = vVal.left * vVal.right < -1e-9
+  const isZeroShear = isZeroShearPoint || isSmoothZero || isZeroCrossing
+
+  const isKink = Math.abs(vVal.left - vVal.right) > 1e-6
+  const isMomentJump = Math.abs(mVal.left - mVal.right) > 1e-6
+
+  const mLeft = mVal.left
+  const mRight = clampedX >= L - EPS ? mVal.left : mVal.right
+
+  const px = xScale(clampedX)
+  const py = yScale(mRight)
+
+  const pxPerM = Math.abs(xScale(1) - xScale(0)) || 1
+  const sy = yScale(1) - yScale(0) || -1
+
+  const vLeft = clampedX <= EPS ? vVal.right : vVal.left
+  const vRight = clampedX >= L - EPS ? vVal.left : vVal.right
+
+  const anchorLeftY = isMomentJump ? yScale(mLeft) : py
+  const anchorRightY = py
+
+  const forceZeroLeft = isZeroShear && !isZeroCrossing
+  const forceZeroRight = isZeroShear && !isZeroCrossing
+
+  const leftRay = computeTangentRay(px, anchorLeftY, vLeft, 'left', forceZeroLeft, pxPerM, sy, radius)
+  const rightRay = computeTangentRay(px, anchorRightY, vRight, 'right', forceZeroRight, pxPerM, sy, radius)
+
+  const fullSegment = {
+    x1: leftRay.x1,
+    y1: leftRay.y1,
+    x2: rightRay.x2,
+    y2: rightRay.y2,
+  }
+
+  return {
+    x: clampedX,
+    px,
+    py,
+    moment: mVal,
+    shear: vVal,
+    isKink,
+    isMomentJump,
+    isZeroShear,
+    isZeroCrossing,
+    leftRay,
+    rightRay,
+    fullSegment,
+  }
+}
+

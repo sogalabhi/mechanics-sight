@@ -31,8 +31,14 @@ export function CanvasStack({ width }: { width: number }) {
   const xAt = (clientX: number): number | null => {
     const px = clientX - ref.current!.getBoundingClientRect().left
     if (px < xs(0) || px > xs(length)) return null
+    const res = useStore.getState().result
+    const stops = [
+      0,
+      length,
+      ...(res?.critical_points.map((c) => c.x) ?? []),
+      ...(res?.zero_shear_points ?? []),
+    ]
     let m = Math.min(length, Math.max(0, xs.invert(px)))
-    const stops = [0, length, ...(useStore.getState().result?.critical_points.map((c) => c.x) ?? [])]
     for (const s of stops) if (Math.abs(xs(s) - px) <= SNAP_PX) m = s
     return m
   }
