@@ -33,8 +33,11 @@ export function NumberField({ label, value, unit, step = 1, onCommit }: Props) {
     <label className={styles.field}>
       <span className={styles.fieldLabel}>{label}</span>
       <span className={styles.inputWrap}>
+        <button type="button" className={styles.stepBtn} aria-label={`Decrease ${label}`} onClick={() => commitValue(value - step)}>−</button>
         <input
           className={`${styles.input} num`}
+          inputMode="decimal"
+          aria-label={label}
           aria-invalid={!!err}
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -50,6 +53,7 @@ export function NumberField({ label, value, unit, step = 1, onCommit }: Props) {
             }
           }}
         />
+        <button type="button" className={styles.stepBtn} aria-label={`Increase ${label}`} onClick={() => commitValue(value + step)}>+</button>
         {unit && <span className={styles.unit}>{unit}</span>}
       </span>
       {err && <span className={styles.err}>{err}</span>}

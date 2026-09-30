@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { gridStep } from '@/math/snap'
 import { findItem, removeItem, round3, updateItem, validateBeam } from '@/model/actions'
 import type { Item } from '@/model/types'
 import { useStore } from '@/store/store'
@@ -19,7 +20,7 @@ function typeName(i: Item): string {
   }
 }
 
-export function Inspector() {
+export function Inspector({ compact = false }: { compact?: boolean }) {
   const beam = useStore((s) => s.beam)
   const id = useStore((s) => s.selectedId)
   const commit = useStore((s) => s.commit)
@@ -45,7 +46,7 @@ export function Inspector() {
     <NumberField
       label={label}
       unit="m"
-      step={0.1}
+      step={gridStep(L)}
       value={fromRight ? round3(L - get) : get}
       onCommit={(v) => apply({ [key]: round3(fromRight ? L - v : v) })}
     />
@@ -54,8 +55,14 @@ export function Inspector() {
 
   return (
     <div>
-      <h2 className={styles.title}>{typeName(item)}</h2>
-      <button className={styles.del} onClick={() => commit(removeItem(beam, item.id), null)}>Delete</button>
+      {compact ? (
+        <p className={styles.itemName}>{typeName(item)}</p>
+      ) : (
+        <>
+          <h2 className={styles.title}>{typeName(item)}</h2>
+          <button className={styles.del} onClick={() => commit(removeItem(beam, item.id), null)}>Delete</button>
+        </>
+      )}
       <Segmented
         label="Measure from"
         value={fromRight ? 'right' : 'left'}

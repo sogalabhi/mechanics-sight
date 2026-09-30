@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
-import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { Crosshair } from '@/diagrams/Crosshair'
+import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
 import { Guides } from './Guides'
@@ -27,22 +27,31 @@ export function CanvasStack({ width }: { width: number }) {
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
-  const move = (e: React.PointerEvent) => {
-    const left = ref.current!.getBoundingClientRect().left
-    const px = e.clientX - left
-    if (px < xs(0) || px > xs(length)) return setHover(null)
+  /** Beam x (m) under a pointer, snapped to the ends and critical points; null off the beam. */
+  const xAt = (clientX: number): number | null => {
+    const px = clientX - ref.current!.getBoundingClientRect().left
+    if (px < xs(0) || px > xs(length)) return null
     let m = Math.min(length, Math.max(0, xs.invert(px)))
     const stops = [0, length, ...(useStore.getState().result?.critical_points.map((c) => c.x) ?? [])]
     for (const s of stops) if (Math.abs(xs(s) - px) <= SNAP_PX) m = s
-    setHover(m)
+    return m
   }
-  const pin = () => {
+  // pointerdown as well as move: a tap on a phone never produces a move
+  const track = (e: React.PointerEvent) => setHover(xAt(e.clientX))
+  // click reads its own position: on touch, pointerleave has already cleared the hover by then
+  const pin = (e: React.MouseEvent) => {
     const s = useStore.getState()
-    setPinned(s.pinnedX !== null ? null : s.hoverX)
+    setPinned(s.pinnedX !== null ? null : xAt(e.clientX))
   }
 
   return (
-    <div ref={ref} onPointerMove={move} onPointerLeave={() => setHover(null)}>
+    <div
+      ref={ref}
+      style={{ touchAction: 'pan-y' }}
+      onPointerDown={track}
+      onPointerMove={track}
+      onPointerLeave={(e) => e.pointerType !== 'touch' && setHover(null)}
+    >
       <svg width={width} height={BEAM_PANEL_HEIGHT} style={{ display: 'block' }}>
         <Guides height={BEAM_PANEL_HEIGHT} />
         <BeamView />

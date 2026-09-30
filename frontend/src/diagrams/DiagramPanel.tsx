@@ -4,7 +4,7 @@ import { formatNumber, formatQty, formatTick } from '@/math/format'
 import { placeLabels, type LabelCandidate } from '@/math/labels'
 import { curvePoints, largestRegions, signRegions, valueAt, type Kind } from '@/math/poly'
 import { Guides } from '@/canvas/Guides'
-import { useXScale, GUTTER } from '@/canvas/XScaleContext'
+import { useLayout, useXScale } from '@/canvas/XScaleContext'
 import { useStore } from '@/store/store'
 import { Crosshair } from './Crosshair'
 
@@ -32,6 +32,7 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
   const result = useStore((s) => s.result)
   const stale = useStore((s) => s.error !== null)
   const x = useXScale()
+  const { gutter: GUTTER, compact } = useLayout()
   const meta = META[kind]
   const pxPerM = Math.abs(x(1) - x(0))
 
@@ -98,7 +99,7 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
   return (
     <g>
       <text x={8} y={16} fontSize={11} letterSpacing="0.08em" fill="var(--ink-2)" fontWeight={500}>
-        {meta.title}
+        {compact ? meta.title.split(' · ')[0] : meta.title}
       </text>
       {stale && (
         <text x={width - 8} y={16} fontSize={11} textAnchor="end" fill="var(--warn)">

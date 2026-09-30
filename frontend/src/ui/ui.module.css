@@ -11,3 +11,13 @@
 .seg button[aria-pressed='true'] { background: var(--ink); color: var(--paper); }
 .btn { height: 28px; padding: 0 10px; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
 .btn:disabled { color: var(--ink-2); cursor: default; }
+
+/* Touch: bigger targets, 16px text (stops iOS zooming into the field), +/- steppers. */
+.stepBtn { display: none; }
+@media (max-width: 699px), (pointer: coarse) {
+  .input { height: 44px; font-size: 16px; }
+  .stepBtn { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 44px; height: 44px; font: inherit; font-size: 22px; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
+  .seg button { height: 44px; }
+  .btn { height: 40px; }
+  .unit { width: 36px; font-size: 13px; }
+}

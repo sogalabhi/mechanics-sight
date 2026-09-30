@@ -78,10 +78,8 @@
 @media (max-width: 699px) {
   .shell {
     grid-template-columns: 1fr;
-    grid-template-rows: 48px auto auto auto 28px;
-    grid-template-areas: 'top' 'palette' 'canvas' 'inspector' 'status';
+    grid-template-rows: 48px auto auto 28px;
+    grid-template-areas: 'top' 'canvas' 'inspector' 'status';
   }
-  .palette { border-right: 0; border-bottom: 1px solid var(--rule); overflow-x: auto; }
-  .palette > div { display: flex; gap: 8px; }
-  .palette section + section { margin-top: 0; }
+  .top { position: relative; overflow: visible; gap: 8px; padding: 0 8px; }
 }
