@@ -4,6 +4,17 @@
       "AnalysisOut": {
         "additionalProperties": false,
         "properties": {
+          "canonical": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/CanonicalOut"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Recognized standard textbook case if applicable"
+          },
           "classification": {
             "$ref": "#/components/schemas/ClassificationOut"
           },
@@ -136,6 +147,64 @@
           "supports"
         ],
         "title": "BeamIn",
+        "type": "object"
+      },
+      "CanonicalOut": {
+        "additionalProperties": false,
+        "properties": {
+          "case_id": {
+            "title": "Case Id",
+            "type": "string"
+          },
+          "derivation": {
+            "description": "Step-by-step first-principles derivation (LaTeX)",
+            "items": {
+              "type": "string"
+            },
+            "title": "Derivation",
+            "type": "array"
+          },
+          "location_text": {
+            "description": "Position of extreme (LaTeX / text)",
+            "title": "Location Text",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "result_text": {
+            "description": "Evaluated result with units (LaTeX)",
+            "title": "Result Text",
+            "type": "string"
+          },
+          "substituted_formula": {
+            "description": "Formula with substituted values (LaTeX)",
+            "title": "Substituted Formula",
+            "type": "string"
+          },
+          "symbolic_formula": {
+            "description": "Textbook formula (LaTeX)",
+            "title": "Symbolic Formula",
+            "type": "string"
+          },
+          "symbolic_reactions": {
+            "description": "Reactions formula (LaTeX)",
+            "title": "Symbolic Reactions",
+            "type": "string"
+          }
+        },
+        "required": [
+          "case_id",
+          "name",
+          "symbolic_formula",
+          "symbolic_reactions",
+          "substituted_formula",
+          "result_text",
+          "location_text",
+          "derivation"
+        ],
+        "title": "CanonicalOut",
         "type": "object"
       },
       "ClassificationOut": {

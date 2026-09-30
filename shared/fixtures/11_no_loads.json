@@ -101,6 +101,7 @@
       "max_positive_shear": null,
       "max_negative_shear": null
     },
-    "warnings": []
+    "warnings": [],
+    "canonical": null
   }
 }

@@ -1,5 +1,6 @@
 """Entry point: analyze(beam) -> AnalysisResult."""
 
+from beam_solver.analysis.canonical import detect_canonical
 from beam_solver.analysis.critical_points import build_critical_points
 from beam_solver.analysis.extremes import find_extremes
 from beam_solver.analysis.results import AnalysisResult
@@ -38,7 +39,7 @@ def analyze(beam: Beam) -> AnalysisResult:
     points = build_critical_points(segments, all_loads, beam.length, f_tol, m_tol)
     extremes = find_extremes(segments, points, f_tol, m_tol)
 
-    return AnalysisResult(
+    initial_result = AnalysisResult(
         classification=solution.classification,
         reactions=solution.reactions,
         segments=segments,
@@ -49,4 +50,21 @@ def analyze(beam: Beam) -> AnalysisResult:
         max_positive_shear=extremes.max_positive_shear,
         max_negative_shear=extremes.max_negative_shear,
         warnings=solution.warnings,
+    )
+    canonical = detect_canonical(beam, initial_result)
+    if canonical is None:
+        return initial_result
+
+    return AnalysisResult(
+        classification=initial_result.classification,
+        reactions=initial_result.reactions,
+        segments=initial_result.segments,
+        critical_points=initial_result.critical_points,
+        zero_shear_points=initial_result.zero_shear_points,
+        max_sagging=initial_result.max_sagging,
+        max_hogging=initial_result.max_hogging,
+        max_positive_shear=initial_result.max_positive_shear,
+        max_negative_shear=initial_result.max_negative_shear,
+        warnings=initial_result.warnings,
+        canonical=canonical,
     )

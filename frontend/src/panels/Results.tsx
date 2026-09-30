@@ -3,6 +3,7 @@ import type { AnalysisResult } from '@/model/types'
 import { useStore } from '@/store/store'
 import { ValuesTable } from './ValuesTable'
 import { WorkingPanel } from '@/working/WorkingPanel'
+import { CanonicalCard } from '@/working/CanonicalCard'
 import styles from './panels.module.css'
 
 function badge(r: AnalysisResult): { text: string; tone: string } {
@@ -29,6 +30,7 @@ export function Results() {
     <div>
       <h2 className={styles.title}>Results</h2>
       <p className={`${styles.badge} ${b.tone}`}>{b.text}</p>
+      {result.canonical && <CanonicalCard canonical={result.canonical} />}
 
       <h3 className={styles.sub}>Reactions</h3>
       <table className={`${styles.table} num`}>

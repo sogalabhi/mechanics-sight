@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from beam_solver.analysis import AnalysisResult, Extreme, Step
+from beam_solver.analysis import AnalysisResult, CanonicalCase, Extreme, Step
 from beam_solver.domain import (
     Beam,
     DistributedLoad,
@@ -16,6 +16,7 @@ from beam_solver.errors import BeamError, ClassifiedBeamError
 from beam_solver.io.schemas import (
     AnalysisOut,
     BeamIn,
+    CanonicalOut,
     ClassificationOut,
     CriticalPointOut,
     ErrorBody,
@@ -65,6 +66,21 @@ def _extreme(e: Extreme | None) -> ExtremeOut | None:
     return None if e is None else ExtremeOut(x=e.x, value=e.value)
 
 
+def canonical_to_schema(c: CanonicalCase | None) -> CanonicalOut | None:
+    if c is None:
+        return None
+    return CanonicalOut(
+        case_id=c.case_id,
+        name=c.name,
+        symbolic_formula=c.symbolic_formula,
+        symbolic_reactions=c.symbolic_reactions,
+        substituted_formula=c.substituted_formula,
+        result_text=c.result_text,
+        location_text=c.location_text,
+        derivation=list(c.derivation),
+    )
+
+
 def step_to_schema(step: Step) -> StepOut:
     return StepOut(
         kind=step.kind,  # type: ignore[arg-type]
@@ -109,6 +125,7 @@ def result_to_schema(result: AnalysisResult) -> AnalysisOut:
             max_negative_shear=_extreme(result.max_negative_shear),
         ),
         warnings=list(result.warnings),
+        canonical=canonical_to_schema(result.canonical),
     )
 
 

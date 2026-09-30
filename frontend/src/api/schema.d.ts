@@ -49,6 +49,8 @@ export interface components {
     schemas: {
         /** AnalysisOut */
         AnalysisOut: {
+            /** @description Recognized standard textbook case if applicable */
+            canonical?: components["schemas"]["CanonicalOut"] | null;
             classification: components["schemas"]["ClassificationOut"];
             /** Critical Points */
             critical_points: components["schemas"]["CriticalPointOut"][];
@@ -90,6 +92,43 @@ export interface components {
             schema_version: 1;
             /** Supports */
             supports: components["schemas"]["SupportIn"][];
+        };
+        /** CanonicalOut */
+        CanonicalOut: {
+            /** Case Id */
+            case_id: string;
+            /**
+             * Derivation
+             * @description Step-by-step first-principles derivation (LaTeX)
+             */
+            derivation: string[];
+            /**
+             * Location Text
+             * @description Position of extreme (LaTeX / text)
+             */
+            location_text: string;
+            /** Name */
+            name: string;
+            /**
+             * Result Text
+             * @description Evaluated result with units (LaTeX)
+             */
+            result_text: string;
+            /**
+             * Substituted Formula
+             * @description Formula with substituted values (LaTeX)
+             */
+            substituted_formula: string;
+            /**
+             * Symbolic Formula
+             * @description Textbook formula (LaTeX)
+             */
+            symbolic_formula: string;
+            /**
+             * Symbolic Reactions
+             * @description Reactions formula (LaTeX)
+             */
+            symbolic_reactions: string;
         };
         /** ClassificationOut */
         ClassificationOut: {

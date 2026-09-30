@@ -1,5 +1,6 @@
 import type { components } from '@/api/schema'
 import { useStore } from '@/store/store'
+import { CanonicalCard } from './CanonicalCard'
 import { Math } from './Math'
 import styles from './working.module.css'
 
@@ -35,6 +36,7 @@ export function WorkingPanel() {
   const on = useStore((s) => s.showWorking)
   const setOn = useStore((s) => s.setShowWorking)
   const steps = useStore((s) => s.result?.steps)
+  const canonical = useStore((s) => s.result?.canonical)
   const unsupported = useStore((s) => s.stepsUnsupported)
   return (
     <div>
@@ -45,18 +47,24 @@ export function WorkingPanel() {
         <p className={styles.note} role="alert">This solver did not return steps. Restart the backend so it runs the latest code.</p>
       )}
       {on && !steps && !unsupported && <p className={styles.note}>Loading…</p>}
-      {on && steps &&
-        GROUPS.map((g) => {
-          const list = steps.filter((s) => s.group === g.id)
-          return list.length ? (
-            <section key={g.id}>
-              <h3 className={styles.group}>{g.title}</h3>
-              <ol className={styles.list}>
-                {list.map((s, i) => <StepView key={i} step={s} />)}
-              </ol>
-            </section>
-          ) : null
-        })}
+      {on && steps && (
+        <>
+          {canonical && <CanonicalCard canonical={canonical} />}
+          {GROUPS.map((g) => {
+            const list = steps.filter((s) => s.group === g.id)
+            return list.length ? (
+              <section key={g.id}>
+                <h3 className={styles.group}>{g.title}</h3>
+                <ol className={styles.list}>
+                  {list.map((s, i) => (
+                    <StepView key={i} step={s} />
+                  ))}
+                </ol>
+              </section>
+            ) : null
+          })}
+        </>
+      )}
     </div>
   )
 }

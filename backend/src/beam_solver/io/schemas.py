@@ -129,6 +129,17 @@ class StepOut(_Model):
     at: float | None = None
 
 
+class CanonicalOut(_Model):
+    case_id: str
+    name: str
+    symbolic_formula: str = Field(description="Textbook formula (LaTeX)")
+    symbolic_reactions: str = Field(description="Reactions formula (LaTeX)")
+    substituted_formula: str = Field(description="Formula with substituted values (LaTeX)")
+    result_text: str = Field(description="Evaluated result with units (LaTeX)")
+    location_text: str = Field(description="Position of extreme (LaTeX / text)")
+    derivation: list[str] = Field(description="Step-by-step first-principles derivation (LaTeX)")
+
+
 class AnalysisOut(_Model):
     schema_version: Literal[1] = SCHEMA_VERSION
     classification: ClassificationOut
@@ -138,6 +149,9 @@ class AnalysisOut(_Model):
     zero_shear_points: list[float]
     extremes: ExtremesOut
     warnings: list[str]
+    canonical: CanonicalOut | None = Field(
+        default=None, description="Recognized standard textbook case if applicable"
+    )
     steps: list[StepOut] | None = Field(
         default=None, description="Worked steps; only present when requested with ?steps=true"
     )

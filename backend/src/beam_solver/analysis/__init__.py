@@ -1,8 +1,10 @@
 """Internal forces: segments, critical points, extremes."""
 
 from beam_solver.analysis.analyze import analyze
+from beam_solver.analysis.canonical import detect_canonical
 from beam_solver.analysis.results import (
     AnalysisResult,
+    CanonicalCase,
     CriticalPoint,
     Extreme,
     SampledDiagram,
@@ -13,6 +15,7 @@ from beam_solver.analysis.steps import Step, build_steps
 
 __all__ = [
     "AnalysisResult",
+    "CanonicalCase",
     "CriticalPoint",
     "Extreme",
     "SampledDiagram",
@@ -21,4 +24,5 @@ __all__ = [
     "Step",
     "analyze",
     "build_steps",
+    "detect_canonical",
 ]

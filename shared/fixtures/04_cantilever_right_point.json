@@ -98,6 +98,22 @@
         "value": -5.0
       }
     },
-    "warnings": []
+    "warnings": [],
+    "canonical": {
+      "case_id": "cantilever_end_point",
+      "name": "Cantilever Beam with End Point Load",
+      "symbolic_formula": "M_{\\min} = -PL\\ \\text{(hogging)}",
+      "symbolic_reactions": "R_y = P, \\quad M_{\\text{wall}} = -PL",
+      "substituted_formula": "M_{\\min} = -(5\\ \\text{kN}) \\cdot (4\\ \\text{m})",
+      "result_text": "M_{\\min} = -20\\ \\text{kN\u00b7m}",
+      "location_text": "x = 4\\ \\text{m}\\ (\\text{at fixed wall})",
+      "derivation": [
+        "1.\\ \\text{Reactions at the Clamped Support } (x = L):",
+        "\\Sigma F_y = 0 \\implies R_y = P",
+        "\\Sigma M_{\\text{wall}} = 0 \\implies M_{\\text{wall}} + P \\cdot L = 0 \\implies M_{\\text{wall}} = -PL",
+        "2.\\ \\text{Internal Moment at Fixed End } (x = L^-):",
+        "M(L^-) = \\mathbf{-PL}\\ \\text{(hogging)}"
+      ]
+    }
   }
 }

@@ -60,6 +60,12 @@ Propped cantilever, fixed–fixed, continuous beams, support settlement, spring 
 - Distributed axial loads, distributed couples, thermal loads
 - Units other than SI. Converting polynomial coefficients needs a different factor per power, so this is not an "edge only" change.
 
+**Product positioning vs enterprise tools (e.g. STAAD.Pro):**
+STAAD.Pro is an enterprise 3D structural analysis and design program using numerical finite element approximations (FEA) to size concrete and steel members for construction. It is a "black box" design code checker with high friction and no step-by-step transparency. Mechanics Sight is the **"Desmos for Structural Mechanics"**: instant interactive feedback, exact closed-form calculus (piecewise polynomials with zero meshing error), and first-principles transparency with step-by-step LaTeX proofs.
+
+**Why frames and trusses are out of scope:**
+Straight beams operate on a 1D continuous coordinate $x \in [0, L]$ with piecewise integration. 2D/3D frames and trusses require a completely different mathematical architecture: a 2D/3D node-and-member graph, coordinate transformation matrices ($T$), and the Direct Stiffness Method ($K \mathbf{d} = \mathbf{F}$). Furthermore, their diagrams cannot be projected on a single horizontal axis. Straight beam mechanics (including Gerber hinges, deflections, cross-section stresses, and continuous beams) will be taken to full depth rather than diluting the product into a shallow 2D CAD tool.
+
 **Why write this down:** the code can give an honest error instead of a wrong answer, and a clearly limited project that works well is worth more than a large one that half-works.
 
 ---
@@ -746,37 +752,130 @@ Run the Python solver in the browser with Pyodide for offline use. It is heavy (
 
 ---
 
+## 11.5 The Intuition & Pedagogical Engine (Learning by Seeing and Feeling)
+
+SFD and BMD are abstract mathematical plots. Most students memorize mechanical rules ("UDL gives a parabola", "Point load gives a triangle", "M is maximum where V = 0") without building physical or geometric intuition for *why* the curves behave that way. This engine bridges textbook formulas, visual calculus, and physical deformation into an interconnected learning experience.
+
+### 11.5.1 The Deformed Shape / Qualitative Elastic Curve
+Even before user input of $E$ and $I$ in Phase 3, determinate beam deformation shapes are geometrically fixed by the BMD and support conditions:
+- **Exaggerated Real-Time Bent Beam:** Drawn directly beneath the BMD (or as an overlay on the beam sketch).
+- **Tension vs. Compression Fibers:**
+  - **Sagging ($M > 0$):** The beam smiles ($\smile$). The top face is highlighted in **Red (Compression)** and the bottom face in **Blue (Tension)**. Label: *"Bottom fibers stretched — rebar required at the bottom"*.
+  - **Hogging ($M < 0$):** The beam frowns ($\frown$). The top face is highlighted in **Blue (Tension)** and bottom in **Red (Compression)**. Label: *"Top fibers stretched over the support"*.
+- **Points of Contraflexure / Inflection ($M = 0$):**
+  - Highlighted with a visual landmark on the curve where the beam switches between concave up and concave down.
+
+### 11.5.2 Calculus & Curvature Visualizer ("Slope is Value")
+- **Dynamic Tangent Line:**
+  - When hovering along the BMD at $x$, a tangent line is drawn on the moment curve.
+  - The numerical slope of this tangent line dynamically lights up on the SFD directly above:
+    $$\text{Slope of BMD} = \frac{dM}{dx} = V(x)$$
+  - When the cursor reaches a zero-shear point ($V = 0$), the tangent line becomes perfectly horizontal ($\text{slope} = 0$), proving visually why extreme moments occur at zero shear.
+- **Curvature / Concavity Badges:**
+  - Under a downward distributed load ($w < 0$), the badge explains:
+    $$\frac{d^2M}{dx^2} = \frac{dV}{dx} = w < 0 \implies \text{Concave Downwards (Frowning Parabola)}$$
+
+### 11.5.3 Area-under-SFD Shading (Visual Integration)
+- Textbooks teach: $\Delta M_{a \to b} = \int_a^b V(x) \, dx$.
+- Clicking and dragging a range $[x_a, x_b]$ on the SFD shades the area under the shear curve and shows a live calculation card:
+  $$\text{Shaded SFD Area} = \int_{x_a}^{x_b} V(x)\,dx = +15\text{ kN}\cdot\text{m} \implies \Delta M = M(x_b) - M(x_a) = +15\text{ kN}\cdot\text{m}$$
+- Visually demystifies why a rectangle of shear produces an inclined ramp of moment.
+
+### 11.5.4 The "Virtual Saw" (Interactive Free Body Cut)
+- On hover or when toggling "Inspect Cut" at any coordinate $x$:
+  - The beam visually separates at $x$, showing the left segment as an isolated free body diagram.
+  - The applied external loads to the left of the cut are rendered.
+  - The internal shear force $V_{\text{cut}}$ and internal bending moment $M_{\text{cut}}$ appear on the cut face as glowing balancing vectors.
+  - An equilibrium popup proves why those values exist:
+    $$\Sigma F_y = 0 \implies V_{\text{cut}} = \Sigma F_{\text{left}}$$
+    $$\Sigma M_{\text{cut}} = 0 \implies M_{\text{cut}} = -\Sigma M_{\text{anticlockwise, left}}$$
+- Converts the abstract internal force convention into an intuitive physical balancing act.
+
+### 11.5.5 Symbolic Formula Matcher & First-Principles Proofs
+Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but students struggle to connect them to computer outputs.
+
+1. **Pattern Matcher:**
+   The solver inspects the beam setup against standard canonical benchmark cases:
+   - Simply Supported + Midspan Point Load $\implies M_{\max} = \frac{PL}{4}$
+   - Simply Supported + Full UDL $\implies M_{\max} = \frac{wL^2}{8}$
+   - Simply Supported + Point Load at $(a, b) \implies M_{\max} = \frac{Pab}{L}$
+   - Cantilever + End Point Load $\implies M_{\max} = -PL,\ R = P,\ M_{\text{wall}} = PL$
+   - Cantilever + Full UDL $\implies M_{\max} = -\frac{wL^2}{2},\ R = wL,\ M_{\text{wall}} = \frac{wL^2}{2}$
+   - Simply Supported + Triangular Load ($0 \to w_0$) $\implies M_{\max} = \frac{w_0 L^2}{9\sqrt{3}}$
+
+2. **3-Tier Display in the Working Panel:**
+   - **Tier 1 (Symbolic):** $M_{\max} = \frac{wL^2}{8}$
+   - **Tier 2 (Substituted):** $M_{\max} = \frac{(2.000\text{ kN/m}) \cdot (6.000\text{ m})^2}{8}$
+   - **Tier 3 (Evaluated):** $M_{\max} = 9.000\text{ kN}\cdot\text{m}$
+
+3. **Expandable "Where did this formula come from?" Derivation Card:**
+   Provides the symbolic proof for the standard case:
+   $$\begin{aligned}
+   \text{1. Reactions: } & R_A = R_B = \frac{wL}{2} \\
+   \text{2. Moment Equation: } & M(x) = R_A x - w x \left(\frac{x}{2}\right) = \frac{wLx}{2} - \frac{wx^2}{2} \\
+   \text{3. Zero Shear Root: } & \frac{dM}{dx} = V(x) = \frac{wL}{2} - wx = 0 \implies x = \frac{L}{2} \\
+   \text{4. Peak Moment: } & M(L/2) = \frac{wL}{2}\left(\frac{L}{2}\right) - \frac{w}{2}\left(\frac{L}{2}\right)^2 = \frac{wL^2}{4} - \frac{wL^2}{8} = \mathbf{\frac{wL^2}{8}}
+   \end{aligned}$$
+   For non-canonical beams (multiple arbitrary loads), the panel smoothly defaults to the General Method of Sections.
+
+### 11.5.6 Student User Journey ("How a Student Sees and Uses It")
+1. **Homework Input:** The student inputs a beam from their problem sheet by dragging a pin, roller, and UDL onto the canvas.
+2. **Instant Verification:** The diagrams update live, immediately showing the shape of SFD and BMD.
+3. **Formula Confirmation:** The student opens the Working panel. A banner states: *"Recognized Case: Simply Supported Beam with Uniformly Distributed Load"*. They see the exact $\frac{wL^2}{8}$ formula from their lecture notes and see their numbers plugged in.
+4. **Step-by-Step Assignment Solution:** The student follows the LaTeX steps to verify each equilibrium equation ($\Sigma F_y = 0, \Sigma M_A = 0$) and segment equation for their written homework submission.
+5. **Interactive Exploration & Physical Feel:**
+   - The student hovers over the peak: the tangent line on the BMD goes horizontal, aligning with $V=0$ on the SFD.
+   - The student clicks "Saw the Beam": they see the isolated left chunk with $V$ and $M$ arrows keeping it upright.
+   - The student drags the load across the span: the Elastic Curve bends and flexes in real time, developing deep, lasting intuition for exams and structural design.
+
+---
+
 ## 12. Later phases: design
 
-### Phase 2 — hinges, horizontal loads, guided support
-- **Hinges:** `Beam.hinges: tuple[float, ...] = ()`. Each hinge adds the row M(x_h) = 0 to the bending block, built from the unit reactions' section polynomials evaluated just left of x_h. Then e = 3 + h. The classification (Section 6) needs no other change: the count and the rank already handle hinges, including badly placed ones (see the last row of the 6.7 table).
-  - Validation: a hinge lies strictly inside (0, L) and not at a `FIXED` support. A couple exactly at a hinge → `InvalidLoadError`, because it is unclear which side it acts on.
-- **Horizontal / inclined loads:** `PointLoad` gains `fx: float = 0.0`, which goes into the ΣFx entry of b. The ΣFx row and the horizontal reactions already exist from Phase 1. N(x) = −Σ fx to the left of x (tension positive) gives the AFD.
-  - Axially indeterminate beams (axial degree > 0, for example pin–pin) that have any horizontal load → `IndeterminateBeamError` until Phase 4. With no horizontal loads, the exact H = 0 rule from Section 6.4 still applies.
-- **Guided support (optional):** one new row `GUIDED: (X, ROTATION)` in `RESTRAINTS`. It resists horizontal force and moment, but not vertical force.
-- Loads that act at the axis only; eccentric horizontal loads are out of scope.
+### Phase 2 — hinges, horizontal loads, guided support, and AFD
+- **Internal Hinges (Gerber Beams):** `Beam.hinges: tuple[float, ...] = ()`.
+  - Mechanics: A hinge releases the bending moment restraint while transmitting vertical shear force ($V$ is continuous across the hinge unless an external load sits there, but $M(x_h) = 0$).
+  - Equation assembly in `EquilibriumSystem`: Each hinge adds the row $M(x_h^-) = 0$ to the bending block ($e = 3 + h$ equations).
+    - For each unit reaction column $j$: evaluate its section polynomial for $M$ at $x_h^-$.
+    - The RHS vector $b$ receives $b_h = \sum \text{moment about } x_h \text{ of all applied loads left of } x_h$.
+  - Validation: $x_h \in (0, L)$, not at a `FIXED` support, no point couple directly at a hinge (`InvalidLoadError`).
+  - Classification: Handled automatically by count and rank ($e = 3 + h$). Badly placed hinges (e.g. fixed at 0, roller at 1, hinge at 3) fail the rank test and report "unstable" with clear diagnostics.
+- **Horizontal / Inclined Point Loads & AFD:**
+  - `PointLoad` gains `fx: float = 0.0` (in addition to vertical force).
+  - Axial equilibrium $\Sigma F_x = 0$ resolves horizontal reactions.
+  - Normal force $N(x) = -\Sigma f_x$ left of $x$ (tension positive).
+  - Segment polynomials gain axial representation `axial: tuple[float, ...]`.
+  - Diagrams stack: Beam $\to$ AFD $\to$ SFD $\to$ BMD.
+  - Indeterminacy: Axially indeterminate beams with non-zero horizontal loads raise `IndeterminateBeamError` until Phase 4 compatibility.
+- **Guided (Sliding) Support:**
+  - Declared in `RESTRAINTS`: `SupportKind.GUIDED: (Direction.X, Direction.ROTATION)`.
+  - Resists horizontal translation and rotation, but allows frictionless vertical translation ($R_y = 0$).
+  - Modeled as a collar with vertical rails. Useful for symmetry boundary conditions.
 
-### Phase 3 — deflection
-- Input: `EI` (kN·m²) as one number. Then a section library (`Rectangle`, `Circle`, `ISection`, `TSection`, each giving I, area and extreme fibre distances) together with E. Then stepped beams: EI given per region.
-- **Method: integrate each segment's polynomial.** Positions where EI changes become extra critical points. In each segment, θ(t) = θ₀ + ∫M/EI dt and y(t) = y₀ + ∫θ dt, using `Polynomial.integ`. The unknowns are (θ₀, y₀) per segment. The equations are:
-  - continuity of y at every internal boundary
-  - continuity of θ at every internal boundary **except at hinges**
-  - y = 0 at every pin, roller and fixed support
-  - θ = 0 at fixed supports
-
-  This is Macaulay's method written segment by segment. Stepped EI and hinges become "a boundary with a different rule" rather than special terms.
-- Output: slope and deflection polynomials per segment (optional response fields), plus maximum |y| and its position. The UI may display mm.
-- Stresses: σ = M·y/I at the extreme fibres, τ = VQ/(Ib) for the section library shapes.
+### Phase 3 — deflection, cross-section library, and stresses
+- **Cross-Section Library:**
+  - Parametric sections:
+    - `ISection`: total depth $h$, flange width $b_f$, flange thickness $t_f$, web thickness $t_w$.
+    - `TSection`: flange width $b_f$, flange thickness $t_f$, web depth $d_w$, web thickness $t_w$.
+    - `RectangularSection`: width $b$, height $h$ (solid or hollow box).
+    - `CircularSection`: outer diameter $D$, wall thickness $t$ (solid or pipe).
+  - Automated geometric properties: Area $A$, centroid / neutral axis location $\bar{y}$, moment of inertia $I_x$, extreme fiber distances $y_{\text{top}}, y_{\text{bottom}}$, section modulus $Z = I/y_{\max}$, and first moment of area function $Q(y)$.
+  - Material input: Young's modulus $E$ (GPa) and yield strength $\sigma_y$ (MPa).
+- **Deflection & Slope Integration:**
+  - Method: integrate each segment's polynomial with Macaulay segment boundary matching.
+  - $\theta(t) = \theta_0 + \int \frac{M(t)}{EI} \, dt$ and $y(t) = y_0 + \int \theta(t) \, dt$.
+  - Unknowns: $(\theta_0, y_0)$ per segment. Boundary equations: continuity of $y$, continuity of $\theta$ (except at hinges), $y = 0$ at supports, $\theta = 0$ at fixed supports.
+  - Output: exact slope and deflection polynomials, max deflection $y_{\max}$ in mm.
+- **Bending & Shear Stresses:**
+  - Normal bending stress: $\sigma(x, y) = \frac{M(x) \cdot y}{I_x}$. Graphs top and bottom fiber stresses along $x$, and linear depth profile at any cut $x$. Highlights yielding ($\sigma > \sigma_y$).
+  - Transverse shear stress: $\tau(x, y) = \frac{V(x) \cdot Q(y)}{I_x \cdot b(y)}$. Shows classic parabolic distribution across depth, visually proving that the thin web carries 90–95% of vertical shear while flanges resist bending moment.
 
 ### Phase 4 — indeterminate beams
-- The unknown reactions and the integration constants are solved **together** in one linear system. M in each segment is written as (known-load part) + Σ rⱼ × (unit-reaction part), by superposition, so every condition stays linear in the unknowns.
-- Unknowns = reactions + 2 per segment. Equations = 2 (equilibrium) + hinges + continuity conditions + support conditions. Example, a propped cantilever with one segment: unknowns R₀, M₀, R₁, θ₀, y₀ = 5. Equations: ΣFy, ΣM, y(0) = 0, θ(0) = 0, y(L) = 0 = 5.
-- Note that there is a y = 0 condition at **every** support, not just the "extra" ones.
-- The determinacy check is relaxed: more unknowns than equilibrium equations is allowed when EI is given.
-- **Axial compatibility:** for beams with more than one X restraint and horizontal loads, the total change of length between the X restraints is zero (∫N/EA dx = 0). This resolves the axial degree. With constant EA, the value of EA cancels out.
-- **Settlement:** y = −δ at that support instead of 0.
-- **Spring support:** R + k·y = 0 (linear, so it is still one row).
-- Determinate beams keep using the Phase 1 solver: SFD and BMD never require EI.
+- Solved via unified stiffness/flexibility integration constants and reaction unknowns together in one linear system:
+  - Unknowns: reactions + 2 constants per segment.
+  - Equations: equilibrium (2) + hinge conditions ($h$) + continuity + boundary conditions at all supports ($y=0$ at every support, $\theta=0$ at fixed).
+- Support settlement ($y = -\delta$) and elastic spring supports ($R + k\cdot y = 0$).
+- Axial compatibility ($\int \frac{N}{EA} \, dx = 0$) resolving multiple $X$-restraints under horizontal loads.
 
 ### One rule across phases
 Don't add fields for future phases early. Unused fields are untested code. Growth happens only at these points: more rows in the equation system, supports declaring their unknowns, the shared Load interface, and optional schema fields with defaults.
@@ -785,18 +884,23 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 
 ## 13. Build order (milestones, with done criteria)
 
-| # | Milestone | Done when |
-|---|---|---|
-| M0 | Scaffold: repo layout, `pyproject.toml`, tooling, pre-commit, CI, `docs/SIGN_CONVENTIONS.md`, hand solutions, fixture `input` + `checks` files | CI runs. The hand-case tests exist and fail. |
-| M1 | Domain: errors, tolerances, supports, loads (`resultant`, `moment_about`, `breakpoints`, `split`), Beam validation | Load unit tests and validation/error tests pass. |
-| M2 | `EquilibriumSystem`, `classify()`, reaction solver | The Section 6.7 table passes, along with the reactions for every hand case and every error case. |
-| M3 | Analysis: `section_polynomials`, segments, critical points, extremes, `AnalysisResult` | Every hand case and every invariant test passes, including hypothesis. SymPy cross-check passes. |
-| M4 | `io` schemas + CLI (`beam-solver analyze beam.json --plot out.png --json out.json`) + matplotlib plots | The CLI reproduces the fixture `output` snapshots, and the plots look right for all hand cases. |
-| M5 | FastAPI app, error envelope, `openapi.json` export, TS type generation | API tests pass on the fixtures. The contract CI check is green. |
-| M6 | Phase 1.5 frontend: form, stacked diagrams, hover, URL sharing, undo | Vitest contract tests pass. Manual check on all hand cases. |
-| M6.5 | Working steps: backend emits structured `steps` (equilibrium equations with numbers substituted, per-segment V(x) and M(x), zero-shear and extremes), opt-in via `?steps=true`. Frontend "Working" panel rendered with KaTeX | Steps for all 12 hand cases match the hand solutions in `docs/`. Fixture snapshots and the `openapi.json` contract check are green. The panel shows the right steps for all 12 cases. |
-| M7 | Phase 1.6: drag and drop, snapping, throttled live updates | Playwright drag tests pass (snap to support, jump display, error while dragging). |
-| M8+ | Phase 2 → 3 → 4, each starting with new hand cases and fixtures | Same bar as M2/M3 for each new feature. |
+| # | Milestone | Scope | Done when | Status |
+|---|---|---|---|---|
+| M0 | Scaffold | Repo layout, tooling, CI, conventions, hand solutions, contract fixtures | CI runs, hand-case fixtures exist | **Done** |
+| M1 | Domain | Errors, tolerances, supports, loads, Beam validation | Domain unit tests pass | **Done** |
+| M2 | Solvers | `EquilibriumSystem`, `classify()`, reaction solver | Table 6.7 tests pass, reactions match hand cases | **Done** |
+| M3 | Analysis | `section_polynomials`, segments, critical points, extremes | Hand cases & hypothesis invariant tests pass | **Done** |
+| M4 | I/O & CLI | Schemas, CLI `beam-solver`, matplotlib diagrams | CLI reproduces snapshots & plots look right | **Done** |
+| M5 | API | FastAPI app, error envelopes, OpenAPI export, TS types | API tests pass, contract check green | **Done** |
+| M6 | Frontend 1.5 | React + Vite UI, stacked SVG graphs, hover, URL sharing, undo | Vitest contract tests pass, manual check green | **Done** |
+| M6.5| Worked Steps | Backend LaTeX steps generator, KaTeX Working panel | Steps match hand solutions for all 12 cases | **Done** |
+| *Extras*| Packaging | HTML report download, Docker Compose, Vercel deployments | Deployments active, reports download clean | **Done** |
+| M7 | Phase 1.6 Drag & Drop | Canvas pointer drag, 8px snapping, 1-2-5 grid, draft state | Playwright drag tests pass (snap, drag, live update) | *In Progress* |
+| M7.5| Intuition Engine 1 | Qualitative Elastic Curve (smile/frown, tension/compression fibers), Calculus Tangent sync ($dM/dx=V$), Textbook Formula Matcher ($wL^2/8, PL/4$) & proofs | Visual verification on all 12 hand cases | *Planned* |
+| M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *Planned* |
+| M8.5| Intuition Engine 2 | "Virtual Saw" interactive free-body cut, Area-under-SFD shading | Visual cut equilibrium checks pass | *Planned* |
+| M9 | Phase 3 Sections & Deflection | Cross-section library (I-beam, T-beam), $EI$ deflection integration, $\sigma$ and $\tau$ stress envelopes | Cross-section and deflection benchmarks pass | *Planned* |
+| M10| Phase 4 Indeterminate | Propped cantilever, fixed-fixed, continuous beams, settlement, spring supports | Classic indeterminate hand cases pass | *Planned* |
 
 ---
 

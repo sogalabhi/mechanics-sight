@@ -122,6 +122,25 @@
         "value": -6.0
       }
     },
-    "warnings": []
+    "warnings": [],
+    "canonical": {
+      "case_id": "ss_full_udl",
+      "name": "Simply Supported Beam with Uniform Load (UDL)",
+      "symbolic_formula": "M_{\\max} = \\frac{wL^2}{8}",
+      "symbolic_reactions": "R_A = R_B = \\frac{wL}{2}",
+      "substituted_formula": "M_{\\max} = \\frac{(2\\ \\text{kN/m}) \\cdot (6\\ \\text{m})^2}{8}",
+      "result_text": "M_{\\max} = 9\\ \\text{kN\u00b7m}",
+      "location_text": "x = 3\\ \\text{m}\\ (\\text{midspan})",
+      "derivation": [
+        "1.\\ \\text{Support Reactions by Equilibrium}:",
+        "\\Sigma M_A = 0 \\implies R_B \\cdot L - (wL)\\left(\\frac{L}{2}\\right) = 0 \\implies R_B = \\frac{wL}{2}, \\quad R_A = \\frac{wL}{2}",
+        "2.\\ \\text{Bending Moment Function } M(x) \\text{ for a cut at } x:",
+        "M(x) = R_A x - w x \\left(\\frac{x}{2}\\right) = \\frac{wLx}{2} - \\frac{wx^2}{2}",
+        "3.\\ \\text{Find Location of Maximum Moment } \\left(\\frac{dM}{dx} = V(x) = 0\\right):",
+        "\\frac{dM}{dx} = V(x) = \\frac{wL}{2} - wx = 0 \\implies x = \\frac{L}{2}",
+        "4.\\ \\text{Substitute } x = \\frac{L}{2} \\text{ into } M(x):",
+        "M\\left(\\frac{L}{2}\\right) = \\frac{wL}{2}\\left(\\frac{L}{2}\\right) - \\frac{w}{2}\\left(\\frac{L}{2}\\right)^2 = \\mathbf{\\frac{wL^2}{8}}"
+      ]
+    }
   }
 }

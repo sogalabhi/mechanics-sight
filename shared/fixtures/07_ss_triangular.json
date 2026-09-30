@@ -124,6 +124,25 @@
         "value": -6.0
       }
     },
-    "warnings": []
+    "warnings": [],
+    "canonical": {
+      "case_id": "ss_triangular",
+      "name": "Simply Supported Beam with Triangular Load",
+      "symbolic_formula": "M_{\\max} = \\frac{w_0 L^2}{9\\sqrt{3}} \\approx 0.06415\\, w_0 L^2",
+      "symbolic_reactions": "R_A = \\frac{w_0 L}{6}, \\quad R_B = \\frac{w_0 L}{3}",
+      "substituted_formula": "M_{\\max} = \\frac{(3\\ \\text{kN/m}) \\cdot (6\\ \\text{m})^2}{9\\sqrt{3}}",
+      "result_text": "M_{\\max} = 6.928\\ \\text{kN\u00b7m}",
+      "location_text": "x = \\frac{L}{\\sqrt{3}} \\approx 3.464\\ \\text{m}",
+      "derivation": [
+        "1.\\ \\text{Total Load Resultant and Line of Action}:",
+        "W = \\frac{1}{2} w_0 L \\quad \\text{acting at } \\bar{x} = \\frac{2}{3}L",
+        "2.\\ \\text{Support Reactions by Equilibrium}:",
+        "\\Sigma M_A = 0 \\implies R_B \\cdot L - \\left(\\frac{1}{2}w_0 L\\right)\\left(\\frac{2}{3}L\\right) = 0 \\implies R_B = \\frac{w_0 L}{3}, \\quad R_A = \\frac{w_0 L}{6}",
+        "3.\\ \\text{Shear Function and Zero-Shear Root}:",
+        "V(x) = R_A - \\frac{w_0}{2L}x^2 = \\frac{w_0 L}{6} - \\frac{w_0}{2L}x^2 = 0 \\implies x = \\frac{L}{\\sqrt{3}}",
+        "4.\\ \\text{Evaluate Moment at Zero Shear } \\left(x = \\frac{L}{\\sqrt{3}}\\right):",
+        "M\\left(\\frac{L}{\\sqrt{3}}\\right) = \\left(\\frac{w_0 L}{6}\\right)\\left(\\frac{L}{\\sqrt{3}}\\right) - \\frac{w_0}{6L}\\left(\\frac{L}{\\sqrt{3}}\\right)^3 = \\mathbf{\\frac{w_0 L^2}{9\\sqrt{3}}}"
+      ]
+    }
   }
 }

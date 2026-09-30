@@ -153,6 +153,23 @@
         "value": -5.0
       }
     },
-    "warnings": []
+    "warnings": [],
+    "canonical": {
+      "case_id": "ss_midspan_point",
+      "name": "Simply Supported Beam with Midspan Point Load",
+      "symbolic_formula": "M_{\\max} = \\frac{PL}{4}",
+      "symbolic_reactions": "R_A = R_B = \\frac{P}{2}",
+      "substituted_formula": "M_{\\max} = \\frac{(10\\ \\text{kN}) \\cdot (6\\ \\text{m})}{4}",
+      "result_text": "M_{\\max} = 15\\ \\text{kN\u00b7m}",
+      "location_text": "x = 3\\ \\text{m}\\ (\\text{midspan})",
+      "derivation": [
+        "1.\\ \\text{Support Reactions by Symmetry}:",
+        "R_A = R_B = \\frac{P}{2}",
+        "2.\\ \\text{Moment Equation for Left Half } \\left(0 \\le x \\le \\frac{L}{2}\\right):",
+        "M(x) = R_A x = \\frac{P}{2}x",
+        "3.\\ \\text{Maximum Moment at the Midspan Load } \\left(x = \\frac{L}{2}\\right):",
+        "M\\left(\\frac{L}{2}\\right) = \\frac{P}{2}\\left(\\frac{L}{2}\\right) = \\mathbf{\\frac{PL}{4}}"
+      ]
+    }
   }
 }

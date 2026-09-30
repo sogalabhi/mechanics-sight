@@ -64,6 +64,20 @@ class SampledDiagram:
 
 
 @dataclass(frozen=True)
+class CanonicalCase:
+    """A recognized standard textbook case with symbolic and substituted formulas."""
+
+    case_id: str
+    name: str
+    symbolic_formula: str
+    symbolic_reactions: str
+    substituted_formula: str
+    result_text: str
+    location_text: str
+    derivation: tuple[str, ...]
+
+
+@dataclass(frozen=True)
 class AnalysisResult:
     classification: Classification
     reactions: tuple[Reaction, ...]
@@ -75,6 +89,7 @@ class AnalysisResult:
     max_positive_shear: Extreme | None
     max_negative_shear: Extreme | None
     warnings: tuple[str, ...]
+    canonical: CanonicalCase | None = None
 
     def _critical_point(self, x: float) -> CriticalPoint | None:
         return next((cp for cp in self.critical_points if same_position(cp.x, x)), None)

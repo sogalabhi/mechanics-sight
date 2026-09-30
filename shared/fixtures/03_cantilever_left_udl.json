@@ -107,6 +107,22 @@
       },
       "max_negative_shear": null
     },
-    "warnings": []
+    "warnings": [],
+    "canonical": {
+      "case_id": "cantilever_full_udl",
+      "name": "Cantilever Beam with Uniform Load (UDL)",
+      "symbolic_formula": "M_{\\min} = -\\frac{wL^2}{2}\\ \\text{(hogging)},\\quad M_{\\text{wall}} = +\\frac{wL^2}{2}",
+      "symbolic_reactions": "R_y = wL, \\quad M_{\\text{wall}} = \\frac{wL^2}{2}",
+      "substituted_formula": "M_{\\min} = -\\frac{(3\\ \\text{kN/m}) \\cdot (4\\ \\text{m})^2}{2}",
+      "result_text": "M_{\\min} = -24\\ \\text{kN\u00b7m}",
+      "location_text": "x = 0\\ \\text{m}\\ (\\text{at fixed wall})",
+      "derivation": [
+        "1.\\ \\text{Reactions at the Clamped Support } (x = 0):",
+        "\\Sigma F_y = 0 \\implies R_y = wL",
+        "\\Sigma M_{\\text{wall}} = 0 \\implies M_{\\text{wall}} - (wL)\\left(\\frac{L}{2}\\right) = 0 \\implies M_{\\text{wall}} = +\\frac{wL^2}{2}\\ \\text{(anticlockwise)}",
+        "2.\\ \\text{Internal Bending Moment at the Fixed End } (x = 0^+):",
+        "M(0^+) = -M_{\\text{wall}} = \\mathbf{-\\frac{wL^2}{2}}\\ \\text{(hogging)}"
+      ]
+    }
   }
 }
