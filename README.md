@@ -7,7 +7,7 @@ See [plan.md](plan.md) for the design and [docs/SIGN_CONVENTIONS.md](docs/SIGN_C
 
 ## Layout
 - `backend/` — Python package `beam_solver` (physics, solver, CLI, FastAPI)
-- `frontend/` — React + TypeScript (Phase 1.5)
+- `frontend/` — React + TypeScript beam editor
 - `shared/fixtures/` — hand-solved cases used by backend and frontend tests
 
 ## Development
@@ -62,6 +62,32 @@ uv run ruff check && uv run ruff format --check && uv run mypy && uv run lint-im
 cd frontend
 npm test && npm run lint && npm run build
 ```
+
+## Dragging in the editor
+
+Drag pin/roller supports, point loads, moments, or hinges along the beam. Fixed
+supports stay at their end. Drag a distributed load to move its span; select it
+and drag either end handle to resize it. You can also drag items from the desktop
+palette onto the beam, or click the palette to add them as before.
+
+Positions snap to nearby beam points within 8 pixels, then to a grid. Hold `Alt`
+to bypass snapping (positions still round to millimetres). `Escape` cancels a drag;
+one `Undo` reverses a completed drag. Diagrams update while dragging, and invalid
+arrangements show an error while retaining the last valid diagrams.
+
+## Browser tests
+
+After installing backend and frontend dependencies, run from the repository root:
+
+```bash
+cd frontend
+npx playwright install chromium
+npm run test:e2e
+```
+
+The tests start the backend using `backend/.venv/bin/python` on port 18000 and Vite
+on port 5174. On Linux, use `npx playwright install --with-deps chromium` if browser
+system libraries are missing. Browser tests also run in CI.
 
 ## Docker
 ```bash

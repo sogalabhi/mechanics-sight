@@ -9,6 +9,6 @@ export default defineConfig({
   },
   server: {
     fs: { allow: ['..'] },
-    proxy: { '/api': 'http://localhost:8000' } },
-  test: { environment: 'node', css: true },
+    proxy: { '/api': process.env.BEAM_API_URL ?? 'http://localhost:8000' } },
+  test: { environment: 'node', css: true, include: ['src/**/*.test.{ts,tsx}'] },
 })

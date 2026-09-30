@@ -22,7 +22,7 @@ function typeName(i: Item): string {
 }
 
 export function Inspector({ compact = false }: { compact?: boolean }) {
-  const beam = useStore((s) => s.beam)
+  const beam = useStore((s) => s.draft ?? s.beam)
   const id = useStore((s) => s.selectedId)
   const commit = useStore((s) => s.commit)
   const [fromRight, setFromRight] = useState(false)

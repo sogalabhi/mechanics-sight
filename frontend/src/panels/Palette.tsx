@@ -1,9 +1,11 @@
+import { useBeamDrag } from '@/canvas/useBeamDrag'
 import { addItem } from '@/model/actions'
 import { useStore } from '@/store/store'
 import { ENTRIES } from './paletteEntries'
 import styles from './panels.module.css'
 
 export function Palette() {
+  const { startDrag, consumeClick } = useBeamDrag()
   const beam = useStore((s) => s.beam)
   const commit = useStore((s) => s.commit)
   return (
@@ -15,7 +17,10 @@ export function Palette() {
             <button
               key={it.kind}
               className={styles.entry}
-              onClick={() => {
+              style={{ touchAction: 'none', cursor: 'grab' }}
+              onPointerDown={(e) => startDrag(e, { kind: it.kind })}
+              onClick={(e) => {
+                if (e.detail > 0 && consumeClick()) return
                 const r = addItem(beam, it.kind)
                 commit(r.beam, r.id)
               }}

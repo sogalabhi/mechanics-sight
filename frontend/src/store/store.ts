@@ -10,6 +10,9 @@ export interface AnalysisError {
 
 interface State {
   beam: BeamInput
+  draft: BeamInput | null
+  setDraft: (draft: BeamInput | null) => void
+  finishDrag: () => void
   past: BeamInput[]
   future: BeamInput[]
   selectedId: string | null
@@ -51,6 +54,13 @@ interface State {
 
 export const useStore = create<State>((set) => ({
   beam: beamFromHash(window.location.hash) ?? emptyBeam(6),
+  draft: null,
+  setDraft: (draft) => set({ draft }),
+  finishDrag: () => set((s) => {
+    if (!s.draft) return s
+    if (JSON.stringify(s.draft) === JSON.stringify(s.beam)) return { draft: null }
+    return { beam: s.draft, draft: null, past: [...s.past, s.beam], future: [] }
+  }),
   past: [],
   future: [],
   selectedId: null,
@@ -70,14 +80,15 @@ export const useStore = create<State>((set) => ({
   commit: (beam, selectId) =>
     set((s) => ({
       beam,
+      draft: null,
       past: [...s.past, s.beam],
       future: [],
       selectedId: selectId === undefined ? s.selectedId : selectId,
     })),
   undo: () =>
-    set((s) => (s.past.length ? { beam: s.past[s.past.length - 1], past: s.past.slice(0, -1), future: [s.beam, ...s.future] } : s)),
+    set((s) => (s.draft ? { draft: null } : s.past.length ? { beam: s.past[s.past.length - 1], past: s.past.slice(0, -1), future: [s.beam, ...s.future] } : s)),
   redo: () =>
-    set((s) => (s.future.length ? { beam: s.future[0], past: [...s.past, s.beam], future: s.future.slice(1) } : s)),
+    set((s) => (s.draft ? { draft: null } : s.future.length ? { beam: s.future[0], past: [...s.past, s.beam], future: s.future.slice(1) } : s)),
   select: (id) => set({ selectedId: id }),
   setResult: (result) => set({ result, error: null }),
   setError: (error) => set({ error }),

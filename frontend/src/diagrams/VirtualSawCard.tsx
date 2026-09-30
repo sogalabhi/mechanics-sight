@@ -6,7 +6,7 @@ import styles from './VirtualSawCard.module.css'
 
 export function VirtualSawCard() {
   const sawCutX = useStore((s) => s.sawCutX)
-  const beam = useStore((s) => s.beam)
+  const beam = useStore((s) => s.draft ?? s.beam)
   const result = useStore((s) => s.result)
   const setSawCutX = useStore((s) => s.setSawCutX)
 

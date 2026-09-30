@@ -17,7 +17,9 @@ function schedule(delay = Math.max(0, THROTTLE_MS - (Date.now() - lastRun))) {
 
 async function run() {
   lastRun = Date.now()
-  const { beam, showWorking, setResult, setError } = useStore.getState()
+  const state = useStore.getState()
+  const { showWorking, setResult, setError } = state
+  const beam = state.draft ?? state.beam
   ctrl?.abort()
   if (beam.supports.length === 0) {
     seq++
@@ -47,7 +49,10 @@ async function run() {
 export function startLiveAnalysis(): () => void {
   schedule(0)
   const unsub = useStore.subscribe((s, prev) => {
-    if (s.beam !== prev.beam || s.showWorking !== prev.showWorking) {
+    if (s.beam !== prev.beam || s.draft !== prev.draft || s.showWorking !== prev.showWorking) {
+      // Invalidate immediately, before the next throttled request starts.
+      seq++
+      ctrl?.abort()
       retries = 0
       schedule()
     }
@@ -55,6 +60,7 @@ export function startLiveAnalysis(): () => void {
   return () => {
     unsub()
     clearTimeout(timer)
+    seq++
     ctrl?.abort()
   }
 }

@@ -738,6 +738,9 @@ Stacked panels sharing **one** `d3-scale` x-scale:
 - Clicking any item opens an edit panel with exact values. This panel stays in Phase 1.6.
 
 ### Drag and drop (Phase 1.6)
+- **Implemented interactions:** pointer dragging for pin/roller supports, point loads, moments and hinges; desktop palette drops; distributed-span movement and endpoint resizing. Fixed supports stay at their beam end.
+- **Cancellation:** Escape, pointer cancellation/lost capture, or window blur restore the committed beam. Ctrl+Z during a drag cancels its preview. Mouse, pen and touch share the pointer-event implementation.
+- **Verification:** Playwright exercises real-backend live updates, snapping/Alt, one-step undo/redo, palette drops/cancellation, distributed resizing, invalid support collisions, fixed supports and phone touch dragging. Unit tests cover request throttling, stale responses, snapping and bounds. Browser checks run in CI.
 - **Snapping:** first to existing points (0, L, supports, load ends) within **8 px**, otherwise to a grid. The grid step is a 1-2-5 number close to L/100, with a minimum of 1 mm. Holding **Alt** disables snapping.
 - **Rounding:** every stored position is rounded to whole millimetres with `Math.round(x * 1000) / 1000`. This gives the same double as the typed decimal (0.3, not 0.30000000000000004). Never compute positions as `Math.round(x / 0.1) * 0.1`. The backend still keeps its own tolerance, because typed input and old links skip the snapping code.
 - **Live updates:** the beam sketch moves instantly from `draft`. API calls are **throttled** to at most one every 80 ms, and the last call always goes out. Each request carries an increasing sequence number and cancels the previous one with `AbortController`. Any response older than the newest one already shown is ignored.
@@ -938,7 +941,7 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | M6 | Frontend 1.5 | React + Vite UI, stacked SVG graphs, hover, URL sharing, undo | Vitest contract tests pass, manual check green | **Done** |
 | M6.5| Worked Steps | Backend LaTeX steps generator, KaTeX Working panel | Steps match hand solutions for all 12 cases | **Done** |
 | *Extras*| Packaging | HTML report download, Docker Compose, Vercel deployments | Deployments active, reports download clean | **Done** |
-| M7 | Phase 1.6 Drag & Drop | Canvas pointer drag, 8px snapping, 1-2-5 grid, draft state | Playwright drag tests pass (snap, drag, live update) | *In Progress* |
+| M7 | Phase 1.6 Drag & Drop | Canvas pointer drag, 8px snapping, 1-2-5 grid, draft state | Playwright drag tests pass (snap, drag, live update) | **Done** |
 | M7.5| Intuition Engine 1 | Qualitative Elastic Curve (smile/frown, tension/compression fibers), Calculus Tangent sync ($dM/dx=V$), Textbook Formula Matcher ($wL^2/8, PL/4$) & proofs | Visual verification on all 12 hand cases | **Done** |
 | M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *Hinges, axial/inclined loads and AFD done; guided supports pending* |
 | M8.5| Intuition Engine 2 | "Virtual Saw" interactive free-body cut, Area-under-SFD shading | Visual cut equilibrium checks pass | **Done** |

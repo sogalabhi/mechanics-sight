@@ -9,6 +9,7 @@ import { allItems, keyPoints } from '@/model/actions'
 import type { Item } from '@/model/types'
 import { useStore } from '@/store/store'
 import { useXScale } from './xscale'
+import { useBeamDrag } from './useBeamDrag'
 
 export const BEAM_Y = 130
 export const BEAM_PANEL_HEIGHT = 260
@@ -17,8 +18,9 @@ type Bounds = [number, number, number, number]
 
 /** Focusable, selectable item. A ring shows when it is selected or has keyboard focus. */
 function Selectable({ item, label, bounds, children }: { item: Item; label: string; bounds: Bounds; children: ReactNode }) {
-  const select = useStore((s) => s.select)
+  const { startDrag } = useBeamDrag()
   const selected = useStore((s) => s.selectedId === item.id)
+  const dragging = useStore((s) => s.draft !== null && s.selectedId === item.id)
   const [focused, setFocused] = useState(false)
   const [x0, y0, x1, y1] = bounds
   return (
@@ -27,15 +29,16 @@ function Selectable({ item, label, bounds, children }: { item: Item; label: stri
       role="button"
       aria-label={label}
       aria-pressed={selected}
-      style={{ cursor: 'pointer', outline: 'none' }}
+      data-item-id={item.id}
+      style={{ cursor: dragging ? 'grabbing' : item.type === 'fixed' ? 'pointer' : 'grab', outline: 'none', touchAction: 'none' }}
       onPointerDown={(e) => {
-        e.stopPropagation()
-        select(item.id)
+        startDrag(e, { item })
       }}
       onFocus={() => setFocused(true)}
       onBlur={() => setFocused(false)}
-      onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && select(item.id)}
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); useStore.getState().select(item.id) } }}
     >
+      <rect x={x0} y={y0} width={x1 - x0} height={y1 - y0} fill="transparent" />
       {children}
       {(selected || focused) && (
         <rect
@@ -52,7 +55,7 @@ function Selectable({ item, label, bounds, children }: { item: Item; label: stri
 const position = (i: Item) => (i.type === 'distributed' ? i.start : i.position)
 
 export function BeamView() {
-  const beam = useStore((s) => s.beam)
+  const beam = useStore((s) => s.draft ?? s.beam)
   const result = useStore((s) => s.result)
   const stale = useStore((s) => s.error !== null)
   const showReactions = useStore((s) => s.showReactions)
@@ -72,6 +75,7 @@ export function BeamView() {
       height: Math.max(loadHeight(l.w_start, wMax), loadHeight(l.w_end, wMax)),
     })),
   )
+  const { startDrag } = useBeamDrag()
   const x0 = x(0)
   const xL = x(beam.length)
 
@@ -90,6 +94,14 @@ export function BeamView() {
             <Selectable key={item.id} item={item} bounds={[x(item.start) - 6, -(lift + h + 24), x(item.end) + 6, 2]}
               label={`Distributed load ${item.w_start} to ${item.w_end} kN/m from ${formatQty(item.start, 'm')} to ${formatQty(item.end, 'm')}`}>
               <DistributedLoad xs={x(item.start)} xe={x(item.end)} w1={item.w_start} w2={item.w_end} wMax={wMax} lift={lift} state={st} />
+              {selectedId === item.id && (['start', 'end'] as const).map((part) => (
+                <g key={part} role="button" aria-label={`Resize load ${part}`} data-resize={part}
+                  style={{ cursor: 'ew-resize', touchAction: 'none' }}
+                  onPointerDown={(e) => startDrag(e, { item, part })}>
+                  <rect x={x(item[part]) - 10} y={-lift - h - 10} width={20} height={h + 20} fill="transparent" />
+                  <circle cx={x(item[part])} cy={-lift - h} r={5} fill="var(--paper)" stroke="var(--select)" strokeWidth={2} />
+                </g>
+              ))}
             </Selectable>
           )
         }
@@ -135,7 +147,7 @@ export function BeamView() {
         )
       })}
       {result && showReactions && (
-        <g opacity={stale ? 0.35 : 1}>
+        <g opacity={stale ? 0.35 : 1} pointerEvents="none">
           {result.reactions.map((r) => {
             const sup = beam.supports.find((s) => s.id === r.support_id)
             if (!sup) return null

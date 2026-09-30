@@ -18,7 +18,7 @@ export function TopBar() {
   const [theme, setTheme] = useState<Theme>(loadTheme)
   const [note, setNote] = useState<string | null>(null)
   const [menuOpen, setMenuOpen] = useState(false)
-  const canReport = useStore((s) => s.result !== null && s.error === null)
+  const canReport = useStore((s) => s.draft === null && s.result !== null && s.error === null)
   const [busy, setBusy] = useState(false)
 
   useEffect(() => {

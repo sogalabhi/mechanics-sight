@@ -63,7 +63,7 @@ function partitionZones(points: DeflectionPoint[]): Zone[] {
 }
 
 export function ElasticCurvePanel({ width }: { width: number }) {
-  const beam = useStore((s) => s.beam)
+  const beam = useStore((s) => s.draft ?? s.beam)
   const result = useStore((s) => s.result)
   const stale = useStore((s) => s.error !== null)
   const hoverX = useStore((s) => s.hoverX)

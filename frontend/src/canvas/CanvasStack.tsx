@@ -120,9 +120,12 @@ export function CanvasStack({ width }: { width: number }) {
         if (e.pointerType !== 'touch') setHover(null)
       }}
     >
+      <p style={{ margin: '6px 8px', fontSize: 11, color: 'var(--ink-2)' }}>
+        Drag supports and loads · Select a distributed load to resize its ends · Alt: no snapping · Esc: cancel
+      </p>
       <IntegrationCard />
       <VirtualSawCard />
-      <svg width={width} height={BEAM_PANEL_HEIGHT} style={{ display: 'block' }}>
+      <svg data-beam-canvas width={width} height={BEAM_PANEL_HEIGHT} style={{ display: 'block' }}>
         <Guides height={BEAM_PANEL_HEIGHT} />
         <BeamView />
         <Crosshair height={BEAM_PANEL_HEIGHT} />
