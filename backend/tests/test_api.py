@@ -76,3 +76,13 @@ def test_openapi_snapshot_is_current() -> None:
 
     assert OUT.exists(), "run scripts/export_openapi.py"
     assert OUT.read_text() == openapi_text(), "run scripts/export_openapi.py"
+
+
+def test_steps_are_opt_in(client: TestClient) -> None:
+    body = FIXTURES[0]["input"]
+    assert "steps" not in client.post(URL, json=body).json()
+    data = client.post(URL + "?steps=true", json=body).json()
+    assert data["steps"], "expected worked steps"
+    assert {s["group"] for s in data["steps"]} == {"reactions", "diagrams", "extremes"}
+    # everything else is unchanged by the flag
+    assert {k: v for k, v in data.items() if k != "steps"} == approx_json(FIXTURES[0]["output"])

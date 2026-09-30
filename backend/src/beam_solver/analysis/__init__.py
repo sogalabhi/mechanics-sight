@@ -9,6 +9,7 @@ from beam_solver.analysis.results import (
     Segment,
     Side,
 )
+from beam_solver.analysis.steps import Step, build_steps
 
 __all__ = [
     "AnalysisResult",
@@ -17,5 +18,7 @@ __all__ = [
     "SampledDiagram",
     "Segment",
     "Side",
+    "Step",
     "analyze",
+    "build_steps",
 ]

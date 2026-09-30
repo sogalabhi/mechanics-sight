@@ -1,6 +1,7 @@
 import { formatNumber } from '@/math/format'
 import type { AnalysisResult } from '@/model/types'
 import { useStore } from '@/store/store'
+import { WorkingPanel } from '@/working/WorkingPanel'
 import styles from './panels.module.css'
 
 function badge(r: AnalysisResult): { text: string; tone: string } {
@@ -66,6 +67,7 @@ export function Results() {
       {result.warnings.map((w) => (
         <p key={w} className={styles.hint}>{w}</p>
       ))}
+      <WorkingPanel />
     </div>
   )
 }

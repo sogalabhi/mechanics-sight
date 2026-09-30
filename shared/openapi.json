@@ -37,6 +37,21 @@
             "title": "Segments",
             "type": "array"
           },
+          "steps": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/StepOut"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Worked steps; only present when requested with ?steps=true",
+            "title": "Steps"
+          },
           "warnings": {
             "items": {
               "type": "string"
@@ -497,6 +512,125 @@
         "title": "SegmentOut",
         "type": "object"
       },
+      "StepOut": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "At"
+          },
+          "group": {
+            "enum": [
+              "reactions",
+              "diagrams",
+              "extremes"
+            ],
+            "title": "Group",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "supports",
+              "loads",
+              "resultant",
+              "force_balance",
+              "moment_balance",
+              "reactions",
+              "shear",
+              "moment",
+              "zero_shear",
+              "moment_at",
+              "extreme"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "notes": {
+            "description": "Plain-text lines",
+            "items": {
+              "type": "string"
+            },
+            "title": "Notes",
+            "type": "array"
+          },
+          "result": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "LaTeX",
+            "title": "Result"
+          },
+          "substituted": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "LaTeX",
+            "title": "Substituted"
+          },
+          "symbolic": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "LaTeX",
+            "title": "Symbolic"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "x_end": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X End"
+          },
+          "x_start": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "X Start"
+          }
+        },
+        "required": [
+          "kind",
+          "group",
+          "title"
+        ],
+        "title": "StepOut",
+        "type": "object"
+      },
       "SupportIn": {
         "additionalProperties": false,
         "properties": {
@@ -540,8 +674,20 @@
   "paths": {
     "/api/v1/analyze": {
       "post": {
-        "description": "Classify the beam, solve its reactions, and return exact SFD/BMD data.",
+        "description": "Classify the beam, solve its reactions, and return exact SFD/BMD data.\n\nWith ``?steps=true`` the response also carries the worked steps (LaTeX).",
         "operationId": "analyze_beam_api_v1_analyze_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "steps",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Steps",
+              "type": "boolean"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {

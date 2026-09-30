@@ -103,6 +103,31 @@ class ExtremesOut(_Model):
     max_negative_shear: ExtremeOut | None
 
 
+class StepOut(_Model):
+    kind: Literal[
+        "supports",
+        "loads",
+        "resultant",
+        "force_balance",
+        "moment_balance",
+        "reactions",
+        "shear",
+        "moment",
+        "zero_shear",
+        "moment_at",
+        "extreme",
+    ]
+    group: Literal["reactions", "diagrams", "extremes"]
+    title: str
+    symbolic: str | None = Field(default=None, description="LaTeX")
+    substituted: str | None = Field(default=None, description="LaTeX")
+    result: str | None = Field(default=None, description="LaTeX")
+    notes: list[str] = Field(default_factory=list, description="Plain-text lines")
+    x_start: float | None = None
+    x_end: float | None = None
+    at: float | None = None
+
+
 class AnalysisOut(_Model):
     schema_version: Literal[1] = SCHEMA_VERSION
     classification: ClassificationOut
@@ -112,6 +137,9 @@ class AnalysisOut(_Model):
     zero_shear_points: list[float]
     extremes: ExtremesOut
     warnings: list[str]
+    steps: list[StepOut] | None = Field(
+        default=None, description="Worked steps; only present when requested with ?steps=true"
+    )
 
 
 class ErrorBody(_Model):

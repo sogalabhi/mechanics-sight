@@ -672,7 +672,7 @@ For `unstable` and `indeterminate`, `details` contains the `classification`. The
 - `schema_version` changes only on a breaking change. The frontend owns a `migrate(beamJson)` function for old saved and shared beams.
 
 ### Working steps (M6.5)
-The solver already builds the equilibrium system, so it also records how it got each number. `steps` is an optional list of structured items, `{kind, symbolic, substituted, result}`, for reactions (ΣFy = 0, ΣM = 0), each segment's V(x) and M(x), and the zero-shear and extreme points. The frontend formats them; the wording and math styling live in one place, and the frontend still does no mechanics.
+The solver already builds the equilibrium system, so it also records how it got each number. `steps` is an optional list of items `{kind, group, title, symbolic, substituted, result, notes, x_start, x_end, at}` for reactions (ΣFy = 0, ΣM = 0), each segment's V(x) and M(x), and the zero-shear and extreme points. The math fields are LaTeX strings written by the backend (so the wording and notation live in one place); the frontend only renders them with KaTeX and uses `x_start`/`x_end`/`at` to pin the crosshair. The frontend still does no mechanics.
 - It is returned only with `?steps=true`, so live analysis and dragging (M7) stay small and fast.
 - It is an optional field with a default, so `schema_version` does not change (see Versioning).
 - Steps come from the same computation as the numbers, so they cannot disagree with the diagrams.

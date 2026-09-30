@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from beam_solver.analysis import AnalysisResult, Extreme
+from beam_solver.analysis import AnalysisResult, Extreme, Step
 from beam_solver.domain import (
     Beam,
     DistributedLoad,
@@ -26,6 +26,7 @@ from beam_solver.io.schemas import (
     PointMomentIn,
     ReactionOut,
     SegmentOut,
+    StepOut,
 )
 from beam_solver.solvers import Classification
 
@@ -64,6 +65,21 @@ def _extreme(e: Extreme | None) -> ExtremeOut | None:
     return None if e is None else ExtremeOut(x=e.x, value=e.value)
 
 
+def step_to_schema(step: Step) -> StepOut:
+    return StepOut(
+        kind=step.kind,  # type: ignore[arg-type]
+        group=step.group,  # type: ignore[arg-type]
+        title=step.title,
+        symbolic=step.symbolic,
+        substituted=step.substituted,
+        result=step.result,
+        notes=list(step.notes),
+        x_start=step.x_start,
+        x_end=step.x_end,
+        at=step.at,
+    )
+
+
 def result_to_schema(result: AnalysisResult) -> AnalysisOut:
     return AnalysisOut(
         classification=classification_to_schema(result.classification),
@@ -97,7 +113,8 @@ def result_to_schema(result: AnalysisResult) -> AnalysisOut:
 
 
 def result_to_json(result: AnalysisResult) -> dict[str, Any]:
-    return result_to_schema(result).model_dump(mode="json")
+    out = result_to_schema(result)
+    return out.model_dump(mode="json", exclude=None if out.steps is not None else {"steps"})
 
 
 def error_to_schema(error: BeamError) -> ErrorOut:

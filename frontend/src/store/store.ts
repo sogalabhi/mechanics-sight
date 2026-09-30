@@ -16,6 +16,8 @@ interface State {
   /** Last good result. Kept while `error` is set so the diagrams can be greyed out. */
   result: AnalysisResult | null
   error: AnalysisError | null
+  /** Ask the solver for worked steps too. Off unless the Working panel is open. */
+  showWorking: boolean
   hoverX: number | null
   pinnedX: number | null
   /** One call = one undo step. */
@@ -27,6 +29,7 @@ interface State {
   setError: (e: AnalysisError) => void
   setHover: (x: number | null) => void
   setPinned: (x: number | null) => void
+  setShowWorking: (on: boolean) => void
 }
 
 export const useStore = create<State>((set) => ({
@@ -36,6 +39,7 @@ export const useStore = create<State>((set) => ({
   selectedId: null,
   result: null,
   error: null,
+  showWorking: false,
   hoverX: null,
   pinnedX: null,
   commit: (beam, selectId) =>
@@ -54,4 +58,5 @@ export const useStore = create<State>((set) => ({
   setError: (error) => set({ error }),
   setHover: (hoverX) => set({ hoverX }),
   setPinned: (pinnedX) => set({ pinnedX }),
+  setShowWorking: (showWorking) => set({ showWorking }),
 }))

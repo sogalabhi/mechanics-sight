@@ -16,6 +16,8 @@ export interface paths {
         /**
          * Analyze Beam
          * @description Classify the beam, solve its reactions, and return exact SFD/BMD data.
+         *
+         *     With ``?steps=true`` the response also carries the worked steps (LaTeX).
          */
         post: operations["analyze_beam_api_v1_analyze_post"];
         delete?: never;
@@ -61,6 +63,11 @@ export interface components {
             schema_version: 1;
             /** Segments */
             segments: components["schemas"]["SegmentOut"][];
+            /**
+             * Steps
+             * @description Worked steps; only present when requested with ?steps=true
+             */
+            steps?: components["schemas"]["StepOut"][] | null;
             /** Warnings */
             warnings: string[];
             /** Zero Shear Points */
@@ -232,6 +239,47 @@ export interface components {
             /** X Start */
             x_start: number;
         };
+        /** StepOut */
+        StepOut: {
+            /** At */
+            at?: number | null;
+            /**
+             * Group
+             * @enum {string}
+             */
+            group: "reactions" | "diagrams" | "extremes";
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "supports" | "loads" | "resultant" | "force_balance" | "moment_balance" | "reactions" | "shear" | "moment" | "zero_shear" | "moment_at" | "extreme";
+            /**
+             * Notes
+             * @description Plain-text lines
+             */
+            notes?: string[];
+            /**
+             * Result
+             * @description LaTeX
+             */
+            result?: string | null;
+            /**
+             * Substituted
+             * @description LaTeX
+             */
+            substituted?: string | null;
+            /**
+             * Symbolic
+             * @description LaTeX
+             */
+            symbolic?: string | null;
+            /** Title */
+            title: string;
+            /** X End */
+            x_end?: number | null;
+            /** X Start */
+            x_start?: number | null;
+        };
         /** SupportIn */
         SupportIn: {
             /** Id */
@@ -258,7 +306,9 @@ export type $defs = Record<string, never>;
 export interface operations {
     analyze_beam_api_v1_analyze_post: {
         parameters: {
-            query?: never;
+            query?: {
+                steps?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;

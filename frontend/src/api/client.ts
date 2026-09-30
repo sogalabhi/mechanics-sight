@@ -9,8 +9,12 @@ export class ApiError extends Error {
 }
 
 /** POST the beam; throws ApiError for a solver error, TypeError/AbortError otherwise. */
-export async function analyze(beam: BeamInput, signal?: AbortSignal): Promise<AnalysisResult> {
-  const res = await fetch('/api/v1/analyze', {
+export async function analyze(
+  beam: BeamInput,
+  signal?: AbortSignal,
+  steps = false,
+): Promise<AnalysisResult> {
+  const res = await fetch('/api/v1/analyze' + (steps ? '?steps=true' : ''), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(beam),

@@ -1,0 +1,10 @@
+.toggle { width: 100%; height: 28px; margin-top: 16px; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
+.group { margin: 16px 0 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.list { margin: 0; padding: 0; list-style: none; }
+.step { padding: 8px 0; border-top: 1px solid var(--grid); }
+.stepHead { display: block; padding: 0; font: inherit; font-weight: 500; color: var(--ink); text-align: left; background: none; border: 0; }
+.stepHead:not(:disabled) { cursor: pointer; }
+.stepHead:not(:disabled):hover { text-decoration: underline; }
+.note { margin: 2px 0; color: var(--ink-2); font-size: 12px; }
+.eq { margin-top: 4px; overflow-x: auto; font-size: 13px; }
+.result { color: var(--ink); }

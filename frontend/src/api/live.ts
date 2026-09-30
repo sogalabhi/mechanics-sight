@@ -17,7 +17,7 @@ function schedule(delay = Math.max(0, THROTTLE_MS - (Date.now() - lastRun))) {
 
 async function run() {
   lastRun = Date.now()
-  const { beam, setResult, setError } = useStore.getState()
+  const { beam, showWorking, setResult, setError } = useStore.getState()
   ctrl?.abort()
   if (beam.supports.length === 0) {
     seq++
@@ -27,7 +27,7 @@ async function run() {
   ctrl = new AbortController()
   const mine = ++seq
   try {
-    const result = await analyze(beam, ctrl.signal)
+    const result = await analyze(beam, ctrl.signal, showWorking)
     if (mine !== seq) return
     retries = 0
     setResult(result)
@@ -46,7 +46,7 @@ async function run() {
 export function startLiveAnalysis(): () => void {
   schedule(0)
   const unsub = useStore.subscribe((s, prev) => {
-    if (s.beam !== prev.beam) {
+    if (s.beam !== prev.beam || s.showWorking !== prev.showWorking) {
       retries = 0
       schedule()
     }

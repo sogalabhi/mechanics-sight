@@ -6,6 +6,7 @@ from beam_solver.io.convert import (
     error_to_schema,
     result_to_json,
     result_to_schema,
+    step_to_schema,
 )
 from beam_solver.io.schemas import AnalysisOut, BeamIn, ErrorOut
 
@@ -18,4 +19,5 @@ __all__ = [
     "error_to_schema",
     "result_to_json",
     "result_to_schema",
+    "step_to_schema",
 ]
