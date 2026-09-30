@@ -756,14 +756,28 @@ Run the Python solver in the browser with Pyodide for offline use. It is heavy (
 
 SFD and BMD are abstract mathematical plots. Most students memorize mechanical rules ("UDL gives a parabola", "Point load gives a triangle", "M is maximum where V = 0") without building physical or geometric intuition for *why* the curves behave that way. This engine bridges textbook formulas, visual calculus, and physical deformation into an interconnected learning experience.
 
-### 11.5.1 The Deformed Shape / Qualitative Elastic Curve
+### 11.5.1 The Deformed Shape / Qualitative Elastic Curve & Fiber Stresses [x] (Implemented & Verified)
 Even before user input of $E$ and $I$ in Phase 3, determinate beam deformation shapes are geometrically fixed by the BMD and support conditions:
-- **Exaggerated Real-Time Bent Beam:** Drawn directly beneath the BMD (or as an overlay on the beam sketch).
+- **Closed-Form Double Integration ($EI y'' = -M(x)$):**
+  - Analytical piecewise integration engine (`frontend/src/math/deflection.ts`) integrates the closed-form polynomial bending moment expressions $M(x)$ across all segments.
+  - Zero-error enforcement of support boundary conditions:
+    - Simply supported & overhang beams: $y(x_1) = 0$ and $y(x_2) = 0$ strictly down to machine precision ($< 10^{-12}$).
+    - Cantilever beams: $y(x_{\text{fixed}}) = 0$ and $\theta(x_{\text{fixed}}) = 0$ at the fixed support wall.
+- **Exaggerated Real-Time Bent Beam Ribbon (`frontend/src/diagrams/ElasticCurvePanel.tsx`):**
+  - Rendered in a dedicated 4th diagram panel stacked directly beneath the BMD in `CanvasStack.tsx`.
+  - Shares the global $x$-scale and vertical crosshair coordination.
+  - Shows an undeformed reference baseline with authentic pin, roller, and fixed support markers at exact positions.
 - **Tension vs. Compression Fibers:**
-  - **Sagging ($M > 0$):** The beam smiles ($\smile$). The top face is highlighted in **Red (Compression)** and the bottom face in **Blue (Tension)**. Label: *"Bottom fibers stretched — rebar required at the bottom"*.
-  - **Hogging ($M < 0$):** The beam frowns ($\frown$). The top face is highlighted in **Blue (Tension)** and bottom in **Red (Compression)**. Label: *"Top fibers stretched over the support"*.
+  - **Sagging ($M > 0$):** The beam smiles ($\smile$). The top face is highlighted in **Red (Compression, `--compression`)** and the bottom face in **Blue (Tension, `--tension`)**. Callout: *"Top: Compression"* and *"Bottom: Tension (Rebar)"*.
+  - **Hogging ($M < 0$):** The beam frowns ($\frown$). The top face is highlighted in **Blue (Tension, `--tension`)** and bottom in **Red (Compression, `--compression`)**. Callout: *"Top: Tension (Rebar)"* and *"Bottom: Compression"*.
 - **Points of Contraflexure / Inflection ($M = 0$):**
-  - Highlighted with a visual landmark on the curve where the beam switches between concave up and concave down.
+  - Highlighted with clear node markers on the neutral axis where curvature changes sign, vertical alignment ticks, and callout badge `Inflection (M=0)`.
+- **Peak Deflection Marker ($\delta_{\max}$):**
+  - Displays the point of maximum deflection with dashed dimension line and label `δ_max at x = ... m`.
+- **Interactive Cursor & Crosshair Coordination:**
+  - On hover or pin, a node on the deflected centerline highlights the point and displays real-time fiber status (`Sagging: Top C | Bot T` or `Hogging: Top T | Bot C`).
+- **User-Configurable Toggle in `ViewMenu.tsx`:**
+  - "Show deflected shape (elastic curve)" checkbox toggle (defaults to ON).
 
 ### 11.5.2 Calculus & Curvature Visualizer ("Slope is Value")
 - **Dynamic Tangent Line [x] (Implemented & Verified):**

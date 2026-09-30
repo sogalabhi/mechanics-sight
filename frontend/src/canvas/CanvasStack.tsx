@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Crosshair } from '@/diagrams/Crosshair'
 import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
+import { DEFLECTION_PANEL_HEIGHT, ElasticCurvePanel } from '@/diagrams/ElasticCurvePanel'
 import { IntegrationCard } from '@/diagrams/IntegrationCard'
 import { useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
@@ -16,6 +17,7 @@ export function CanvasStack({ width }: { width: number }) {
   const xs = useXScale()
   const ref = useRef<HTMLDivElement>(null)
   const length = useStore((s) => s.beam.length)
+  const showDeflection = useStore((s) => s.showDeflection)
   const dragStart = useRef<{ clientX: number; x0: number; isDragging: boolean } | null>(null)
   const { setHover } = useStore.getState()
 
@@ -114,6 +116,11 @@ export function CanvasStack({ width }: { width: number }) {
           <DiagramPanel kind={k} width={width} />
         </svg>
       ))}
+      {showDeflection && (
+        <svg width={width} height={DEFLECTION_PANEL_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
+          <ElasticCurvePanel width={width} />
+        </svg>
+      )}
     </div>
   )
 }

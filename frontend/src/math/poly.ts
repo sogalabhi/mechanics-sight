@@ -11,7 +11,7 @@ export function horner(c: number[], t: number): number {
   return r
 }
 
-function degree(c: number[]): number {
+export function degree(c: number[]): number {
   let d = c.length - 1
   while (d > 0 && Math.abs(c[d]) < 1e-12) d--
   return Math.max(d, 0)

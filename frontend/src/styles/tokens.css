@@ -12,6 +12,8 @@
   --select: #175cd3;
   --danger: #b42318;
   --warn: #b54708;
+  --compression: #dc2626;
+  --tension: #2563eb;
 
   --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -34,6 +36,8 @@
     --select: #53b1fd;
     --danger: #f97066;
     --warn: #fdb022;
+    --compression: #f87171;
+    --tension: #60a5fa;
   }
 }
 
@@ -51,4 +55,6 @@
   --select: #53b1fd;
   --danger: #f97066;
   --warn: #fdb022;
+  --compression: #f87171;
+  --tension: #60a5fa;
 }

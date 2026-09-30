@@ -8,7 +8,7 @@ const confirmReset = () => window.confirm('Reset to an empty 6 m beam? You can u
 
 /** Display toggles and Reset. `inline` lays them out flat, for the phone menu. */
 export function ViewMenu({ inline = false }: { inline?: boolean }) {
-  const { showReactions, showGuides, showCalculus, setShowReactions, setShowGuides, setShowCalculus, commit } = useStore()
+  const { showReactions, showGuides, showCalculus, showDeflection, setShowReactions, setShowGuides, setShowCalculus, setShowDeflection, commit } = useStore()
   const detailsRef = useRef<HTMLDetailsElement>(null)
 
   useEffect(() => {
@@ -36,6 +36,7 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
       <label><input type="checkbox" checked={showReactions} onChange={(e) => setShowReactions(e.target.checked)} /> Show reactions</label>
       <label><input type="checkbox" checked={showGuides} onChange={(e) => setShowGuides(e.target.checked)} /> Show critical-point guides</label>
       <label><input type="checkbox" checked={showCalculus} onChange={(e) => setShowCalculus(e.target.checked)} /> Show calculus tangent (dM/dx = V)</label>
+      <label><input type="checkbox" checked={showDeflection} onChange={(e) => setShowDeflection(e.target.checked)} /> Show deflected shape (elastic curve)</label>
       <button className={ui.btn} onClick={() => confirmReset() && commit(emptyBeam(6), null)}>Reset beam</button>
     </>
   )

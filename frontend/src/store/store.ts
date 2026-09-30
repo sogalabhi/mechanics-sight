@@ -23,6 +23,7 @@ interface State {
   showReactions: boolean
   showGuides: boolean
   showCalculus: boolean
+  showDeflection: boolean
   hoverX: number | null
   pinnedX: number | null
   integrationRange: [number, number] | null
@@ -41,6 +42,7 @@ interface State {
   setShowReactions: (v: boolean) => void
   setShowGuides: (v: boolean) => void
   setShowCalculus: (v: boolean) => void
+  setShowDeflection: (v: boolean) => void
 }
 
 export const useStore = create<State>((set) => ({
@@ -55,6 +57,7 @@ export const useStore = create<State>((set) => ({
   showReactions: true,
   showGuides: true,
   showCalculus: true,
+  showDeflection: true,
   hoverX: null,
   pinnedX: null,
   integrationRange: null,
@@ -80,4 +83,5 @@ export const useStore = create<State>((set) => ({
   setShowReactions: (showReactions) => set({ showReactions }),
   setShowGuides: (showGuides) => set({ showGuides }),
   setShowCalculus: (showCalculus) => set({ showCalculus }),
+  setShowDeflection: (showDeflection) => set({ showDeflection }),
 }))
