@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { AnalysisResult } from '@/model/types'
-import { curvePoints, horner, largestRegions, signRegions, tangentAt, valueAt } from './poly'
+import { curvePoints, horner, integrateShear, largestRegions, signRegions, tangentAt, valueAt } from './poly'
 import { placeLabels } from './labels'
 
 const fixtures = import.meta.glob('../../../shared/fixtures/*.json', { eager: true }) as Record<
@@ -133,4 +133,71 @@ describe('tangentAt (Calculus Tangent Visualizer)', () => {
     expect(tL?.px).toBe(xs(6))
   })
 })
+
+describe('integrateShear (Visual Integration: Area under SFD = ΔM)', () => {
+  it('ss_full_udl: left half area under SFD matches maximum moment M(3)', () => {
+    const udlFixture = Object.values(fixtures).find((f) => f.default.name.includes('full_udl'))?.default.output
+    expect(udlFixture).toBeDefined()
+    if (!udlFixture) return
+
+    const res = integrateShear(udlFixture, 0, 3)
+    expect(res).not.toBeNull()
+    if (!res) return
+
+    // Triangle of height 6 and base 3: Area = 9 kN·m
+    expect(res.totalArea).toBeCloseTo(9.0, 6)
+    expect(res.positiveArea).toBeCloseTo(9.0, 6)
+    expect(res.negativeArea).toBeCloseTo(0.0, 6)
+    expect(res.deltaMoment).toBeCloseTo(9.0, 6)
+    expect(res.deltaMoment).toBeCloseTo(res.totalArea, 6)
+  })
+
+  it('ss_full_udl: full span net area is zero, matching M(6) - M(0)', () => {
+    const udlFixture = Object.values(fixtures).find((f) => f.default.name.includes('full_udl'))?.default.output
+    if (!udlFixture) return
+
+    const res = integrateShear(udlFixture, 0, 6)
+    expect(res).not.toBeNull()
+    if (!res) return
+
+    expect(res.positiveArea).toBeCloseTo(9.0, 6)
+    expect(res.negativeArea).toBeCloseTo(-9.0, 6)
+    expect(res.totalArea).toBeCloseTo(0.0, 6)
+    expect(res.deltaMoment).toBeCloseTo(0.0, 6)
+    expect(res.regions.length).toBe(2) // Positive triangle + negative triangle
+  })
+
+  it('ss_central_point: shear rectangle area equals linear moment rise', () => {
+    const pointFixture = Object.values(fixtures).find((f) => f.default.name.includes('central_point'))?.default.output
+    expect(pointFixture).toBeDefined()
+    if (!pointFixture) return
+
+    // Rectangle of shear 5 kN * 3 m = 15 kN·m
+    const left = integrateShear(pointFixture, 0, 3)
+    expect(left).not.toBeNull()
+    if (!left) return
+    expect(left.totalArea).toBeCloseTo(15.0, 6)
+    expect(left.deltaMoment).toBeCloseTo(15.0, 6)
+
+    const right = integrateShear(pointFixture, 3, 6)
+    expect(right).not.toBeNull()
+    if (!right) return
+    expect(right.totalArea).toBeCloseTo(-15.0, 6)
+    expect(right.deltaMoment).toBeCloseTo(-15.0, 6)
+  })
+
+  it('contract fixtures: exact integration identity holds across all segments without couples', () => {
+    for (const mod of Object.values(fixtures)) {
+      const output = mod.default.output
+      for (const seg of output.segments) {
+        const res = integrateShear(output, seg.x_start, seg.x_end)
+        if (!res) continue
+        if (Math.abs(res.momentJumpSum) < 1e-6) {
+          expect(res.deltaMoment).toBeCloseTo(res.totalArea, 5)
+        }
+      }
+    }
+  })
+})
+
 

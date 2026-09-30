@@ -11,6 +11,8 @@
 
 .top {
   grid-area: top;
+  position: relative;
+  z-index: 50;
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -58,7 +60,7 @@
 
 .hr { margin: 16px 0; border: 0; border-top: 1px solid var(--rule); }
 
-.top { flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; }
+.top { flex-wrap: nowrap; overflow: visible; white-space: nowrap; }
 
 @media (max-width: 1099px) {
   .shell {

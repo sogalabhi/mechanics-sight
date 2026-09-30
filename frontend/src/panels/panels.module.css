@@ -28,12 +28,12 @@ section + section { margin-top: 16px; }
   .title { text-align: center; }
 }
 
-.menu { position: relative; }
+.menu { position: relative; z-index: 50; }
 .menu summary { list-style: none; display: inline-flex; align-items: center; }
 .menu summary::-webkit-details-marker { display: none; }
-.menuBody { position: absolute; z-index: 10; top: 34px; left: 0; display: flex; flex-direction: column; gap: 8px; min-width: 240px; padding: 12px; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); }
+.menuBody { position: absolute; z-index: 100; top: 34px; left: 0; display: flex; flex-direction: column; gap: 8px; min-width: 250px; padding: 12px; background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18); }
 .menuBody hr { width: 100%; margin: 0; border: 0; border-top: 1px solid var(--rule); }
-.menuBody label { display: flex; gap: 6px; align-items: center; }
+.menuBody label { display: flex; gap: 6px; align-items: center; cursor: pointer; user-select: none; }
 
 .signWrap { position: relative; margin-left: auto; }
 .link { font: inherit; font-size: 12px; color: var(--ink-2); background: none; border: 0; cursor: pointer; }

@@ -6,6 +6,7 @@ import { curvePoints, largestRegions, signRegions, valueAt, type Kind } from '@/
 import { Guides } from '@/canvas/Guides'
 import { useLayout, useXScale } from '@/canvas/xscale'
 import { useStore } from '@/store/store'
+import { AreaShading } from './AreaShading'
 import { CalculusTangent } from './CalculusTangent'
 import { Crosshair } from './Crosshair'
 
@@ -168,6 +169,7 @@ export function DiagramPanel({ kind, width }: { kind: Kind; width: number }) {
           )
         })}
       </g>
+      <AreaShading kind={kind} width={width} yOf={y} height={DIAGRAM_HEIGHT} />
       {kind === 'moment' && <CalculusTangent yOf={y} height={DIAGRAM_HEIGHT} />}
       <Crosshair kind={kind} yOf={y} height={DIAGRAM_HEIGHT} color={meta.color} unit={meta.unit} />
     </g>

@@ -25,6 +25,7 @@ interface State {
   showCalculus: boolean
   hoverX: number | null
   pinnedX: number | null
+  integrationRange: [number, number] | null
   /** One call = one undo step. */
   commit: (beam: BeamInput, selectId?: string | null) => void
   undo: () => void
@@ -34,6 +35,7 @@ interface State {
   setError: (e: AnalysisError) => void
   setHover: (x: number | null) => void
   setPinned: (x: number | null) => void
+  setIntegrationRange: (range: [number, number] | null) => void
   setShowWorking: (on: boolean) => void
   setStepsUnsupported: (v: boolean) => void
   setShowReactions: (v: boolean) => void
@@ -55,6 +57,7 @@ export const useStore = create<State>((set) => ({
   showCalculus: true,
   hoverX: null,
   pinnedX: null,
+  integrationRange: null,
   commit: (beam, selectId) =>
     set((s) => ({
       beam,
@@ -71,6 +74,7 @@ export const useStore = create<State>((set) => ({
   setError: (error) => set({ error }),
   setHover: (hoverX) => set({ hoverX }),
   setPinned: (pinnedX) => set({ pinnedX }),
+  setIntegrationRange: (integrationRange) => set({ integrationRange }),
   setShowWorking: (showWorking) => set({ showWorking, stepsUnsupported: false }),
   setStepsUnsupported: (stepsUnsupported) => set({ stepsUnsupported }),
   setShowReactions: (showReactions) => set({ showReactions }),

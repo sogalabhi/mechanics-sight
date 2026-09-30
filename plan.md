@@ -778,11 +778,20 @@ Even before user input of $E$ and $I$ in Phase 3, determinate beam deformation s
   - Under a downward distributed load ($w < 0$), the badge explains:
     $$\frac{d^2M}{dx^2} = \frac{dV}{dx} = w < 0 \implies \text{Concave Downwards (Frowning Parabola)}$$
 
-### 11.5.3 Area-under-SFD Shading (Visual Integration)
+### 11.5.3 Area-under-SFD Shading (Visual Integration) [x] (Implemented & Verified)
 - Textbooks teach: $\Delta M_{a \to b} = \int_a^b V(x) \, dx$.
-- Clicking and dragging a range $[x_a, x_b]$ on the SFD shades the area under the shear curve and shows a live calculation card:
-  $$\text{Shaded SFD Area} = \int_{x_a}^{x_b} V(x)\,dx = +15\text{ kN}\cdot\text{m} \implies \Delta M = M(x_b) - M(x_a) = +15\text{ kN}\cdot\text{m}$$
-- Visually demystifies why a rectangle of shear produces an inclined ramp of moment.
+- **Click-and-Drag / Span Selection:**
+  - Clicking and dragging across any span $[x_a, x_b]$ on the canvas smoothly shades the area under the shear curve.
+  - Sub-divides into positive ($V > 0$, cyan with 45° diagonal hatch) and negative ($V < 0$, amber with -45° diagonal hatch) regions.
+- **BMD Integration Bracket:**
+  - On the BMD directly below, the corresponding moment curve segment highlights with an emerald/green glow.
+  - A vertical dimension bracket shows $\Delta M = M(x_b) - M(x_a)$ with rise/fall directional arrows matching the shaded SFD area.
+- **Pedagogical Floating HUD Card (`IntegrationCard.tsx`):**
+  - Displays the exact closed-form calculus integral:
+    $$\text{Shaded SFD Area} = \int_{x_a}^{x_b} V(x)\,dx = +15\text{ kN}\cdot\text{m} \iff \Delta M = M(x_b) - M(x_a) = +15\text{ kN}\cdot\text{m}$$
+  - Breakdown of positive area $A_+$, negative area $A_-$, and net area.
+  - Automatically identifies applied moment couple jumps inside the interval.
+  - Dismissible with `Escape` or a single click.
 
 ### 11.5.4 The "Virtual Saw" (Interactive Free Body Cut)
 - On hover or when toggling "Inspect Cut" at any coordinate $x$:

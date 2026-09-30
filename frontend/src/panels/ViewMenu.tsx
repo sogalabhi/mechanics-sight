@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { emptyBeam } from '@/model/actions'
 import { useStore } from '@/store/store'
 import ui from '@/ui/ui.module.css'
@@ -8,6 +9,28 @@ const confirmReset = () => window.confirm('Reset to an empty 6 m beam? You can u
 /** Display toggles and Reset. `inline` lays them out flat, for the phone menu. */
 export function ViewMenu({ inline = false }: { inline?: boolean }) {
   const { showReactions, showGuides, showCalculus, setShowReactions, setShowGuides, setShowCalculus, commit } = useStore()
+  const detailsRef = useRef<HTMLDetailsElement>(null)
+
+  useEffect(() => {
+    if (inline) return
+    const onPointerDown = (e: MouseEvent | TouchEvent) => {
+      if (detailsRef.current?.open && !detailsRef.current.contains(e.target as Node)) {
+        detailsRef.current.removeAttribute('open')
+      }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && detailsRef.current?.open) {
+        detailsRef.current.removeAttribute('open')
+      }
+    }
+    document.addEventListener('pointerdown', onPointerDown)
+    window.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown)
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [inline])
+
   const body = (
     <>
       <label><input type="checkbox" checked={showReactions} onChange={(e) => setShowReactions(e.target.checked)} /> Show reactions</label>
@@ -18,7 +41,7 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
   )
   if (inline) return <div className={styles.inlineView}>{body}</div>
   return (
-    <details className={styles.menu}>
+    <details ref={detailsRef} className={styles.menu}>
       <summary className={ui.btn} aria-label="View options">View</summary>
       <div className={styles.menuBody}>{body}</div>
     </details>

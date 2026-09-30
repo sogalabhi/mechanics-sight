@@ -219,3 +219,147 @@ export function tangentAt(
   }
 }
 
+export interface AreaRegion {
+  sign: 1 | -1
+  x0: number
+  x1: number
+  area: number // kN·m
+  pts: [number, number][] // points in (x, V) coordinates around zero line
+}
+
+export interface ShearIntegrationResult {
+  xStart: number
+  xEnd: number
+  totalArea: number
+  positiveArea: number
+  negativeArea: number
+  momentStart: number
+  momentEnd: number
+  deltaMoment: number
+  momentJumpSum: number
+  regions: AreaRegion[]
+}
+
+/** Anti-derivative evaluation of Horner polynomial: Q(t) where dQ/dt = P(t). */
+export function integrateHorner(c: number[], t: number): number {
+  let r = 0
+  for (let i = c.length - 1; i >= 0; i--) {
+    r = r * t + c[i] / (i + 1)
+  }
+  return r * t
+}
+
+/** Find real roots of polynomial strictly inside (t0, t1). */
+function findShearRoots(c: number[], t0: number, t1: number): number[] {
+  const d = degree(c)
+  const roots: number[] = []
+  if (d === 1) {
+    if (Math.abs(c[1]) > 1e-12) {
+      const r = -c[0] / c[1]
+      if (r > t0 + 1e-6 && r < t1 - 1e-6) roots.push(r)
+    }
+  } else if (d === 2) {
+    const [c0, c1, c2] = [c[0], c[1], c[2]]
+    const disc = c1 * c1 - 4 * c2 * c0
+    if (disc >= 0 && Math.abs(c2) > 1e-12) {
+      const sq = Math.sqrt(disc)
+      const r1 = (-c1 - sq) / (2 * c2)
+      const r2 = (-c1 + sq) / (2 * c2)
+      if (r1 > t0 + 1e-6 && r1 < t1 - 1e-6) roots.push(r1)
+      if (r2 > t0 + 1e-6 && r2 < t1 - 1e-6) roots.push(r2)
+    }
+  }
+  return roots.sort((a, b) => a - b)
+}
+
+/**
+ * Computes exact closed-form integral of shear force: Area = ∫_{x_a}^{x_b} V(x) dx.
+ * Decomposes into positive and negative regions and correlates with ΔM = M(x_b) - M(x_a).
+ */
+export function integrateShear(
+  result: AnalysisResult,
+  xStart: number,
+  xEnd: number,
+  pxPerM: number = 100,
+): ShearIntegrationResult | null {
+  const segs = result.segments
+  if (!segs.length) return null
+
+  const L = segs[segs.length - 1].x_end
+  const a = Math.max(0, Math.min(xStart, xEnd, L))
+  const b = Math.min(L, Math.max(xStart, xEnd, 0))
+  if (b - a < 1e-5) return null
+
+  let totalArea = 0
+  let positiveArea = 0
+  let negativeArea = 0
+  const regions: AreaRegion[] = []
+
+  for (const s of segs) {
+    if (s.x_end <= a + EPS || s.x_start >= b - EPS) continue
+
+    const xLo = Math.max(a, s.x_start)
+    const xHi = Math.min(b, s.x_end)
+    const tLo = xLo - s.x_start
+    const tHi = xHi - s.x_start
+
+    const c = coeffs(s, 'shear')
+    const roots = findShearRoots(c, tLo, tHi)
+    const subBreaks = [tLo, ...roots, tHi]
+
+    for (let i = 0; i < subBreaks.length - 1; i++) {
+      const t0 = subBreaks[i]
+      const t1 = subBreaks[i + 1]
+      if (t1 - t0 < 1e-7) continue
+
+      const area = integrateHorner(c, t1) - integrateHorner(c, t0)
+      const tMid = (t0 + t1) / 2
+      const vMid = horner(c, tMid)
+      const sign: 1 | -1 = vMid >= 0 ? 1 : -1
+
+      if (sign > 0) positiveArea += area
+      else negativeArea += area
+      totalArea += area
+
+      // Build polygon coordinates: (x, 0) -> (x(t), V(t)) -> (x1, 0)
+      const x0 = s.x_start + t0
+      const x1 = s.x_start + t1
+      const nSteps = Math.max(2, Math.ceil(((x1 - x0) * pxPerM) / 4))
+      const pts: [number, number][] = [[x0, 0]]
+      for (let k = 0; k <= nSteps; k++) {
+        const tau = t0 + ((t1 - t0) * k) / nSteps
+        pts.push([s.x_start + tau, horner(c, tau)])
+      }
+      pts.push([x1, 0])
+
+      regions.push({ sign, x0, x1, area, pts })
+    }
+  }
+
+  const mStart = valueAt(result, a, 'moment').right
+  const mEnd = valueAt(result, b, 'moment').left
+  const deltaMoment = mEnd - mStart
+
+  // Jumps in moment diagram caused by applied couples inside (a, b)
+  let momentJumpSum = 0
+  for (const cp of result.critical_points) {
+    if (cp.x > a + 1e-5 && cp.x < b - 1e-5) {
+      momentJumpSum += cp.moment_right - cp.moment_left
+    }
+  }
+
+  return {
+    xStart: a,
+    xEnd: b,
+    totalArea,
+    positiveArea,
+    negativeArea,
+    momentStart: mStart,
+    momentEnd: mEnd,
+    deltaMoment,
+    momentJumpSum,
+    regions,
+  }
+}
+
+
