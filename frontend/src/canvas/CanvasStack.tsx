@@ -4,7 +4,7 @@ import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
 import { Guides } from './Guides'
-import { useXScale } from './XScaleContext'
+import { useXScale } from './xscale'
 
 const SNAP_PX = 6
 

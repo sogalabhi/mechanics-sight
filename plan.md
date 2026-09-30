@@ -596,7 +596,7 @@ Frontend:
 
 CI (GitHub Actions) on every push:
 - **Backend:** ruff, format check, mypy, lint-imports, pytest with coverage
-- **Frontend:** eslint, `tsc --noEmit`, vitest
+- **Frontend:** oxlint, `tsc -b`, vitest (which also runs the shared contract fixtures), production build
 - **Contract:** export `openapi.json` from the app, regenerate the TypeScript types, and fail if either differs from what is committed
 
 ---

@@ -1,5 +1,6 @@
 import { Arrow } from './Arrow'
 import { formatLabel } from '@/math/format'
+import { loadHeight } from './loadHeight'
 import { groupOpacity, MONO, stateColor, stroke, type SymbolState } from './state'
 
 interface Props {
@@ -18,7 +19,6 @@ interface Props {
 }
 
 const FACE = -5
-export const loadHeight = (w: number, wMax: number) => (w === 0 || wMax === 0 ? 0 : 10 + (34 * Math.abs(w)) / wMax)
 
 export function DistributedLoad({ xs, xe, w1, w2, wMax, lift = 0, unit = 'kN/m', state = 'default' }: Props) {
   const h1 = loadHeight(w1, wMax)

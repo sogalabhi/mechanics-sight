@@ -1,5 +1,5 @@
 import { useStore } from '@/store/store'
-import { useXScale } from './XScaleContext'
+import { useXScale } from './xscale'
 
 /** Faint dashed verticals at every critical point, so x lines up across the three panels. */
 export function Guides({ height }: { height: number }) {

@@ -116,6 +116,7 @@ class StepOut(_Model):
         "zero_shear",
         "moment_at",
         "extreme",
+        "notice",
     ]
     group: Literal["reactions", "diagrams", "extremes"]
     title: str

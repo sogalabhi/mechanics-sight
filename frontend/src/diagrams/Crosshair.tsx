@@ -1,6 +1,6 @@
 import { formatNumber } from '@/math/format'
 import { isJump, valueAt, type Kind } from '@/math/poly'
-import { useXScale } from '@/canvas/XScaleContext'
+import { useXScale } from '@/canvas/xscale'
 import { useStore } from '@/store/store'
 
 interface Props {

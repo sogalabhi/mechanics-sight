@@ -105,3 +105,40 @@ def test_cli_steps_flag(tmp_path: Path) -> None:
     assert json.loads(out.read_text())["steps"]
     assert main(["analyze", str(src), "--json", str(out)]) == 0
     assert "steps" not in json.loads(out.read_text())
+
+
+def _crowded(n_loads: int) -> dict[str, Any]:
+    loads = [
+        {"id": f"l{i}", "type": "point", "position": 1.0 + i * 0.9, "magnitude": -1.0}
+        for i in range(n_loads)
+    ]
+    supports = [
+        {"id": "a", "type": "pin", "position": 0.0},
+        {"id": "b", "type": "roller", "position": 100.0},
+    ]
+    return {"schema_version": 1, "length": 100.0, "supports": supports, "loads": loads}
+
+
+def test_many_loads_are_summed_not_listed() -> None:
+    from beam_solver.analysis.steps import MAX_TERMS
+    from beam_solver.io import beam_from_json
+
+    beam = beam_from_json(_crowded(30))
+    steps = build_steps(beam, analyze(beam))
+    shear = [s for s in steps if s.kind == "shear"]
+    assert shear, "30 loads is still under the segment limit"
+    assert all((s.substituted or "").count("underbrace") <= MAX_TERMS for s in shear)
+    assert any("sum of the" in (s.substituted or "") for s in shear)
+
+
+def test_huge_beam_drops_the_per_segment_working() -> None:
+    from beam_solver.analysis.steps import MAX_STEP_SEGMENTS
+    from beam_solver.io import beam_from_json
+
+    beam = beam_from_json(_crowded(90))
+    result = analyze(beam)
+    assert len(result.segments) > MAX_STEP_SEGMENTS
+    steps = build_steps(beam, result)
+    assert not [s for s in steps if s.kind in ("shear", "moment")]
+    assert any(s.kind == "notice" for s in steps)
+    assert any(s.kind == "reactions" for s in steps), "the reactions are still worked"

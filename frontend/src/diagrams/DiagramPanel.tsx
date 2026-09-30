@@ -4,7 +4,7 @@ import { formatNumber, formatQty, formatTick } from '@/math/format'
 import { placeLabels, type LabelCandidate } from '@/math/labels'
 import { curvePoints, largestRegions, signRegions, valueAt, type Kind } from '@/math/poly'
 import { Guides } from '@/canvas/Guides'
-import { useLayout, useXScale } from '@/canvas/XScaleContext'
+import { useLayout, useXScale } from '@/canvas/xscale'
 import { useStore } from '@/store/store'
 import { Crosshair } from './Crosshair'
 

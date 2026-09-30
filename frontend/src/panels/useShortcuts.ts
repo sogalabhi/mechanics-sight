@@ -15,7 +15,8 @@ export function useShortcuts() {
       const k = e.key.toLowerCase()
       if (mod && k === 'z') {
         e.preventDefault()
-        e.shiftKey ? s.redo() : s.undo()
+        if (e.shiftKey) s.redo()
+        else s.undo()
       } else if (mod && k === 'y') {
         e.preventDefault()
         s.redo()

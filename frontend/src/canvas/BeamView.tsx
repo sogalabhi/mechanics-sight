@@ -8,7 +8,7 @@ import { packLanes } from '@/math/lanes'
 import { allItems, keyPoints } from '@/model/actions'
 import type { Item } from '@/model/types'
 import { useStore } from '@/store/store'
-import { useXScale } from './XScaleContext'
+import { useXScale } from './xscale'
 
 export const BEAM_Y = 130
 export const BEAM_PANEL_HEIGHT = 260

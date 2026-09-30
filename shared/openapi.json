@@ -547,7 +547,8 @@
               "moment",
               "zero_shear",
               "moment_at",
-              "extreme"
+              "extreme",
+              "notice"
             ],
             "title": "Kind",
             "type": "string"

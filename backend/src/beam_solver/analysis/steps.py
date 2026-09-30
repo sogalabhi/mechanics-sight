@@ -18,6 +18,8 @@ from beam_solver.domain import Beam, DistributedLoad, Load, PointLoad, PointMome
 from beam_solver.solvers import EquilibriumSystem
 
 _ZERO_TOL = 5e-4  # below this a value prints as 0 (3 decimals)
+MAX_STEP_SEGMENTS = 60  # beyond this the per-segment working is left out
+MAX_TERMS = 12  # beyond this many contributions on one segment, they are summed
 
 
 @dataclass(frozen=True)
@@ -301,9 +303,30 @@ def _reaction_steps(beam: Beam, result: AnalysisResult, labels: _Labels) -> list
 # --- V(x), M(x) ------------------------------------------------------------------------------
 
 
+def _sum_of(name: str, terms: list[str]) -> str:
+    if not terms:
+        return f"{name}(x) = 0"
+    if len(terms) > MAX_TERMS:
+        return f"{name}(x) = \\text{{sum of the {len(terms)} load contributions to the left}}"
+    return f"{name}(x) = " + " + ".join(terms)
+
+
 def _segment_steps(
     beam: Beam, all_loads: tuple[Load, ...], result: AnalysisResult, labels: _Labels
 ) -> list[Step]:
+    if len(result.segments) > MAX_STEP_SEGMENTS:
+        return [
+            Step(
+                "notice",
+                "diagrams",
+                "Working for each segment is left out",
+                notes=(
+                    f"This beam has {len(result.segments)} segments (more than "
+                    f"{MAX_STEP_SEGMENTS}), so the V(x) and M(x) working per segment is not "
+                    "shown. The exact polynomials are still in the diagrams and the values table.",
+                ),
+            )
+        ]
     steps: list[Step] = []
     for seg in result.segments:
         span = f"{_num(seg.x_start)} < x < {_num(seg.x_end)}"
@@ -314,9 +337,9 @@ def _segment_steps(
             terms: list[str] = []
             for load in all_loads:
                 poly = load.section_polynomials(seg.x_start)[idx]
+                if all(abs(float(c)) < _ZERO_TOL for c in poly.coef):
+                    continue  # the load is to the right of this segment
                 coef = _to_x(list(poly.coef), seg.x_start)
-                if all(abs(c) < _ZERO_TOL for c in coef):
-                    continue
                 terms.append(f"\\underbrace{{{_paren(_poly(coef))}}}_{{{labels.of(load)}}}")
             final = _to_x(seg.shear if idx == 0 else seg.moment, seg.x_start)
             steps.append(
@@ -325,7 +348,7 @@ def _segment_steps(
                     "diagrams",
                     f"{'Shear force' if idx == 0 else 'Bending moment'} for {span}",
                     symbolic=sym,
-                    substituted=f"{name}(x) = " + (" + ".join(terms) if terms else "0"),
+                    substituted=_sum_of(name, terms),
                     result=f"{name}(x) = {_poly(final)}",
                     x_start=seg.x_start,
                     x_end=seg.x_end,

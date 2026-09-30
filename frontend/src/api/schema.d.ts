@@ -252,7 +252,7 @@ export interface components {
              * Kind
              * @enum {string}
              */
-            kind: "supports" | "loads" | "resultant" | "force_balance" | "moment_balance" | "reactions" | "shear" | "moment" | "zero_shear" | "moment_at" | "extreme";
+            kind: "supports" | "loads" | "resultant" | "force_balance" | "moment_balance" | "reactions" | "shear" | "moment" | "zero_shear" | "moment_at" | "extreme" | "notice";
             /**
              * Notes
              * @description Plain-text lines
