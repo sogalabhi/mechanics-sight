@@ -274,3 +274,28 @@ def test_indeterminate_physical_deflection_and_stress():
     # Bending stress exists and yield ratio is computed
     assert res.bending_stress is not None
     assert res.bending_stress.yield_ratio > 0
+
+
+def test_multi_pinned_axial_indeterminate():
+    """L=6m, pin at 0, pin at 6, horizontal force Fx = +12 kN at x = 2m.
+    Axial stiffness:
+    k_1 = EA / 2, k_2 = EA / 4
+    u_2 = Fx / (k_1 + k_2) = 12 / (0.75 EA) = 16 / EA
+    R_A,x = -k_1 * u_2 = -8 kN
+    R_B,x = -k_2 * u_2 = -4 kN
+    Sum of horizontal reactions = -12 kN (equilibrium).
+    """
+    beam = Beam(
+        6.0,
+        (Support("A", SupportKind.PIN, 0.0), Support("B", SupportKind.PIN, 6.0)),
+        (PointLoad("P", 2.0, 0.0, fx=12.0),),
+    )
+    res = analyze(beam)
+
+    assert res.classification.axial_degree == 1
+    reacs = {r.support_id: r for r in res.reactions}
+    assert pytest.approx(reacs["A"].fx, abs=1e-5) == -8.0
+    assert pytest.approx(reacs["B"].fx, abs=1e-5) == -4.0
+    assert pytest.approx(reacs["A"].fy, abs=1e-5) == 0.0
+    assert pytest.approx(reacs["B"].fy, abs=1e-5) == 0.0
+
