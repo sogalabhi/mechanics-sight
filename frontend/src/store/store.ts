@@ -35,6 +35,7 @@ interface State {
   pinnedX: number | null
   sawCutX: number | null
   integrationRange: [number, number] | null
+  dockHud: boolean
   /** One call = one undo step. */
   commit: (beam: BeamInput, selectId?: string | null) => void
   undo: () => void
@@ -46,6 +47,7 @@ interface State {
   setPinned: (x: number | null) => void
   setSawCutX: (x: number | null) => void
   setIntegrationRange: (range: [number, number] | null) => void
+  setDockHud: (dock: boolean) => void
   setShowWorking: (on: boolean) => void
   setSelectedMethod: (method: string | null) => void
   setStepsUnsupported: (v: boolean) => void
@@ -55,6 +57,19 @@ interface State {
   setShowAxial: (v: boolean | null) => void
   setShowDeflection: (v: boolean) => void
   setShowStress: (v: boolean) => void
+}
+
+const DOCK_HUD_KEY = 'ms_dock_hud'
+const getStoredDockHud = () => {
+  try {
+    return (
+      typeof window !== 'undefined' &&
+      typeof window.localStorage !== 'undefined' &&
+      window.localStorage.getItem(DOCK_HUD_KEY) === 'true'
+    )
+  } catch {
+    return false
+  }
 }
 
 export const useStore = create<State>((set) => ({
@@ -84,6 +99,7 @@ export const useStore = create<State>((set) => ({
   pinnedX: null,
   sawCutX: null,
   integrationRange: null,
+  dockHud: getStoredDockHud(),
   commit: (beam, selectId) =>
     set((s) => ({
       beam,
@@ -103,6 +119,14 @@ export const useStore = create<State>((set) => ({
   setPinned: (pinnedX) => set({ pinnedX }),
   setSawCutX: (sawCutX) => set({ sawCutX }),
   setIntegrationRange: (integrationRange) => set({ integrationRange }),
+  setDockHud: (dockHud) => {
+    try {
+      if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
+        window.localStorage.setItem(DOCK_HUD_KEY, String(dockHud))
+      }
+    } catch {}
+    set({ dockHud })
+  },
   setShowWorking: (showWorking) => set({ showWorking, stepsUnsupported: false }),
   setSelectedMethod: (selectedMethod) => set({ selectedMethod }),
   setStepsUnsupported: (stepsUnsupported) => set({ stepsUnsupported }),

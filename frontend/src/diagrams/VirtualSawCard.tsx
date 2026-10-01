@@ -1,15 +1,18 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { formatNumber, formatQty } from '@/math/format'
 import { computeSectionCut } from '@/math/sectionCut'
 import { computeStressProfile } from '@/math/stressProfile'
 import { useStore } from '@/store/store'
 import styles from './VirtualSawCard.module.css'
 
-export function VirtualSawCard() {
+export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
   const sawCutX = useStore((s) => s.sawCutX)
   const beam = useStore((s) => s.draft ?? s.beam)
   const result = useStore((s) => s.result)
   const setSawCutX = useStore((s) => s.setSawCutX)
+  const dockHud = useStore((s) => s.dockHud)
+  const setDockHud = useStore((s) => s.setDockHud)
+  const [minimized, setMinimized] = useState(false)
 
   const data = useMemo(() => {
     if (sawCutX === null || !result) return null
@@ -30,6 +33,8 @@ export function VirtualSawCard() {
     return computeStressProfile(activeSection, data.mCut, data.vCut)
   }, [activeSection, data])
 
+  if (!docked && dockHud) return null
+  if (docked && !dockHud) return null
   if (!data) return null
 
   // Mini-FBD SVG dimensions
@@ -45,23 +50,46 @@ export function VirtualSawCard() {
   const vMatches = Math.abs(data.vCut - data.vDiagram) < 1e-4
   const mMatches = Math.abs(data.mCut - data.mDiagram) < 1e-4
 
+  const cardClass = `${docked ? styles.dockedCard : styles.card} ${minimized ? styles.minimized : ''}`
+
   return (
-    <aside className={styles.card} aria-label="Virtual Saw Free Body Cut">
+    <aside className={cardClass} aria-label="Virtual Saw Free Body Cut">
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleGroup}>
           <span className={styles.title}>Virtual Saw Cut</span>
           <span className={styles.badge}>x = {formatNumber(data.xCut)} m</span>
         </div>
-        <button
-          className={styles.closeBtn}
-          onClick={() => setSawCutX(null)}
-          title="Close section cut (Esc)"
-          aria-label="Close section cut"
-        >
-          ×
-        </button>
+        <div className={styles.actionGroup}>
+          <button
+            className={styles.actionBtn}
+            onClick={() => setDockHud(!dockHud)}
+            title={dockHud ? 'Float over canvas' : 'Dock to sidebar (frees up canvas)'}
+            aria-label={dockHud ? 'Float over canvas' : 'Dock to sidebar'}
+          >
+            {dockHud ? '⧉ Float' : '◨ Dock'}
+          </button>
+          <button
+            className={styles.actionBtn}
+            onClick={() => setMinimized(!minimized)}
+            title={minimized ? 'Expand details' : 'Minimize to header'}
+            aria-label={minimized ? 'Expand details' : 'Minimize'}
+          >
+            {minimized ? '＋' : '—'}
+          </button>
+          <button
+            className={styles.closeBtn}
+            onClick={() => setSawCutX(null)}
+            title="Close section cut (Esc)"
+            aria-label="Close section cut"
+          >
+            ×
+          </button>
+        </div>
       </div>
+
+      {!minimized && (
+        <>
 
       <div className={styles.intro}>
         The <strong>Method of Sections</strong> isolates the left segment [0, {formatNumber(data.xCut)} m].
@@ -71,7 +99,7 @@ export function VirtualSawCard() {
       {/* Mini Free Body Diagram Canvas */}
       <div className={styles.fbdBox}>
         <div className={styles.fbdTitle}>Free Body Diagram (FBD) of Left Segment</div>
-        <svg width={fbdW} height={fbdH} viewBox={`0 0 ${fbdW} ${fbdH}`} style={{ display: 'block' }}>
+        <svg width="100%" height={fbdH} viewBox={`0 0 ${fbdW} ${fbdH}`} style={{ maxWidth: fbdW, height: 'auto', display: 'block' }}>
           {/* Dimension line at bottom */}
           <line x1={xOrigin} x2={xCutPx} y1={fbdH - 12} y2={fbdH - 12} stroke="var(--ink-2)" strokeWidth={1} />
           <line x1={xOrigin} x2={xOrigin} y1={fbdH - 16} y2={fbdH - 8} stroke="var(--ink-2)" strokeWidth={1} />
@@ -456,6 +484,8 @@ export function VirtualSawCard() {
           </>
         )}
       </div>
+        </>
+      )}
     </aside>
   )
 }

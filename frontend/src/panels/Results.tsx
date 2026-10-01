@@ -4,6 +4,9 @@ import { useStore } from '@/store/store'
 import { ValuesTable } from './ValuesTable'
 import { WorkingPanel } from '@/working/WorkingPanel'
 import { CanonicalCard } from '@/working/CanonicalCard'
+import { IntegrationCard } from '@/diagrams/IntegrationCard'
+import { VirtualSawCard } from '@/diagrams/VirtualSawCard'
+import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
 
 function badge(r: AnalysisResult): { text: string; tone: string } {
@@ -22,7 +25,58 @@ function badge(r: AnalysisResult): { text: string; tone: string } {
 export function Results() {
   const result = useStore((s) => s.result)
   const setPinned = useStore((s) => s.setPinned)
-  if (!result) return null
+  const beam = useStore((s) => s.draft ?? s.beam)
+  const commit = useStore((s) => s.commit)
+  const dockHud = useStore((s) => s.dockHud)
+  const sawCutX = useStore((s) => s.sawCutX)
+  const integrationRange = useStore((s) => s.integrationRange)
+
+  if (!result) {
+    return (
+      <div>
+        <h2 className={styles.title}>Results</h2>
+        <div className={styles.emptyResultsCard}>
+          <div className={styles.emptyBadge}>Awaiting Restraint</div>
+          <p className={styles.emptyTitle}>No Results to Display</p>
+          <p className={styles.emptyDesc}>
+            {beam.supports.length === 0
+              ? 'Beam has no supports. Add a pin, roller, or fixed support to solve for reactions, extremes, and stresses.'
+              : 'The structure cannot be solved in its current state. Verify support constraints and hinge stability.'}
+          </p>
+          {beam.supports.length === 0 && (
+            <div className={styles.emptyActions}>
+              <button
+                className={ui.btn}
+                style={{ width: '100%', justifyContent: 'center' }}
+                onClick={() => {
+                  const b = structuredClone(beam)
+                  b.supports = [
+                    { id: 's1', type: 'pin', position: 0 },
+                    { id: 's2', type: 'roller', position: b.length },
+                  ]
+                  if (!b.loads || b.loads.length === 0) {
+                    b.loads = [
+                      {
+                        id: 'l1',
+                        type: 'point',
+                        position: Math.round((b.length / 2) * 100) / 100,
+                        magnitude: -10,
+                        fx: 0,
+                      },
+                    ]
+                  }
+                  commit(b)
+                }}
+              >
+                + Add Pin & Roller
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    )
+  }
+
   const b = badge(result)
   const ex = result.extremes
   const rows: [string, { x: number; value: number } | null, string][] = [
@@ -38,6 +92,8 @@ export function Results() {
       <h2 className={styles.title}>Results</h2>
       <p className={`${styles.badge} ${b.tone}`}>{b.text}</p>
       {result.canonical && <CanonicalCard canonical={result.canonical} />}
+      {dockHud && sawCutX !== null && <VirtualSawCard docked />}
+      {dockHud && integrationRange !== null && <IntegrationCard docked />}
 
       <h3 className={styles.sub}>Reactions</h3>
       <table className={`${styles.table} num`}>

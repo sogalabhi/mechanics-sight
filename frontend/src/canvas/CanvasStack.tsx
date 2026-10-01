@@ -7,6 +7,7 @@ import { IntegrationCard } from '@/diagrams/IntegrationCard'
 import { VirtualSawCard } from '@/diagrams/VirtualSawCard'
 import { useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
+import { EmptyDiagramState } from './EmptyDiagramState'
 import { Guides } from './Guides'
 import { useXScale } from './xscale'
 
@@ -19,6 +20,7 @@ export function CanvasStack({ width }: { width: number }) {
   const xs = useXScale()
   const ref = useRef<HTMLDivElement>(null)
   const length = useStore((s) => s.beam.length)
+  const result = useStore((s) => s.result)
   const showDeflection = useStore((s) => s.showDeflection)
   const showStress = useStore((s) => s.showStress)
   const hasStress = Boolean(useStore((s) => s.result?.bending_stress))
@@ -133,25 +135,31 @@ export function CanvasStack({ width }: { width: number }) {
         <BeamView />
         <Crosshair height={BEAM_PANEL_HEIGHT} />
       </svg>
-      {showAxial && (
-        <svg width={width} height={DIAGRAM_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
-          <DiagramPanel kind="axial" width={width} />
-        </svg>
-      )}
-      {(['shear', 'moment'] as const).map((k) => (
-        <svg key={k} width={width} height={DIAGRAM_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
-          <DiagramPanel kind={k} width={width} />
-        </svg>
-      ))}
-      {showDeflection && (
-        <svg width={width} height={DEFLECTION_PANEL_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
-          <ElasticCurvePanel width={width} />
-        </svg>
-      )}
-      {showStress && hasStress && (
-        <svg width={width} height={STRESS_PANEL_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
-          <StressPanel width={width} />
-        </svg>
+      {result ? (
+        <>
+          {showAxial && (
+            <svg width={width} height={DIAGRAM_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
+              <DiagramPanel kind="axial" width={width} />
+            </svg>
+          )}
+          {(['shear', 'moment'] as const).map((k) => (
+            <svg key={k} width={width} height={DIAGRAM_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
+              <DiagramPanel kind={k} width={width} />
+            </svg>
+          ))}
+          {showDeflection && (
+            <svg width={width} height={DEFLECTION_PANEL_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
+              <ElasticCurvePanel width={width} />
+            </svg>
+          )}
+          {showStress && hasStress && (
+            <svg width={width} height={STRESS_PANEL_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
+              <StressPanel width={width} />
+            </svg>
+          )}
+        </>
+      ) : (
+        <EmptyDiagramState width={width} />
       )}
     </div>
   )
