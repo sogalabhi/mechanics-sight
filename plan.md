@@ -1242,7 +1242,7 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | M10.2| Phase 4 Classical Methods (Part 1) | Force Method & Slope-Deflection step generators | Propped cantilever & fixed-fixed method tests pass | **Done** |
 | M10.3| Phase 4 Classical Methods (Part 2) | Moment Distribution, Three-Moment, & Direct Stiffness step generators, method router, API `?method=` | Continuous beam & multi-method tests pass | **Done** |
 | M10.4| Phase 4 Canonical Indeterminate Matcher | Propped cantilever & fixed-fixed canonical formulas ($wL^2/8, 9wL^2/128, wL^2/12$) & derivation cards | Canonical indeterminate proofs pass | **Done** |
-| M10.5| Phase 4 Frontend UI & Switcher | Method selector dropdown in Working Panel, Hardy Cross cycle table, settlement & spring inputs in Inspector | Frontend live analysis, unit tests, and production build green | **In Progress** |
+| M10.5| Phase 4 Frontend UI & Switcher | Method selector dropdown in Working Panel, Hardy Cross cycle table, settlement & spring inputs in Inspector | Frontend live analysis, unit tests, and production build green | **Done** |
 | M10.6| Phase 4 Verification & Hardening | Full 20-case textbook benchmark suite, report generation with indeterminate methods | All contract tests & CI checks green | Planned |
 
 ---
