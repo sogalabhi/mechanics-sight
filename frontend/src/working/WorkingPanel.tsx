@@ -33,12 +33,26 @@ function StepView({ step }: { step: Step }) {
   )
 }
 
+const METHOD_LABELS: Record<string, string> = {
+  force: 'Force Method (Consistent Deformations)',
+  three_moment: 'Three-Moment Equation (Clapeyron)',
+  slope_deflection: 'Slope-Deflection Method',
+  moment_distribution: 'Moment Distribution (Hardy Cross)',
+  direct_stiffness: 'Direct Stiffness Method (1D FEM)',
+}
+
 export function WorkingPanel() {
   const on = useStore((s) => s.showWorking)
   const setOn = useStore((s) => s.setShowWorking)
   const steps = useStore((s) => s.result?.steps)
   const canonical = useStore((s) => s.result?.canonical)
+  const availableMethods = useStore((s) => s.result?.available_methods)
+  const selectedMethod = useStore((s) => s.selectedMethod)
+  const resultSelectedMethod = useStore((s) => s.result?.selected_method)
+  const setSelectedMethod = useStore((s) => s.setSelectedMethod)
   const unsupported = useStore((s) => s.stepsUnsupported)
+
+  const activeMethod = selectedMethod ?? resultSelectedMethod ?? availableMethods?.[0]
   return (
     <div>
       <button className={styles.toggle} aria-expanded={on} onClick={() => setOn(!on)}>
@@ -50,6 +64,23 @@ export function WorkingPanel() {
       {on && !steps && !unsupported && <p className={styles.note}>Loading…</p>}
       {on && steps && (
         <>
+          {availableMethods && availableMethods.length > 0 && (
+            <div className={styles.methodSelector}>
+              <label htmlFor="method-select" className={styles.methodLabel}>Solution method</label>
+              <select
+                id="method-select"
+                className={styles.methodSelect}
+                value={activeMethod}
+                onChange={(e) => setSelectedMethod(e.target.value)}
+              >
+                {availableMethods.map((m) => (
+                  <option key={m} value={m}>
+                    {METHOD_LABELS[m] ?? m}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           {canonical && <CanonicalCard canonical={canonical} />}
           {GROUPS.map((g) => {
             const list = steps.filter((s) => s.group === g.id)

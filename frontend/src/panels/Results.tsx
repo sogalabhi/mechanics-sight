@@ -10,8 +10,13 @@ function badge(r: AnalysisResult): { text: string; tone: string } {
   const c = r.classification
   if (c.status === 'determinate') return { text: 'Determinate', tone: '' }
   if (c.status === 'unstable') return { text: `Unstable — ${c.reason ?? 'not restrained'}`, tone: styles.danger }
-  if (c.bending_degree === 0) return { text: `Indeterminate · degree ${c.degree} (axial) — solved`, tone: '' }
-  return { text: `Indeterminate · degree ${c.degree} (bending)`, tone: styles.warn }
+  if (c.bending_degree > 0 && c.axial_degree > 0) {
+    return { text: `Indeterminate · degree ${c.degree} (${c.bending_degree} bending, ${c.axial_degree} axial) — solved`, tone: '' }
+  }
+  if (c.bending_degree > 0) {
+    return { text: `Indeterminate · degree ${c.bending_degree} (bending) — solved`, tone: '' }
+  }
+  return { text: `Indeterminate · degree ${c.axial_degree} (axial) — solved`, tone: '' }
 }
 
 export function Results() {

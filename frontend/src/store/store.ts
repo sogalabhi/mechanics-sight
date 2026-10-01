@@ -21,6 +21,8 @@ interface State {
   error: AnalysisError | null
   /** Ask the solver for worked steps too. Off unless the Working panel is open. */
   showWorking: boolean
+  /** Solution method requested for indeterminate beams */
+  selectedMethod: string | null
   /** The solver answered a steps request without steps (an older server). */
   stepsUnsupported: boolean
   showReactions: boolean
@@ -45,6 +47,7 @@ interface State {
   setSawCutX: (x: number | null) => void
   setIntegrationRange: (range: [number, number] | null) => void
   setShowWorking: (on: boolean) => void
+  setSelectedMethod: (method: string | null) => void
   setStepsUnsupported: (v: boolean) => void
   setShowReactions: (v: boolean) => void
   setShowGuides: (v: boolean) => void
@@ -69,6 +72,7 @@ export const useStore = create<State>((set) => ({
   result: null,
   error: null,
   showWorking: false,
+  selectedMethod: null,
   stepsUnsupported: false,
   showReactions: true,
   showGuides: true,
@@ -100,6 +104,7 @@ export const useStore = create<State>((set) => ({
   setSawCutX: (sawCutX) => set({ sawCutX }),
   setIntegrationRange: (integrationRange) => set({ integrationRange }),
   setShowWorking: (showWorking) => set({ showWorking, stepsUnsupported: false }),
+  setSelectedMethod: (selectedMethod) => set({ selectedMethod }),
   setStepsUnsupported: (stepsUnsupported) => set({ stepsUnsupported }),
   setShowReactions: (showReactions) => set({ showReactions }),
   setShowGuides: (showGuides) => set({ showGuides }),

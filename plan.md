@@ -1,12 +1,14 @@
 # Mechanics Sight — Project Plan
 
-A website where a user describes a beam (length, supports, loads) and gets exact shear force (SFD) and bending moment (BMD) diagrams, with hover values at any point. Later phases add hinges, axial force, deflection and indeterminate beams.
+A free, open-source visual workspace for civil and structural engineering: understand a concept, solve a problem, inspect the calculation, compare alternatives, and share the result. The existing straight-beam solver is the foundation for a broader collection of connected tools and learning labs.
 
-This plan replaces `prompt.md` and `prompt 2.md`. Every open choice in those drafts has been decided here. Section 14 lists what changed and why.
+This plan replaces `prompt.md` and `prompt 2.md`. Section 14 records decisions from those drafts. Sections 1–13 describe the beam foundation and its recorded implementation status; Sections 15–19 describe the expanded product direction and future work.
+
+**Planning update — 2026-10-01:** prioritize a simpler workspace UX and steel education, beginning with a strain-controlled Steel Material Lab. Concrete/RCC is deferred. The new roadmap is planned work, not an implementation or release claim. Existing P3 and M0–M10 status entries remain unchanged by this planning update.
 
 ---
 
-## 1. Core idea
+## 1. Core idea — beam solver foundation
 
 Treat every load the same way, including the unknown reactions. Each load answers a few questions: how much does it push up, how much does it turn the beam about a point, and what does it add to V and M in a segment. Reactions, SFD, BMD, and later deflection and indeterminate beams all reuse that one interface.
 
@@ -16,7 +18,7 @@ One general method computes the answer. Hand-calculation tricks (free-end moment
 
 ## 2. Scope
 
-Each phase must be finished, tested and working before the next starts.
+Each beam-solver phase must meet its release criteria before it is marked complete. The future labs in Sections 15–19 have their own bounded milestones; adding a lab does not extend the beam solver's supported physics automatically.
 
 ### Phase 1 — statically determinate beams, vertical loads only
 
@@ -47,10 +49,22 @@ Drag supports and loads on the beam, with snapping and live updates.
 ### Phase 3 — deflection
 Constant EI, then a cross-section library (rectangle, circle, I, T) with E, then stepped beams (EI changes along the length). Slope and deflection diagrams. Bending and shear stresses.
 
-### Phase 4 — indeterminate beams
-Propped cantilever, fixed–fixed, continuous beams, support settlement, spring supports.
+### Phase 4 — statically indeterminate beams & multi-method pedagogical engine
+- Arbitrarily indeterminate beams ($D_s \ge 1$): propped cantilevers ($D_s = 1$), fixed–fixed beams ($D_s = 2$), multi-span continuous beams ($D_s = N - 1$).
+- Physical non-ideal boundary conditions: support settlements ($\delta$, downward displacement), vertical and rotational elastic spring supports ($k_y, k_\theta$).
+- Multi-pinned/fixed axial compatibility under horizontal loading ($\int \frac{N}{EA} \, dx = 0$).
+- Ground-truth 1D Euler–Bernoulli direct stiffness solver for exact reactions, preserving continuous piecewise polynomial SFD/BMD, deflection, and stress distributions.
+- Multi-method pedagogical switcher allowing students to inspect worked derivation steps under:
+  1. Force Method (Consistent Deformations / Flexibility)
+  2. Slope-Deflection Method
+  3. Moment Distribution Method (Hardy Cross Table)
+  4. Theorem of Three Moments (Clapeyron)
+  5. Direct Stiffness Matrix Method (1D FEM)
 
-### Out of scope (also stated in the README)
+### Current beam-solver boundary (Phases 1–4)
+
+The following remain outside the current beam solver, as reflected in the README. Some are deferred product modules in Section 19; listing them in the future roadmap does not make them supported analysis cases today.
+
 - Moving loads and influence lines
 - Frames, trusses, curved beams
 - 3D, torsion, bending about two axes
@@ -60,11 +74,11 @@ Propped cantilever, fixed–fixed, continuous beams, support settlement, spring 
 - Distributed axial loads, distributed couples, thermal loads
 - Units other than SI. Converting polynomial coefficients needs a different factor per power, so this is not an "edge only" change.
 
-**Product positioning vs enterprise tools (e.g. STAAD.Pro):**
-STAAD.Pro is an enterprise 3D structural analysis and design program using numerical finite element approximations (FEA) to size concrete and steel members for construction. It is a "black box" design code checker with high friction and no step-by-step transparency. Mechanics Sight is the **"Desmos for Structural Mechanics"**: instant interactive feedback, exact closed-form calculus (piecewise polynomials with zero meshing error), and first-principles transparency with step-by-step LaTeX proofs.
+**Product positioning:**
+Mechanics Sight combines free access, open source, connected visual explanations, transparent calculations, and progressively supported Indian engineering references. Existing products already provide calculators, educational visualizations, and connected design workflows; these individual features are not claimed as inventions. The product should earn repeat use through clarity, reliable calculations, and less repeated data entry. Exact piecewise beam polynomials are a strength within the current model assumptions; future modules should use methods appropriate to their physics.
 
-**Why frames and trusses are out of scope:**
-Straight beams operate on a 1D continuous coordinate $x \in [0, L]$ with piecewise integration. 2D/3D frames and trusses require a completely different mathematical architecture: a 2D/3D node-and-member graph, coordinate transformation matrices ($T$), and the Direct Stiffness Method ($K \mathbf{d} = \mathbf{F}$). Furthermore, their diagrams cannot be projected on a single horizontal axis. Straight beam mechanics (including Gerber hinges, deflections, cross-section stresses, and continuous beams) will be taken to full depth rather than diluting the product into a shallow 2D CAD tool.
+**Why frames and trusses are deferred:**
+Straight beams operate on a 1D coordinate $x \in [0, L]$ with piecewise integration. Frames and trusses require node/member models, coordinate transformations, stiffness assembly, and member-local diagrams. They are future modules with a separate analysis design and validation effort. A 3D view of a supported beam or specimen is a visualization feature and does not imply a 3D structural solver.
 
 **Why write this down:** the code can give an honest error instead of a wrong answer, and a clearly limited project that works well is worth more than a large one that half-works.
 
@@ -581,6 +595,25 @@ The backend tests check that `analyze(input)` matches `output` and satisfies `ch
 ### 8.5 SymPy cross-check
 `sympy.physics.continuum_mechanics.beam.Beam` uses its own sign convention. Establish the mapping once on case 1, write it down in the test module, then compare reactions and moments for the other hand cases. It is a dev-only dependency and is never used by the solver.
 
+### 8.6 Indeterminate benchmark cases matrix (Phase 4)
+
+Reference targets for independent checks, not a claim that every listed method's worked derivation has been verified. Track numerical and teaching-content evidence separately in Section 20.
+
+Assume uniform positive $EI$, small-displacement linear elasticity and no support settlement unless stated. Coordinates run from the left end; a propped cantilever is fixed at the left. Inputs use signed vertical loads $w<0$ and $P<0$; the formulas below use their positive downward magnitudes $q=|w|$ and $p=|P|$. Reactions are positive upward. Listed end/wall moments are internal sagging-positive bending moments, not external support reaction couples. In equal-span cases, $L$ means one span length.
+
+| # | Indeterminate Setup | Closed-Form Analytical Solution | Methods to cross-check |
+|---|---|---|---|
+| I-1 | Propped cantilever ($L=6$), UDL $w=-2$ | $R_{\text{roller}} = \frac{3}{8}qL = 4.5\text{ kN}$, $R_{\text{fixed}} = \frac{5}{8}qL = 7.5\text{ kN}$, $M_{\text{wall}} = -\frac{1}{8}qL^2 = -9\text{ kN}\cdot\text{m}$, $M_{\max} = \frac{9}{128}qL^2 = +5.0625\text{ kN}\cdot\text{m}$ at $x = 5L/8 = 3.75\text{ m}$ | Force Method, Slope-Deflection, Direct Stiffness |
+| I-2 | Propped cantilever ($L=6$), Midspan Point Load $P=-12$ at $x=3$ | $R_{\text{roller}} = \frac{5}{16}p = 3.75\text{ kN}$, $R_{\text{fixed}} = \frac{11}{16}p = 8.25\text{ kN}$, $M_{\text{wall}} = -\frac{3}{16}pL = -13.5\text{ kN}\cdot\text{m}$, $M_{\text{load}} = \frac{5}{32}pL = +11.25\text{ kN}\cdot\text{m}$ | Force Method, Slope-Deflection, Direct Stiffness |
+| I-3 | Fixed–fixed beam ($L=6$), UDL $w=-2$ | $R_A = R_B = \frac{qL}{2} = 6\text{ kN}$, $M_A = M_B = -\frac{1}{12}qL^2 = -6\text{ kN}\cdot\text{m}$, $M_{\text{mid}} = +\frac{1}{24}qL^2 = +3\text{ kN}\cdot\text{m}$, inflection at $x = L(1 \pm 1/\sqrt{3})/2 \approx 1.268\text{ m}, 4.732\text{ m}$ | Slope-Deflection, Moment Distribution, Direct Stiffness |
+| I-4 | Fixed–fixed beam ($L=6$), Midspan Point Load $P=-12$ at $x=3$ | $R_A = R_B = \frac{p}{2} = 6\text{ kN}$, $M_A = M_B = -\frac{1}{8}pL = -9\text{ kN}\cdot\text{m}$, $M_{\text{mid}} = +\frac{1}{8}pL = +9\text{ kN}\cdot\text{m}$, inflection points at quarter points $x = 1.5\text{ m}, 4.5\text{ m}$ | Slope-Deflection, Moment Distribution, Direct Stiffness |
+| I-5 | 2-Span continuous beam ($L_1=4, L_2=4$), UDL $w=-3$ | $R_A = R_C = \frac{3}{8}qL = 4.5\text{ kN}$, $R_B = \frac{10}{8}qL = 15.0\text{ kN}$, intermediate hogging $M_B = -\frac{1}{8}qL^2 = -6\text{ kN}\cdot\text{m}$ | Three-Moment (Clapeyron), Moment Distribution, Slope-Deflection, Direct Stiffness |
+| I-6 | 3-Span continuous beam ($L_1=L_2=L_3=4$), UDL $w=-2$ | $R_1 = R_4 = 0.4qL = 3.2\text{ kN}$, $R_2 = R_3 = 1.1qL = 8.8\text{ kN}$, support moments $M_2 = M_3 = -0.1qL^2 = -3.2\text{ kN}\cdot\text{m}$ | Three-Moment, Moment Distribution, Direct Stiffness |
+| I-7 | Propped cantilever, full-span UDL of downward magnitude $q$, roller settlement $\delta = 5\text{ mm}$ downward | $R_B = \frac{3}{8}qL - \frac{3EI\delta}{L^3}$; assume a bilateral support, so negative reaction is permitted. Specify $L$, $EI$ and $q$ before creating a numerical fixture. | Force Method, Direct Stiffness |
+| I-8 | Left-fixed cantilever, vertical tip spring $k_y = 500\text{ kN/m}$, downward tip point load of magnitude $p$ only | Downward displacement magnitude $d = \frac{pL^3}{3EI + k_y L^3}$; signed displacement $v_{\text{tip}}=-d$, upward spring reaction $R_y=-k_yv_{\text{tip}}$. Specify $L$, $EI$ and $p$ for a numerical fixture. | Force Method, Direct Stiffness |
+| I-9 | Multi-pinned beam under horizontal forces, zero prescribed axial support movement and no initial strain | Impose $\int_{x_i}^{x_{i+1}} \frac{N(x)}{EA} \, dx = 0$ between each adjacent pair of axially restrained supports, together with equilibrium. Specify geometry, $EA$ and loads for numerical fixtures. | Direct Stiffness |
+
+
 ---
 
 ## 9. Coding standards (set up in M0)
@@ -692,6 +725,8 @@ The solve takes a few milliseconds including validation. The network round trip 
 
 The detailed UI/UX design (layout, exact symbol geometry, interactions, diagrams, React structure) is in `docs/UI_DESIGN.md`.
 
+This section records the original beam UI. Section 16 defines the planned workspace redesign; its layouts are not implemented by this planning update.
+
 ### Rule
 The frontend never does mechanics. It evaluates polynomials (Horner's method), snaps positions, and draws. All physics lives in Python.
 
@@ -758,6 +793,8 @@ Run the Python solver in the browser with Pyodide for offline use. It is heavy (
 ## 11.5 The Intuition & Pedagogical Engine (Learning by Seeing and Feeling)
 
 SFD and BMD are abstract mathematical plots. Most students memorize mechanical rules ("UDL gives a parabola", "Point load gives a triangle", "M is maximum where V = 0") without building physical or geometric intuition for *why* the curves behave that way. This engine bridges textbook formulas, visual calculus, and physical deformation into an interconnected learning experience.
+
+The implementation notes and completion markers below are retained as the recorded beam foundation. Sections 16–18 plan the next presentation and teaching layer, including replacing overlapping cards with contextual views and introducing steel material experiments.
 
 ### 11.5.1 The Deformed Shape / Qualitative Elastic Curve & Fiber Stresses [x] (Implemented & Verified)
 Even before user input of $E$ and $I$ in Phase 3, determinate beam deformation shapes are geometrically fixed by the BMD and support conditions:
@@ -869,6 +906,31 @@ Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but studen
    - The student hovers over the peak: the tangent line on the BMD goes horizontal, aligning with $V=0$ on the SFD.
    - The student clicks "Saw the Beam": they see the isolated left chunk with $V$ and $M$ arrows keeping it upright.
    - The student drags the load across the span: the Elastic Curve bends and flexes in real time, developing deep, lasting intuition for exams and structural design.
+
+### 11.5.7 Multi-Method Pedagogical Switcher & Indeterminate Worked Steps (Phase 4)
+In civil and structural engineering education, students learn that statically indeterminate beams ($D_s \ge 1$) cannot be solved by statics alone—they require compatibility of deformation. However, different university syllabi emphasize different classical methods:
+- **Force Method (Consistent Deformations / Flexibility):** Primary structure release, virtual work flexibilities $f_{ij}$, compatibility equations $[f]\{X\} = -\{\Delta_0\} + \{\delta\}$.
+- **Slope-Deflection Method:** Member slope-deflection equations linking end moments to end rotations ($2EI/L(2\theta_i + \theta_j - 3\psi)$), fixed-end moments, and rotational joint equilibrium.
+- **Moment Distribution Method (Hardy Cross):** Successive numerical relaxation cycles of joint balancing (BAL) by distribution factors (DF) and carry-over (CO) of 50% to far ends.
+- **Theorem of Three Moments (Clapeyron):** Compatibility across adjacent spans $(L_1, L_2)$ relating intermediate support moments via free bending moment diagram areas ($A \bar{x}$).
+- **Direct Stiffness Matrix Method (1D FEM):** 4-DOF element stiffness matrices, work-equivalent nodal forces, global assembly, and partitioned displacement solve.
+
+**User Experience in the Working Panel:**
+1. **Dynamic Method Switcher:** When an indeterminate beam is loaded, a dedicated dropdown appears above the Reactions group:
+   ```
+   ┌────────────────────────────────────────────────────────────────────────┐
+   │ SOLUTION METHOD: [ Moment Distribution Method (Hardy Cross)          ▾ ]│
+   ├────────────────────────────────────────────────────────────────────────┤
+   │  ✓ Force Method (Consistent Deformations / Flexibility)                │
+   │  ✓ Slope-Deflection Method                                             │
+   │  ✓ Moment Distribution Method (Hardy Cross Table)                      │
+   │  ✓ Theorem of Three Moments (Clapeyron)                                │
+   │  ✓ Direct Stiffness Method (1D Matrix FEM)                             │
+   └────────────────────────────────────────────────────────────────────────┘
+   ```
+2. **Applicability Filtering:** The backend method router filters available methods based on kinematic suitability (e.g. Three-Moment requires $\ge 2$ spans across $\ge 3$ supports; Direct Stiffness and Force Method handle arbitrary restraints, settlements, and springs).
+3. **Hardy Cross Distribution Table:** When Moment Distribution is active, the panel renders the iteration cycles in a structured tabular format showing joint distribution factors, initial FEMs, balance and carry-over cycles, and final reconciled moments.
+4. **Pedagogical Convergence:** Demonstrates to students that regardless of whether one relaxes joints iteratively (Hardy Cross), solves simultaneous angular rotations (Slope-Deflection), releases redundant reactions (Flexibility), or solves discrete finite elements (Direct Stiffness), every classical method arrives at the exact same physical support reactions and bending moments.
 
 ---
 
@@ -982,12 +1044,175 @@ Textbooks teach standard canonical formulas ($wL^2/8$, $PL/4$, etc.), but studen
   - Acceptance: all phase checks pass, API documentation and generated types match, the report
     includes the physical inputs and outputs, and README/contract/plan describe the delivered scope.
 
-### Phase 4 — indeterminate beams
-- Solved via unified stiffness/flexibility integration constants and reaction unknowns together in one linear system:
-  - Unknowns: reactions + 2 constants per segment.
-  - Equations: equilibrium (2) + hinge conditions ($h$) + continuity + boundary conditions at all supports ($y=0$ at every support, $\theta=0$ at fixed).
-- Support settlement ($y = -\delta$) and elastic spring supports ($R + k\cdot y = 0$).
-- Axial compatibility ($\int \frac{N}{EA} \, dx = 0$) resolving multiple $X$-restraints under horizontal loads.
+### Phase 4 — Statically Indeterminate Beams & Multi-Method Pedagogical Engine
+
+In Phase 4, Mechanics Sight transitions from a determinate statics solver into a complete structural mechanics platform capable of solving arbitrarily indeterminate beams ($D_s \ge 1$), including propped cantilevers, fixed–fixed beams, continuous beams over $N$ supports, support settlements, and elastic spring foundations.
+
+To maintain our mission as the *"Desmos for Structural Mechanics"*, Phase 4 decouples **ground-truth physics** from **pedagogical explanation**:
+1. **Ground-Truth 1D Direct Stiffness Engine (`solvers/stiffness.py`):** Solves exact reaction forces and moments using numerical Euler–Bernoulli matrix methods, which are then passed into the Phase 1–3 continuous polynomial pipeline ($V(x), M(x)$, deflection, and stresses with zero meshing error).
+2. **Multi-Method Pedagogical Step Engine (`analysis/methods/`):** Dynamically generates textbook-authentic derivations according to the student's chosen hand method.
+
+```mermaid
+flowchart TD
+    subgraph Input & Domain
+        B[Beam: supports, loads, hinges, spans, settlements, springs]
+        CLASS[Classification Engine: classify determinacy and degree Ds]
+    end
+
+    subgraph Ground Truth Engine
+        DSM[1D Direct Stiffness Solver<br>k^e, FEM, K_global U = F]
+        DSM --> REAC[Exact Reactions Solved]
+        REAC --> P13[Phase 1-3 Pipeline<br>Exact SFD, BMD, Deflection, Stresses]
+    end
+
+    subgraph Multi-Method Pedagogical Layer
+        M_ROUTER[Method Steps Router]
+        M1[Force Method<br>Primary beam, f_ij, Δ_0]
+        M2[Slope-Deflection<br>FEM_ij, θ rotations, joint eq]
+        M3[Moment Distribution<br>DF, Hardy Cross cycle table]
+        M4[Three-Moment Equation<br>Clapeyron tridiagonal system]
+        M5[Direct Stiffness<br>Element matrices, assembly, K U = F]
+    end
+
+    subgraph Presentation Layer
+        UI_CANVAS[Canvas Stack: SFD, BMD, Deflection, Stress Panel]
+        UI_STEPS[Working Panel: Method Switcher & Interactive Steps]
+        UI_INSPECT[Inspector: Support Settlements & Springs]
+    end
+
+    B --> CLASS
+    CLASS -->|Ds > 0| DSM
+    CLASS -->|Ds = 0| STATICS[Existing Statics Solver]
+    STATICS --> P13
+    P13 --> UI_CANVAS
+
+    DSM --> M_ROUTER
+    M_ROUTER --> M1
+    M_ROUTER --> M2
+    M_ROUTER --> M3
+    M_ROUTER --> M4
+    M_ROUTER --> M5
+
+    M1 & M2 & M3 & M4 & M5 --> UI_STEPS
+```
+
+#### 12.4.1 Mathematical Foundations & 1D Direct Stiffness Engine
+- **Nodal Discretization:** The beam is partitioned into 1D Euler–Bernoulli elements. Nodes are automatically created at:
+  - All support locations ($x_{\text{support}}$).
+  - All applied load locations: point loads, couples, and distributed load start/end boundaries.
+  - All internal hinges ($x_h$).
+  - All material and cross-section property span boundaries ($x_{\text{span}}$).
+- **Element Stiffness Formulations:**
+  - **Bending Element (4 DOFs per element: $[v_1, \theta_1, v_2, \theta_2]^T$):**
+    $$k_{\text{bend}}^e = \frac{EI}{L^3} \begin{bmatrix}
+    12 & 6L & -12 & 6L \\
+    6L & 4L^2 & -6L & 2L^2 \\
+    -12 & -6L & 12 & -6L \\
+    6L & 2L^2 & -6L & 4L^2
+    \end{bmatrix}$$
+  - **Axial Element (2 DOFs per element: $[u_1, u_2]^T$):**
+    $$k_{\text{axial}}^e = \frac{EA}{L} \begin{bmatrix}
+    1 & -1 \\
+    -1 & 1
+    \end{bmatrix}$$
+  - For stepped beams, each element uses its span's exact flexural rigidity $EI$ and axial rigidity $EA$.
+- **Internal Hinge Rotational Releases:**
+  - Hinges release bending moment continuity while transmitting shear force.
+  - At a hinge node, vertical displacement is constrained ($v_{\text{left}} = v_{\text{right}}$), but rotational DOFs are decoupled into two distinct DOFs: $\theta_{\text{left}}$ and $\theta_{\text{right}}$.
+  - The left element connects to $\theta_{\text{left}}$ and the right element connects to $\theta_{\text{right}}$.
+- **Work-Equivalent Nodal Loads ($F_{\text{equiv}}$):**
+  - Distributed loads (UDL, triangular, trapezoidal) are integrated across element shape functions $N_i(x)$:
+    $$F_{i,\text{equiv}} = \int_0^L N_i(x) w(x) \, dx$$
+  - Applied point loads and couples within an element are mapped to nodal fixed-end forces using standard cubic Hermite shape functions.
+- **Support Settlements and Spring Foundations:**
+  - **Settlement ($\delta$):** Imposed as a non-zero prescribed displacement $v_p = -\delta$ in the displacement partition $\mathbf{U}_p$.
+  - **Elastic Springs:** Vertical springs add stiffness directly to the diagonal of the global stiffness matrix:
+    $$K_{ii} \leftarrow K_{ii} + k_y$$
+    Rotational springs add stiffness to the rotational DOF: $K_{jj} \leftarrow K_{jj} + k_\theta$.
+- **Partitioned System Solve:**
+  - Global system $\mathbf{K} \mathbf{U} = \mathbf{F}_{\text{ext}} - \mathbf{F}_{\text{equiv}}$ is partitioned into free ($f$) and prescribed ($p$) DOFs:
+    $$\begin{bmatrix} \mathbf{K}_{ff} & \mathbf{K}_{fp} \\ \mathbf{K}_{pf} & \mathbf{K}_{pp} \end{bmatrix} \begin{bmatrix} \mathbf{U}_f \\ \mathbf{U}_p \end{bmatrix} = \begin{bmatrix} \mathbf{F}_f \\ \mathbf{F}_p \end{bmatrix}$$
+  - Free displacements: $\mathbf{U}_f = \mathbf{K}_{ff}^{-1} (\mathbf{F}_f - \mathbf{K}_{fp} \mathbf{U}_p)$.
+  - Reaction forces: $\mathbf{R} = \mathbf{K}_{pf} \mathbf{U}_f + \mathbf{K}_{pp} \mathbf{U}_p - \mathbf{F}_p$.
+- **Integration Pipeline Feed:**
+  - Recovered reactions are returned as standard `Reaction` objects and fed directly into `analysis/analyze.py`.
+  - The existing polynomial engine integrates exact piecewise SFD, BMD, deflection, and stress distributions. This ensures **zero meshing error** and retains exact closed-form calculus across the entire beam.
+
+#### 12.4.2 Classical Hand-Method Step Generators
+The `backend/src/beam_solver/analysis/methods/` package implements five classical solution methods:
+
+1. **Method 1: Force Method (Consistent Deformations / Flexibility) (`force_method.py`):**
+   - Identifies the degree of static indeterminacy $D_s = r - (3 + h)$.
+   - Selects a stable primary determinate structure by removing redundant support restraints (e.g. releasing redundant roller support on a propped cantilever, converting it to a cantilever).
+   - Computes displacement $\Delta_{i0}$ in the primary structure under external loads.
+   - Computes flexibility influence coefficients $f_{ij}$ using the principle of virtual work:
+     $$f_{ij} = \int_0^L \frac{m_i(x) m_j(x)}{EI} \, dx$$
+   - Formulates compatibility equations:
+     $$[f] \{X\} = -\{\Delta_0\} + \{\delta_{\text{settlement}}\}$$
+   - Solves for redundant reaction forces $\{X\}$ and recovers remaining reactions via statics.
+
+2. **Method 2: Slope-Deflection Method (`slope_deflection.py`):**
+   - Evaluates Fixed-End Moments ($M^F_{ij}, M^F_{ji}$) for each span under applied loads.
+   - Formulates fundamental member slope-deflection equations:
+     $$M_{ij} = M^F_{ij} + \frac{2EI}{L}\left(2\theta_i + \theta_j - 3\psi\right),\quad M_{ji} = M^F_{ji} + \frac{2EI}{L}\left(2\theta_j + \theta_i - 3\psi\right)$$
+     where $\psi = (\Delta_j - \Delta_i)/L$ represents member chord rotation from support settlement.
+   - Enforces kinematic boundary conditions: $\theta_i = 0$ at fixed supports.
+   - Sets up joint equilibrium equations $\sum M_{\text{joint}} = 0$ at each rotating joint.
+   - Solves for unknown joint rotations $\theta$, calculates final member end moments, and determines support reactions via member equilibrium.
+
+3. **Method 3: Moment Distribution Method (Hardy Cross) (`moment_distribution.py`):**
+   - Computes member stiffness factors: $K = 4EI/L$ (far end fixed/continuous) or $3EI/L$ (far end pin/roller).
+   - Computes Distribution Factors (DF) at each joint:
+     $$DF_{ij} = \frac{K_{ij}}{\sum K_i}$$
+     At a fixed support, $DF = 0$; at an exterior simple support, $DF = 1$.
+   - Computes initial Fixed-End Moments ($M^F$).
+   - Generates iterative relaxation cycles:
+     - **Balance (BAL):** $\Delta M_{ij} = -DF_{ij} \cdot M_{\text{unbalanced, joint}}$.
+     - **Carry-Over (CO):** Transmits $0.5 \times \Delta M_{ij}$ to the opposite end of the span.
+   - Tabulates iteration cycles until unbalanced moments converge to $< 0.01\text{ kN}\cdot\text{m}$.
+   - Sums end moments: $M_{\text{final}} = M^F + \sum \text{BAL} + \sum \text{CO}$.
+
+4. **Method 4: Theorem of Three Moments (Clapeyron) (`three_moment.py`):**
+   - Applied to continuous beams over multiple supports.
+   - Identifies consecutive span pairs $(L_i, L_{i+1})$ sharing intermediate support $i$.
+   - Calculates free bending moment diagram areas $A_i, A_{i+1}$ and centroid locations $\bar{a}_i, \bar{b}_{i+1}$ under applied loads.
+   - Formulates Clapeyron's Three-Moment equations:
+     $$M_{i-1} L_i + 2 M_i (L_i + L_{i+1}) + M_{i+1} L_{i+1} = -\frac{6 A_i \bar{a}_i}{L_i} - \frac{6 A_{i+1} \bar{b}_{i+1}}{L_{i+1}} - 6EI\left(\frac{\delta_i - \delta_{i-1}}{L_i} + \frac{\delta_i - \delta_{i+1}}{L_{i+1}}\right)$$
+   - Solves the resulting tridiagonal system of equations for intermediate support bending moments.
+   - Recovers support vertical reactions from span shears.
+
+5. **Method 5: Direct Stiffness Matrix Method (1D FEM) (`direct_stiffness.py`):**
+   - Demonstrates the modern computational formulation to students:
+     - Element discretization table.
+     - Element stiffness matrices $[k^e]$ and equivalent nodal load vectors $\{F_{\text{equiv}}^e\}$.
+     - Global matrix assembly and boundary condition partitioning.
+     - Solution vector $\{U_f\}$ and reaction recovery $\{R\} = [K_{pf}]\{U_f\} - \{F_p\}$.
+
+#### 12.4.3 Pedagogical Method Router & API Contract
+- **Method Router (`methods/router.py`):**
+  - Inspects beam topology and support kinematic constraints to return `available_methods(beam)`.
+  - Determines the natural default method for the setup (`default_method_for(beam)`):
+    - Propped cantilever $\to$ Force Method.
+    - Continuous multi-span beam $\to$ Three-Moment Equation.
+    - Fixed–fixed beam $\to$ Slope-Deflection Method.
+    - Arbitrary/spring/settlement $\to$ Direct Stiffness Method.
+  - Dynamically builds the worked reaction steps using the requested method.
+- **Stateless API Endpoint (`api/app.py`):**
+  - `POST /api/v1/analyze?steps=true&method=<method>`
+  - Output fields added to `AnalysisOut`:
+    - `available_methods: list[str] | None`
+    - `selected_method: str | None`
+  - When the beam is determinate, these fields are omitted from JSON serialization to guarantee 100% backward compatibility with all baseline contract fixtures.
+
+#### 12.4.4 Frontend UI & Educational Experience
+- **Method Switcher Dropdown (`WorkingPanel.tsx`):**
+  - Renders an interactive selector when `available_methods.length > 0`.
+  - Selecting a method dispatches live re-analysis with `?method=...`.
+- **Hardy Cross Distribution Table:**
+  - Beautifully formats Moment Distribution cycles into a structured table displaying joint distribution factors, initial FEMs, balance rows, carry-over rows, and final reconciled moments.
+- **Inspector Support Controls (`Inspector.tsx`):**
+  - Supports input of Settlement $\Delta$ (downward, in mm).
+  - Supports input of Vertical Spring Stiffness $k_y$ (kN/m) and Rotational Spring Stiffness $k_\theta$ (kN·m/rad).
 
 ### One rule across phases
 Don't add fields for future phases early. Unused fields are untested code. Growth happens only at these points: more rows in the equation system, supports declaring their unknowns, the shared Load interface, and optional schema fields with defaults.
@@ -1012,7 +1237,13 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | M8 | Phase 2 Backend | Gerber hinges ($M(x_h)=0$), horizontal/inclined loads, AFD, guided supports | Hand cases & fixtures for Phase 2 pass | *Hinges, axial/inclined loads and AFD done; guided supports pending* |
 | M8.5| Intuition Engine 2 | "Virtual Saw" interactive free-body cut, Area-under-SFD shading | Visual cut equilibrium checks pass | **Done** |
 | M9 | Phase 3 Sections & Deflection | Cross-section library (I-beam, T-beam), $EI$ deflection integration, $\sigma$ and $\tau$ stress envelopes | Cross-section, deflection, and stress benchmarks pass | **Done** |
-| M10| Phase 4 Indeterminate | Propped cantilever, fixed-fixed, continuous beams, settlement, spring supports | Classic indeterminate hand cases pass | *M4.0 & M4.1 Ground Truth Solved (270 backend tests green); M4.2+ Classical Methods in progress* |
+| M10.0| Phase 4 Domain & Classification | Settlement ($\delta$), springs ($k_y, k_\theta$), indeterminate degree classification | Domain & classification tests pass | **Done** |
+| M10.1| Phase 4 1D Stiffness Engine | 1D Euler–Bernoulli FEM solver, work-equivalent loads, hinge rotational releases, springs, settlements, exact reaction recovery | Benchmark indeterminate test cases pass (278 tests green) | **Done** |
+| M10.2| Phase 4 Classical Methods (Part 1) | Force Method & Slope-Deflection step generators | Propped cantilever & fixed-fixed method tests pass | **Done** |
+| M10.3| Phase 4 Classical Methods (Part 2) | Moment Distribution, Three-Moment, & Direct Stiffness step generators, method router, API `?method=` | Continuous beam & multi-method tests pass | **Done** |
+| M10.4| Phase 4 Canonical Indeterminate Matcher | Propped cantilever & fixed-fixed canonical formulas ($wL^2/8, 9wL^2/128, wL^2/12$) & derivation cards | Canonical indeterminate proofs pass | **Done** |
+| M10.5| Phase 4 Frontend UI & Switcher | Method selector dropdown in Working Panel, Hardy Cross cycle table, settlement & spring inputs in Inspector | Frontend live analysis, unit tests, and production build green | **In Progress** |
+| M10.6| Phase 4 Verification & Hardening | Full 20-case textbook benchmark suite, report generation with indeterminate methods | All contract tests & CI checks green | Planned |
 
 ---
 
@@ -1053,3 +1284,388 @@ Corrections to `prompt 2.md`:
 12. **Contract fixtures** are shared by the backend and frontend tests.
 13. **"Microseconds"** corrected to "a few milliseconds".
 14. **API limits** on length and item counts added.
+
+---
+
+## 15. Product direction and module map [PLANNED]
+
+### 15.1 Purpose, audience, and access
+
+**Product promise:** see how structures behave, understand each result, and carry a calculation from question to report in one free, open-source website.
+
+- Serve civil students and early-career structural engineers first, with useful member calculations, explanations, and sanity checks. Expand toward a broader civil/structural reference and working environment.
+- Address repeated entry of geometry, materials, and loads across separate calculators, explanations, section tools, and reports.
+- Keep the useful workflow free, including learning content, supported calculations, comparisons, sharing, and reports. Keep source, assumptions, benchmark cases, and contribution guidance accessible; maintain documented self-hosting.
+- Let teachers and engineers contribute reviewed examples, material datasets, translations, and benchmark cases.
+- Treat reliability and clarity as release criteria alongside feature coverage. Explain a result's physical meaning, location, units, equation, assumptions, and applicable limits.
+- A feature combination is the proposed product direction, not proof of market uniqueness. Free tools and open-source alternatives already exist. Test the experience with real user tasks before claiming an unmet need has been solved.
+
+### 15.2 Capabilities and delivery horizons
+
+These are capability areas, not sixteen permanent navigation items or sixteen independent copies of the solver. Existing foundation means that related beam functionality exists; the broader module and redesigned experience are still planned.
+
+| Capability | Scope | Delivery horizon |
+|---|---|---|
+| Beam Workspace | Supports, loads, reactions, AFD/SFD/BMD, stresses, deflection, worked calculations | Existing foundation; UX and teaching improvements next |
+| Mechanics Concepts Lab | Forces, moments, equilibrium, supports, tension, compression, shear | Steel-first learning track |
+| Material Testing Lab | Strain-controlled specimens, material curves, landmarks, loading/unloading | First new steel deliverable |
+| Cross-Section Lab | Area, centroid, inertia, section modulus, neutral axis, section comparisons | Existing geometry foundation; expanded steel exploration planned |
+| Stress Explorer | Axial/bending/shear stress, combined stress, principal stresses, Mohr's circle | Existing bending/shear foundation; further stress states planned |
+| Flexure & Deformation Lab | Fibres, curvature, slope, deflection, stiffness and compatibility | Existing beam foundation; linked teaching planned |
+| Structural Analysis Methods | Equilibrium, compatibility, force method, slope-deflection, moment distribution, stiffness methods | Continue from recorded Phase 4 work; verify each supported method |
+| Torsion Lab | Torque, twist, shear stresses and section effects | Later steel expansion; new mechanics required |
+| Buckling & Stability Lab | Slenderness, end restraints, column modes, local and lateral-torsional buckling | Later steel expansion |
+| Truss & Frame Workspace | Connected members, load paths, member forces and deformation | Deferred structural solver expansion |
+| Structural Dynamics Lab | Vibration, damping, resonance, modes, earthquake response | Deferred |
+| Loads & Combinations | Supported load calculation and combination workflows | Later design expansion |
+| IS-Code Reference | Supported clauses, editions, applicability, examples and linked calculations | Later; steel before RCC |
+| RCC Design | Concrete members, reinforcement, detailing and checks | Explicitly deferred until after steel priorities |
+| Steel Design | Member checks, sizing, connections and traceable code calculations | After steel material/member behavior and validation |
+| Foundations & Retaining Structures | Footings, bearing pressure, retaining walls and stability | Deferred |
+
+Shared capabilities: guided lessons, worked examples, prediction exercises, scenario comparisons, project persistence, sharing, and reports. Reuse existing beam sharing/reporting where suitable; broader project storage and sharing are planned extensions.
+
+### 15.3 Workspaces and navigation
+
+Keep primary navigation to **Tools · Learn · Reference**, with recent projects available without making an account necessary for basic use. Provide a searchable tool/example library and direct URLs for individual tools and lessons.
+
+| Workspace | Capabilities grouped here |
+|---|---|
+| Structural Analysis | Beam analysis initially; methods, member results, later trusses/frames |
+| Material Lab | Steel tension first, then supported shear/compression and material comparisons |
+| Section Lab | Geometry, section properties, stress distributions, section comparisons |
+| Design & Checks | Future steel checks, loads/combinations, then RCC and foundations |
+| Learn & Reference | Guided experiments, explanations, examples and code references |
+
+A guided lesson opens the relevant workspace with a prepared example and staged explanation. It reuses the same calculation and visualization as the practical tool. Future capabilities stay visibly identified as planned until they work.
+
+---
+
+## 16. Workspace UI/UX redesign [PLANNED]
+
+### 16.1 Problems to resolve
+
+The current desktop layout combines editing, material inputs, result tables, textbook formulas, and worked steps in one narrow sidebar. Beam diagrams accumulate vertically. The section-cut and integration cards can overlap the model; the canonical explanation is repeated when working is expanded. The empty state displays unused result panels.
+
+The redesign should preserve a clear main object, expose details according to the user's current task, and keep related views available together.
+
+### 16.2 Four ways to work
+
+| Intention | Presentation | Relationship between data |
+|---|---|---|
+| Solve one problem | Focus view | One model, relevant diagrams, compact results |
+| Understand a relationship | Linked views | Selected beam position, section, fibre and result stay synchronized |
+| Evaluate alternatives | Compare view | Separate original/alternative cases with changes explicitly listed |
+| Work on unrelated tasks | Project tabs | Independent models, selections and undo/redo histories |
+
+- Each tool works standalone and can open a compatible view alongside another tool.
+- Start with Focus; users explicitly choose **Open alongside** or **Compare**.
+- Use one main view and at most two supporting views on desktop. An inspector/explanation panel counts as a supporting view. Avoid a freely floating window system in the first redesign.
+- Permit close, expand, and restore actions; provide useful preset arrangements instead of requiring users to construct a dashboard.
+- Comparisons show units, input differences, model assumptions, and a common scale option for comparable quantities. Unrelated objects do not silently share a beam coordinate or selection.
+
+### 16.3 Beam workspace
+
+Keep the beam visible while inspecting its results. Group diagrams into **Forces**, **Deformation**, and **Stresses**. Forces shows shear and moment together, with axial force when relevant. Preserve the selected position when changing view.
+
+```text
+Mechanics Sight · Project                           Share   More
+Beam 1     Material experiment                         New task
+Add support   Add load   Material & section          Undo  Redo
+----------------------------------------------------------------
+                         Beam model
+                      Selected x = 2 m
+----------------------------------+-----------------------------
+Forces / Deformation / Stresses    | Context or linked view
+                                  | Section at x = 2 m
+Relevant diagrams                 | Selected fibre / explanation
+----------------------------------+-----------------------------
+Key results          Open alongside          View calculations
+```
+
+- Select a load/support to edit it; select a result and choose **Explain** to inspect its meaning and calculation.
+- Dock section cuts, stress profiles, and area explanations in a supporting view so they leave the source diagram visible.
+- Give complete calculations a wide dedicated view, with access to the beam for reference. Show each canonical explanation once.
+- Keep **Cut section**, **Explain this diagram**, and related learning actions near their visual. Advanced details open on request.
+- Group add actions by supports and loads while retaining existing drag and precise numeric entry workflows. Keep less frequent settings in a secondary menu.
+- Show **Try an example** and **Start a beam** on entry. During model creation, display the next useful action and reveal diagrams once valid results exist.
+- Use generic fibre labels such as tension/compression in steel views; reserve reinforcement advice for a future RCC-specific model and explanation.
+
+### 16.4 Shared context and deliberate changes
+
+- Every linked view identifies its source, for example **Beam 1 · x = 2 m · bottom fibre**. At a discontinuity or property boundary, expose the selected side and local material/section.
+- Keep model editing authoritative in one place. Changing the source updates compatible views together; stale results and unsupported links remain visibly identified.
+- Preserve selection and model state when opening/closing views. Hover previews a location; a pinned location remains stable while the user reads or edits another panel.
+- Run independent material tests and section alternatives as experiments/copies. **Apply to beam** transfers explicitly selected, supported properties. It does not silently transfer a specimen's plastic history or turn the beam into a nonlinear model.
+- Switching a material/test mode starts or opens the appropriate experiment; retain previous work through its tab/scenario rather than combining incompatible histories.
+- Extend project persistence and sharing deliberately while retaining existing beam URLs. Store enough inputs, model versions, and loading history to reproduce an experiment; distinguish replay from a fresh calculation with changed data.
+
+### 16.5 Visual, mobile, and accessible behavior
+
+- Use readable labels, restrained borders, consistent quantity colors, and units next to values. Pair color with text, patterns or symbols.
+- Keep engineering notation available with plain-language labels, for example **Shear force V** and **Shear stress τ**.
+- On mobile, show one active visual at a time with a bottom sheet for context. Switching specimen/curve/explanation preserves the experiment and selection.
+- All controls need keyboard access, visible focus, and numeric alternatives to dragging. Touch targets must remain usable at narrow widths.
+- Animation is user controlled: Play/Pause, stepping, and reduced-motion behavior. Label exaggerated deformation and distinguish playback speed from physical strain rate.
+- Use 3D when viewing a cut face, fibres, a specimen or twisting helps the lesson. Keep a clear 2D view available; a 3D rendering is not evidence of a 3D mechanics model.
+
+### 16.6 UX delivery steps and acceptance
+
+- [ ] **UX0 — Prototype:** demonstrate starting a beam, inspecting results, exploring a cut, and the Steel Material Lab. Include desktop and phone states. Review the journey before changing the production layout.
+- [ ] **UX1 — Focus and linked views:** consolidate the beam sidebar, group diagrams, dock explanations, and preserve existing editing, sharing and reporting behavior.
+- [ ] **UX2 — Comparisons and task tabs:** add independent scenarios, clear input differences, scale controls and reusable workspace arrangements after Focus/Linked work well.
+
+Acceptance: a user can open an example, edit a load, inspect a section, explain a result and return to editing without losing context. A material learner can increase strain, identify the current region and unload without navigating away. Check both journeys with representative students/engineers and retain meaningful browser regression coverage for the existing beam workflows.
+
+---
+
+## 17. Teaching concepts through interaction [PLANNED]
+
+### 17.1 Common lesson pattern
+
+Use **try → observe → explain → reveal the equation → predict → check**. Each lesson begins with one controllable change and a short physical explanation. Offer **Try it**, **Why?**, and **Show maths** without displaying every layer at once. Use worked examples and lightweight prediction questions, then let users apply the idea to their own supported model.
+
+| Concept | Interaction | Learning outcome |
+|---|---|---|
+| Tension/compression | Pull or compress a marked bar against an undeformed reference | Distinguish normal force, normal stress, extension/shortening and strain |
+| Moment | Move/rotate a force around a reference point; highlight perpendicular distance | Understand the turning effect and $M=F d_\perp$; then relate it to internal bending moment |
+| Shear | Reveal an imaginary beam cut and the equal/opposite actions on both faces | Identify the force parallel to the cut face and why each isolated part must balance |
+| Shear deformation | Displace the top of a gridded specimen laterally | Connect changed angles to shear strain and the material's shear response |
+| Flexure | Bend longitudinal fibres; reverse the moment; select a fibre | Connect curvature, fibre length change, normal strain, tension and compression |
+| Stress distribution | Move through section depth while retaining the chosen beam position | Distinguish a section resultant from local stress and relate geometry to the profile |
+| Diagram relationships | Move the cut, trace diagram values, shade intervals and inspect tangents | Connect equilibrium to diagrams, $dM/dx=V$, and integration with appropriate jump handling |
+| Supports and stiffness | Compare restraint or section changes in labelled alternatives | Explain changes in equilibrium, compatibility and deformation |
+
+### 17.2 Accuracy of the explanations
+
+- Use the sign convention in Section 3; distinguish screen coordinates from physical directions. Explain both faces of the cut with consistent action/reaction arrows.
+- Present an imaginary cut as an inspection technique. Any separation drawn for clarity is not a simulated crack or failure.
+- For ordinary elastic bending without axial force, explain that tension and compression can coexist with zero net axial force. At the neutral axis, zero longitudinal bending stress does not imply that every stress component is zero.
+- State model assumptions beside optional detail. The current Euler–Bernoulli deflection calculation does not include shear deformation; the shear specimen is a separate material experiment.
+- Do not teach zero shear as a universal rule for all moment maxima: jumps, endpoints and other candidate locations must also be considered.
+- Validate short numeric lessons. Example: for a cantilever with a 10 kN tip load, cuts 2 m and 1 m from the tip have shear magnitudes 10 kN in both places and moment magnitudes 20 and 10 kN·m. The display also shows the signed values under our convention.
+- Tie **Explain this result** to the actual result: location, meaning, input values, formula, units, assumptions and a useful change to try.
+
+### 17.3 Follow one material point
+
+The signature linked lesson follows **beam → section cut → selected fibre → strain → material curve**. The same point stays highlighted as the load or section location changes. Moving toward the neutral axis or reversing bending updates the explanation.
+
+Initially support the beam's validated elastic range. A standalone material experiment may extend beyond yielding, but its response must not be presented as the result of the existing elastic beam analysis. Post-yield member redistribution and failure require their own future mechanics and benchmarks.
+
+---
+
+## 18. Steel-first delivery roadmap [PLANNED]
+
+Steel material behavior is the next new learning priority. Build on the existing section and beam tools, then expand to stability and steel design. Concrete/RCC stays deferred. The S-series below is a separate product track and does not rename P3, M4.x or M0–M10. Existing guided-support and Phase 4 work remains recorded in Section 13; this roadmap does not claim that work is complete.
+
+### 18.1 First deliverable: Steel Material Lab
+
+The first experience is a strain-controlled tensile specimen with a synchronized engineering stress–strain graph. Both are visible together on desktop; phone users can switch views without losing the current point.
+
+```text
+Material: Steel preset       Test: Tension       Preset details
+---------------------------+------------------------------------
+Animated specimen          | Engineering stress–strain curve
+Original reference outline | Current point and active region
+Gauge length / extension   | Optional landmark annotations
+---------------------------+------------------------------------
+Strain slider + numeric entry     Play   Pause   Unload   Reset
+Current stress / strain / permanent strain
+One short explanation                       Why?   Show maths
+```
+
+- Users command strain; the material response determines stress and force. Display stress in MPa and strain as a clearly labelled fraction or percent, with consistent conversions.
+- Show original gauge length and area so engineering strain $\varepsilon=\Delta L/L_0$ and engineering stress $\sigma=F/A_0$ have a visible meaning.
+- Trace the curve as loading progresses. Keep a full-curve preview optional; allow users to pause or step near landmarks.
+- Highlight the current region and explain what changed in the material/specimen. Make every applicable landmark selectable for a short explanation, supported equation, and prediction exercise.
+- Preserve an undeformed outline. Early elastic deformation may be exaggerated for visibility; report the true calculated values and the scale separately.
+- A landmark inspection or timeline replay must be distinguishable from changing the specimen's loading history.
+- Playback speed initially changes the presentation only. Introduce physical strain-rate or temperature controls only with a model/dataset that supports them.
+
+### 18.2 Material-dependent landmarks
+
+| Landmark or region | Explanation and display behavior |
+|---|---|
+| Linear elastic region | Stress is proportional to strain; highlight Young's modulus as the slope |
+| Proportional limit | Identify departure from linear response only where the model/data defines it |
+| Elastic limit | Explain the boundary of complete recovery on unloading; do not automatically equate it with a proof-strength point |
+| Yield behavior | Show a distinct yield point, upper/lower yield and plateau only for a preset that supports them |
+| Offset proof strength | For gradual yielding, construct the stated offset line; explain that a 0.2% offset refers to residual strain, not total strain at that point |
+| Strain hardening | Explain the increasing stress needed for further plastic deformation in the selected model |
+| Ultimate tensile strength | Mark the maximum engineering tensile stress in the supported tensile response |
+| Necking | Show localization of deformation when supported; identify a schematic animation separately from a calculated local shape |
+| Fracture | End the specimen test at the supported endpoint; subsequent playback or Reset has an explicit meaning |
+
+- Presets represent a specified steel/product/condition or a clearly labelled educational idealization. They do not all inherit the same textbook plateau.
+- Young's modulus and yield strength alone cannot define hardening, necking, fracture or unloading. Require a stated response model and the extra parameters or measured data for each supported feature.
+- Default to engineering stress/strain. Explain that the post-peak engineering curve can fall while local true stress behaves differently. A future true-stress view must state its basis; do not extend uniform-deformation conversion formulas through a neck without appropriate local data/modeling.
+- Keep specimen response, idealized material response and future code design curves explicitly identified.
+
+### 18.3 Unloading, reloading, and experimental history
+
+**Unload** is an essential teaching control. For the first supported steel model, unload toward zero stress and show recoverable strain and remaining plastic strain, then allow reloading according to the chosen model.
+
+- Preserve plastic state and prior loading. Moving the strain control backward follows the supported unloading path; it does not rewind along the original loading curve.
+- Distinguish unloading to zero stress from imposing zero total strain, which can require reverse stress after plastic extension.
+- **Reset** creates a fresh specimen. **Replay** inspects a recorded experiment without changing its history.
+- Introduce reverse plasticity, cyclic hardening and damage only with explicitly supported constitutive rules. Do not infer those behaviors from a monotonic curve.
+- Explain what happens if a selected experiment cannot support further unloading, loading, or fracture simulation; end it at its supported limit.
+
+### 18.4 Shear and compression experiments
+
+- Start shear with a gridded specimen and controlled lateral displacement. Show the change in angle, engineering shear strain $\gamma$ and shear stress $\tau$ on a dedicated $\tau$–$\gamma$ graph.
+- In the supported small-strain linear elastic regime, display $\tau=G\gamma$ and highlight $G$ as the slope. Require shear modulus or suitable material data; deriving $G=E/[2(1+\nu)]$ requires isotropic linear elasticity and a known Poisson ratio.
+- Add shear yielding, hardening, unloading and residual distortion only after choosing and validating an appropriate material model. Tensile landmarks and fracture strains are not copied into a shear test.
+- Link local elastic shear stress from a beam section to a material-point explanation when the assumptions and material data match. Distinguish local $\tau$, section resultant $V$, and any explicitly averaged specimen stress.
+- A later steel compression experiment needs its own supported range and loading rules. Separate material compression from member buckling; a short specimen curve does not predict slender-column stability.
+
+### 18.5 Preset evidence and computational ownership
+
+- Each preset records its source, material/product/condition, test mode, engineering/true measure, units, model assumptions, valid range, and any relevant specimen/test conditions. Mark measured data, fitted models and educational idealizations distinctly.
+- Review curve interpolation, event locations and post-peak behavior; avoid smooth curves that invent peaks, plateaus or material properties between source points.
+- Keep physical response and event definitions authoritative in the mechanics layer, consistent with the existing calculation ownership. The UI renders the response and experiment state. Document any later execution-platform change before implementing it.
+- Establish independent reference cases for the response, units, landmark locations, unloading/reloading and terminal conditions. Report the same values in the curve, specimen readings, explanations and exports.
+- Reuse only validated existing beam/section outputs. New material laws, 3D specimen deformation, combined stresses and buckling are separate capabilities with explicit assumptions.
+
+### 18.6 Ordered steel milestones
+
+All items below are pending. UX0 and S0 are the immediate planning/design steps; the first new working feature is the tensile Material Lab. It can ship standalone before the complete multi-tool project system exists.
+
+| ID | Deliverable | Acceptance criteria / boundary |
+|---|---|---|
+| S0 | Steel lesson specification and response contracts | Choose initial sourced/idealized presets, valid strain ranges, event definitions, history rules and independent reference cases; prototype the specimen/curve journey |
+| S1 | Strain-controlled elastic tensile lab | Slider and numeric entry drive synchronized specimen/curve/readings; units, reference dimensions, pause, reset and elastic recovery agree with reference calculations |
+| S2 | Supported steel plasticity and curve landmarks | Yield/proof strength, hardening, permanent strain and unloading/reloading match the chosen model; necking/fracture appear only with adequate data/modeling and honest visualization labels |
+| S3 | Steel shear lab | Elastic $\tau$–$\gamma$ experiment first; add plastic response only with its own validated model; compression remains a separately bounded extension |
+| S4 | Steel section exploration and comparisons | Reuse supported I/T/solid/hollow geometry; show properties and stress distributions; offer clearly labelled equal-area or other explicit comparison constraints |
+| S5 | Linked steel beam/fibre learning | Synchronize beam cut, local section, fibre stress/strain and compatible elastic material curve; preserve sides at jumps, units, selected context and existing reports |
+| S6 | Steel member stability and torsion | Start with bounded column and circular-shaft lessons; local buckling, lateral-torsional buckling and open-section torsion require separate formulations and benchmarks |
+| S7 | Steel design and code checks | Implement a declared set of member/connection checks with standard/edition, applicability, assumptions, governing results and traceable calculations |
+
+Steel preset comparison can follow the first reliable single-specimen experience. Additional materials, a brittle comparison specimen, cyclic behavior, full 3D views and advanced stress transformations are later extensions, not prerequisites for S1.
+
+### 18.7 End-to-end learning acceptance
+
+- A learner can distinguish force, stress and strain and identify the current curve region from both the graph and the specimen.
+- A learner can predict recovery before unloading, then observe the correct elastic/plastic response without Reset being confused with recovery.
+- A learner can explain why shear uses $\tau$, $\gamma$ and $G$, and why a tensile curve cannot simply be relabelled as a shear curve.
+- The first release works with keyboard/touch, small screens and reduced motion; explanations and measurements remain available when animations are paused.
+- Later, a learner can follow a fibre from a beam to its material response without being shown unsupported post-yield beam results.
+- A reviewer can reproduce a preset/experiment from its inputs, source/model version and loading history. Validate with representative user tasks and meaningful mechanics/browser checks before marking a milestone complete.
+
+---
+
+## 19. Deferred expansion and teaching references
+
+### 19.1 Concrete and RCC [DEFERRED — AFTER STEEL]
+
+Preserve this direction for future work; it is not part of the steel-first release.
+
+| Topic | Planned interactive lesson |
+|---|---|
+| Concrete grades and $f_{ck}$ | Virtual compression tests and a distribution of results explaining individual, mean and characteristic strength |
+| Ingredients, hydration and curing | Supported examples connecting constituents and curing to concrete behavior |
+| Concrete stress–strain response | Distinct compression/tension experiments with model-specific cracking, peak response and crushing/softening behavior |
+| Reinforcing steel and $f_y$ | Reuse appropriate steel lessons and explain the properties used in RCC checks |
+| How RCC carries load | Link section strain, concrete compression, reinforcement force and equilibrium as loading changes |
+| Neutral axis and stress blocks | Connect the selected material/design model to section forces and moment resistance |
+| Reinforcement amount | Compare under-reinforced, balanced and over-reinforced section behavior using a supported model |
+| Shear and stirrups | Explain diagonal cracking, shear transfer and transverse reinforcement |
+| Bond, anchorage and cover | Visualize force transfer, development length and detailing |
+| Serviceability and durability | Later lessons for cracking, deflection, creep, shrinkage and exposure |
+| RCC code checks | Explicitly supported clauses, editions, applicability, assumptions and calculation evidence |
+
+The $f_{ck}$ lesson should explain the Indian concrete cube-strength basis and the characteristic-strength concept using a distribution, rather than treating a single specimen's peak as the characteristic value. Experimental curves, idealizations and code design curves remain separately labelled. Check the applicable published standards when implementing any design rule; research/teaching examples and draft standards are not silently treated as current design requirements.
+
+### 19.2 Other deferred capabilities
+
+- Frames/trusses require a node/member solver and member-local views; dynamics requires appropriate mass, damping and time/modal analysis.
+- Loads/combinations, foundations and retaining structures need their own inputs, physical assumptions, standards and benchmark plans.
+- Combined stress and Mohr's circle should follow defined stress components and transformations; a full 3D stress state is a separate extension.
+- Broader material comparisons may introduce aluminium, brittle materials and elastomers, each with suitable test modes and response models.
+- Full member plasticity, large deformation, buckling interaction and failure do not become supported by adding a material test or a 3D animation.
+
+### 19.3 Reference basis for lesson development
+
+Use these as starting references for original explanations and benchmark/model selection. Cite the actual dataset, model and standard edition used by each delivered feature.
+
+- [MIT — Force and moment](https://ocw.mit.edu/courses/1-050-solid-mechanics-fall-2004/resources/emech2_04/): moment arms and equilibrium concepts.
+- [MIT — Internal forces and moments](https://ocw.mit.edu/courses/1-050-solid-mechanics-fall-2004/resources/emech3_04/): sections and resultants; translate source sign conventions explicitly.
+- [MIT — Stresses in beams](https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/resources/mit3_11f99_bstress/): fibres, curvature, normal/shear stress and assumptions.
+- [MIT — Stress–strain curves](https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/resources/mit3_11f99_ss/): engineering/true measures, proof strength, unloading, hardening and necking.
+- [MIT — Shear and torsion](https://ocw.mit.edu/courses/3-11-mechanics-of-materials-fall-1999/resources/mit3_11f99_torsion/): shear strain, shear modulus and bounded torsion examples.
+- [IIT Madras / NPTEL — Concrete I](https://archive.nptel.ac.in/content/storage2/courses/105106117/pdf/1_Introduction/1.5_Concrete_I.pdf): future characteristic-strength and concrete-property lessons; code references in the teaching notes require edition review before implementation.
+
+Earlier product research also identified [CivilLab](https://thushanch.github.io/civillab/), [Vetin Beam](https://github.com/rasimtemur/vetin-beam), [MechSimulator's material test](https://mechsimulator.com/tools/utm-testing/), and [SkyCiv's connected tools](https://skyciv.com/structural-software/). Use hands-on task comparisons to evaluate clarity, access and workflow; their published feature descriptions have not been independently validated here.
+
+---
+
+## 20. Numerical verification, physical validation and content review [PLANNED]
+
+### 20.1 What counts as evidence
+
+Every delivered formula, material property, numerical result and physical explanation needs traceable evidence appropriate to its claim. Open source, convincing prose, agreement between views and a large test count are useful but do not establish correctness on their own. AI may draft code, derivations and lessons; generated content remains a candidate until checked. Asking another AI to agree does not constitute independent engineering review.
+
+Separate **verification** (the implementation solves the stated mathematical model correctly) from **validation** (the model represents measured physical behavior well enough for its stated use). Analytical beam solutions support verification; measured tensile-test data support validation of a particular material model under specified conditions. An idealized teaching model can be useful with its assumptions stated, without claiming to predict a particular steel specimen. This distinction follows the general approach described in [NASA's verification and validation overview](https://www.grc.nasa.gov/www/wind/valid/tutorial/overview.html); that reference concerns CFD, not certification of this structural application.
+
+### 20.2 Current evidence and gaps — inspection on 2026-10-01
+
+- Existing hand-solution documents, fixture `checks`, analytical stress/deflection cases, randomized equilibrium/jump tests and indeterminate benchmarks provide a starting point. Their provenance and independent human review still need auditing.
+- A selected backend run covering hand cases, SymPy, invariants, indeterminate beams, deflection, bending/shear stress and method routing/steps passed **53 tests**, with no skips and one dependency deprecation warning. This was a targeted run, not a complete code, physics or content audit.
+- The SymPy cross-check currently covers only two determinate setups. It uses `pytest.importorskip`, so a missing dependency can omit that evidence in other environments.
+- Fixture `output` snapshots are regenerated by the production solver. They test regression and the API contract; independently derived `checks` must remain separately maintained.
+- The five pedagogical method-builder tests in `backend/tests/test_methods.py` mainly check step titles. Correct headings and agreement with a shared final solver result do not establish that each displayed derivation is correct.
+- Section 8.6 previously placed the I-1 maximum at 2.25 m. Independent symbolic integration with fixed-end conditions and zero prop displacement gives $R_B=3qL/8$, then $V=0$ at $x=5L/8=3.75$ m from the fixed end; $M=9qL^2/128=5.0625$ kN·m. The current solver agrees for $L=6$ m and $q=2$ kN/m. The documentation was corrected, along with ambiguous load-magnitude notation. This check does not certify the rest of the matrix.
+- Existing milestone labels describe implementation progress. A feature needs a separate evidence record before it is described as numerically verified, physically validated or independently reviewed.
+
+### 20.3 Evidence register and independent benchmark library
+
+- [ ] Assign each supported calculation and teaching claim an ID linked to its module, source, assumptions, implementation, tests and rendered lesson/report. A source entry records author/title, edition or dataset version, page/equation/clause, retrieval details and the exact scope supported.
+- [ ] Build a coverage matrix across support/load cases, material models, section families, output quantities and boundary conditions. Include asymmetric and combined cases as well as familiar symmetric examples; record unsupported and untested combinations explicitly.
+- [ ] For each benchmark, preserve inputs, units, axes/sign conventions, independently derived expected values, derivation or source location, numerical tolerances and reviewer/date. Convert source conventions explicitly. Never obtain reference values by calling production solver helpers or regenerating snapshots.
+- [ ] Use published worked examples, separately checked hand derivations and independently implemented reference solvers. Check that model assumptions match before comparing. Several displays/methods that reuse one solver are one computational result, not independent confirmations.
+- [ ] Expand external-solver checks to supported indeterminate, settlement, spring, axial and stress/deformation cases as applicable. Resolve disagreements through derivations and model assumptions, rather than choosing the majority answer.
+
+### 20.4 Numerical and physical consistency checks
+
+- [ ] Check forces and moments balance; imposed displacement/rotation conditions and continuity hold; jumps have the correct sign and size; unsupported/unstable inputs fail clearly. Exercise both sides of concentrated loads/couples and events near supports.
+- [ ] Check the stated differential and constitutive relations within their valid regions: $dM/dx=V$, $dV/dx=w$, strain/curvature and stress/resultant consistency under the chosen conventions. Recovered section stresses should integrate to the represented forces and moments within the section model's assumptions.
+- [ ] Add scaling, superposition and unit-conversion checks where the selected model is linear. Include zero/reversed loads, mirrored configurations with explicitly transformed signs, high/low stiffness and small/large geometries. Do not apply elastic superposition tests to plastic or history-dependent models.
+- [ ] Use a documented per-quantity comparison such as $|a-b|\leq\mathrm{atol}+\mathrm{rtol}|b|$, with dimensional absolute tolerance and dimensionless relative tolerance. Choose thresholds from the algorithm, scale and intended use; handle near-zero values explicitly. Residuals need appropriate force/moment/displacement scales, not one universal decimal tolerance.
+- [ ] Where integration, discretization or iteration is approximate, demonstrate convergence as the relevant resolution/tolerance changes. Record conditioning and approximation limits where they affect accuracy.
+- [ ] Confirm that tests detect representative deliberate defects, such as a flipped sign, incorrect unit conversion or local/global coordinate offset. Code coverage alone cannot show that assertions catch incorrect mechanics.
+
+### 20.5 Steel/material-model validation
+
+- [ ] Source each preset's properties and curves. Record grade/product, test mode, specimen conditions, units and data provenance where available; distinguish measured data, fitted laws and illustrative idealizations. Do not invent a complete steel response from $E$ and $f_y$ alone.
+- [ ] Independently verify elastic slope, model-specific yield/proof-strength construction, unloading/reloading rules, residual strain and supported hardening behavior. Test loading history and reset/replay, not only a monotonic curve.
+- [ ] Where claiming experimental agreement, compare against suitable measured data not used to fit the model when available. Predefine quantities/errors of interest and account for measurement uncertainty and specimen variability; otherwise state the lack of independent validation data.
+- [ ] Check landmark definitions against the selected stress/strain measure and model. Do not show a yield plateau, necking or fracture as a predicted event unless that model/data supports it. Limit engineering/true conversions to their supported assumptions.
+- [ ] Validate shear behavior and tension-to-shear parameter relationships only within their constitutive assumptions. A successful tensile test comparison does not establish torsion, buckling or nonlinear beam accuracy.
+
+### 20.6 Teaching content, animation and end-to-end checks
+
+- [ ] Review each explanation and worked equation for units, signs, applicability, terminology and counterexamples. Numerical tests must check intermediate method quantities and equation residuals, not just step titles or final answers.
+- [ ] Store reviewed explanations/templates and model-driven numerical substitutions. Keep factual teaching content versioned and reviewable; do not present unchecked generated prose as an authoritative calculation or lesson.
+- [ ] Check API, browser readouts, diagrams, selected section/fibre and exported reports against independent benchmark values, including side-of-jump, coordinate and unit conversions. Rendering agreement with the backend is necessary but is not an independent mechanics check.
+- [ ] Review animations for physical meaning: force direction, moment sense, tension/compression fibres, shear distortion, boundary restraints and supported material states. Label exaggerated displacement and qualitative illustrations; a visually plausible animation is not evidence of a solved physical field.
+- [ ] Keep axes, legends and meaningful measurements available with animation paused and reduced motion enabled. Check that displayed rounding does not contradict stated landmarks or equilibrium explanations.
+- [ ] Have an independent structural/mechanics reviewer examine initial benchmark packs and lessons, recording scope, findings and resolved corrections. Student usability/prediction tasks assess whether explanations teach the concept; they complement engineering review.
+- [ ] For future IS-code features, verify the applicable official edition/amendments, clause/table, applicability and units, then independently work calculation examples. Record exactly which checks are supported; do not infer full code compliance from one checked clause.
+
+### 20.7 Release evidence and execution order
+
+| Step | Deliverable | Completion evidence |
+|---|---|---|
+| V0 — Audit existing claims | Inventory of calculations, explanations, sources and missing evidence | Every current capability mapped; unsourced/unverified claims flagged |
+| V1 — Strengthen beam/method benchmarks | Independent reference cases and numerical checks of displayed derivations | Each supported method has checked intermediate equations and final results; reference values remain independent |
+| V2 — Verify rendered results | Browser/report and animation checks for representative cases | Inputs, units, signs, selected location and displayed values agree with checked references |
+| V3 — Validate the first steel lab | Documented idealization or sourced dataset/model with history checks | Elastic behavior and any supported inelastic landmarks/paths have recorded evidence and limits |
+| V4 — Review and publish evidence | Independent review record and reproducible release report | Sources, cases, errors, tolerances, gaps and version are inspectable |
+
+- [ ] Required release CI runs the mechanics, reference, contract and relevant browser suites with pinned dependencies; a missing required reference suite is a failed evidence gate, not a silently accepted skip.
+- [ ] Publish benchmark inputs/expected values, comparison results, tolerances, suite versions, passed/failed/skipped counts and known gaps alongside the matching application commit. Respect source/data redistribution rights; provide original derivations and citations where full source reproduction is unavailable.
+- [ ] Track `sourced`, `numerically verified`, `validated against specified data` and `independently reviewed` as separate evidence attributes scoped to a feature/version. Never imply universal correctness or professional certification from these labels.
+- [ ] Changes to formulas, material data, solver behavior, explanations or relevant rendering trigger the affected checks and review. Preserve regression cases for every confirmed mechanics/content bug.
+
+Priority: complete V0 and V1 for the existing beam and indeterminate worked methods, then V2. Define the steel lab's evidence requirements alongside S0 and complete V3/V4 before claiming the delivered steel behavior has been validated. This section is a work plan; it does not mark those gates complete.

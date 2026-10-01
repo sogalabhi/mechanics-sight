@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { gridStep } from '@/math/snap'
 import { findItem, removeItem, round3, updateItem, validateBeam } from '@/model/actions'
-import type { Item } from '@/model/types'
+import { isSupport, type Item } from '@/model/types'
 import { useStore } from '@/store/store'
 import { NumberField } from '@/ui/NumberField'
 import { Segmented } from '@/ui/Segmented'
@@ -147,6 +147,42 @@ export function Inspector({ compact = false }: { compact?: boolean }) {
             <p className={styles.hint} style={{ marginTop: '0.75rem', fontSize: '0.75rem', lineHeight: 1.4 }}>
               Releases bending moment (<em>M</em> = 0) while transmitting vertical shear force (<em>V</em>).
             </p>
+          )}
+          {isSupport(item) && (
+            <>
+              <NumberField
+                label="Settlement (downward)"
+                unit="mm"
+                step={1}
+                value={round3((item.settlement ?? 0) * 1000)}
+                onCommit={(v) => {
+                  if (!Number.isFinite(v)) return 'Invalid number'
+                  return apply({ settlement: round3(v / 1000) })
+                }}
+              />
+              <NumberField
+                label="Spring ky"
+                unit="kN/m"
+                step={100}
+                value={item.spring_ky ?? 0}
+                onCommit={(v) => {
+                  if (v < 0) return 'Must not be negative'
+                  return apply({ spring_ky: v > 0 ? v : null })
+                }}
+              />
+              {item.type === 'fixed' && (
+                <NumberField
+                  label="Spring kθ"
+                  unit="kN·m/rad"
+                  step={100}
+                  value={item.spring_ktheta ?? 0}
+                  onCommit={(v) => {
+                    if (v < 0) return 'Must not be negative'
+                    return apply({ spring_ktheta: v > 0 ? v : null })
+                  }}
+                />
+              )}
+            </>
           )}
         </>
       )}

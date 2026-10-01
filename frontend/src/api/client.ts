@@ -13,8 +13,13 @@ export async function analyze(
   beam: BeamInput,
   signal?: AbortSignal,
   steps = false,
+  method?: string | null,
 ): Promise<AnalysisResult> {
-  const res = await fetch('/api/v1/analyze' + (steps ? '?steps=true' : ''), {
+  const params = new URLSearchParams()
+  if (steps) params.set('steps', 'true')
+  if (method) params.set('method', method)
+  const qs = params.toString() ? `?${params.toString()}` : ''
+  const res = await fetch('/api/v1/analyze' + qs, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(beam),

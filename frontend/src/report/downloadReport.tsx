@@ -30,9 +30,9 @@ function renderFigures(): { beam: string; afd: string; sfd: string; bmd: string;
 
 /** Fetch fresh working steps for the current beam and download a self-contained HTML report. */
 export async function downloadReport(): Promise<void> {
-  const { beam, result } = useStore.getState()
+  const { beam, result, selectedMethod } = useStore.getState()
   if (!result) throw new Error('Nothing to report yet: add a support first.')
-  const withSteps = await analyze(beam, undefined, true)
+  const withSteps = await analyze(beam, undefined, true, selectedMethod)
   if (!withSteps.steps) throw new Error('The solver did not return steps. Restart the backend.')
   const html = buildReportHtml({
     beam,

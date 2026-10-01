@@ -202,6 +202,11 @@ export function validateBeam(beam: BeamInput): string | null {
     if (sup[k].position - sup[k - 1].position < TOL)
       return `A support is already at ${sup[k].position.toFixed(3)} m`
   }
+  for (const s of beam.supports) {
+    if (s.settlement != null && !Number.isFinite(s.settlement)) return 'Settlement must be a finite number'
+    if (s.spring_ky != null && (!Number.isFinite(s.spring_ky) || s.spring_ky <= 0)) return 'Spring ky must be greater than 0'
+    if (s.spring_ktheta != null && (!Number.isFinite(s.spring_ktheta) || s.spring_ktheta <= 0)) return 'Spring kθ must be greater than 0'
+  }
   const hinges = beam.hinges ?? []
   for (let k = 0; k < hinges.length; k++) {
     const h = hinges[k]
