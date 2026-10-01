@@ -1244,6 +1244,7 @@ Don't add fields for future phases early. Unused fields are untested code. Growt
 | M10.4| Phase 4 Canonical Indeterminate Matcher | Propped cantilever & fixed-fixed canonical formulas ($wL^2/8, 9wL^2/128, wL^2/12$) & derivation cards | Canonical indeterminate proofs pass | **Done** |
 | M10.5| Phase 4 Frontend UI & Switcher | Method selector dropdown in Working Panel, Hardy Cross cycle table, settlement & spring inputs in Inspector | Frontend live analysis, unit tests, and production build green | **Done** |
 | M10.6| Phase 4 Verification & Hardening | Full 20-case textbook benchmark suite, report generation with indeterminate methods | All contract tests & CI checks green | **Done** |
+| M11 | Motion & Physics Animation Engine | Framer Motion (`motion` v13) integration: progressive beam loading/deflection animation, Virtual Saw cut separation with spring forces, smooth diagram curve morphing, Hardy Cross moment distribution flow, HUD & UI spring transitions | Smooth 60fps animations, accessible reduced-motion support, all tests green | Planned |
 
 ---
 
@@ -1669,3 +1670,59 @@ Separate **verification** (the implementation solves the stated mathematical mod
 - [ ] Changes to formulas, material data, solver behavior, explanations or relevant rendering trigger the affected checks and review. Preserve regression cases for every confirmed mechanics/content bug.
 
 Priority: complete V0 and V1 for the existing beam and indeterminate worked methods, then V2. Define the steel lab's evidence requirements alongside S0 and complete V3/V4 before claiming the delivered steel behavior has been validated. This section is a work plan; it does not mark those gates complete.
+
+---
+
+## 21. Motion & Physics Animation System [PLANNED]
+
+Integrate **Framer Motion** (`motion` v13) to transition Mechanics Sight from a static calculation display into a living, tactile structural mechanics simulation.
+
+### 21.1 Core Architecture & Principles
+- **Library**: `motion` (v13.5+, React 19 compatible).
+- **Physical Integrity First**: Animations must reflect real structural mechanics (elastic deformation scales $v(x)$, harmonic damping, sign-consistent internal action arrows).
+- **Performance Budget**: 60fps hardware-accelerated animations using SVG transforms and GPU-composited CSS transforms. Zero lag during interactive dragging.
+- **Accessibility & Preferences**: Full support for `prefers-reduced-motion`. When reduced motion is enabled, transitions snap instantaneously with standard zero-duration fallbacks.
+
+### 21.2 Animation Workflows
+
+#### 1. Dynamic Beam Loading & Progressive Deflection Simulation
+- **Interactive Loading Slider & Playback**:
+  - Load scale multiplier $\lambda \in [0, 1.0]$.
+  - Play / Pause / Reset button in the Deflected Shape panel or TopBar.
+  - Deflection equation scaled dynamically: $v(x, \lambda) = \lambda \cdot v(x)$, slope $\theta(x, \lambda) = \lambda \cdot \theta(x)$.
+- **Damped Harmonic Settling**:
+  - When a load is dropped onto the beam or the Play button is pressed, the elastic curve oscillates with subtle underdamped harmonic motion ($e^{-\zeta \omega_n t} \cos(\omega_d t)$) before settling into static equilibrium.
+  - Students visually experience how external loads induce elastic curvature and internal strain energy.
+
+#### 2. "Virtual Saw" Physical Separation & Internal Force Reveal
+- **Saw Cut Action**:
+  - Pressing `S` or selecting a cut line triggers a brief visual cut incision at $x_{\text{cut}}$.
+- **Lateral Separation**:
+  - The left beam segment $[0, x_{\text{cut}}]$ slides left by $\Delta x = -16\text{px}$, and the right segment $[x_{\text{cut}}, L]$ slides right by $\Delta x = +16\text{px}$ using a spring transition (`type: "spring", stiffness: 300, damping: 25`).
+- **Internal Action Reveal**:
+  - Equal and opposite action/reaction force vectors ($V, M, N$) pop in on the exposed cross-section faces with staggered spring scale (`scale: [0, 1.15, 1]`).
+  - Closing the cut smoothly draws the two halves back together into a continuous beam.
+
+#### 3. Continuous Diagram SVG Curve Morphing
+- **Path Interpolation**:
+  - Animate SVG path data `d` across changes using `motion.path`.
+  - When a point load is moved or a UDL is stretched, the SFD, BMD, and AFD curves smoothly deform and follow the load rather than popping abruptly.
+  - Extreme value markers and zero-shear flags glide smoothly along the curves to their new coordinates.
+
+#### 4. Hardy Cross Moment Distribution Flow
+- **Cycle-by-Cycle Visualizer**:
+  - Step-by-step playback mode for the Moment Distribution Method in the Working Panel.
+  - Step 1: Fixed-End Moments clamp joints (FEM labels light up).
+  - Step 2: Unbalanced joint moments highlight in red/amber.
+  - Step 3: Distribution moments ($DF \cdot M_{\text{unbalanced}}$) sweep into connected spans.
+  - Step 4: Carry-Over arrows physically glide 50% of the distributed moment across the span to the far support.
+  - Loops smoothly until convergence criteria ($\Delta M < 0.01\,\text{kN}\cdot\text{m}$) are met.
+
+#### 5. UI Micro-interactions & HUD Transitions
+- **Dock / Float Spring Transitions**:
+  - When switching HUD cards (`VirtualSawCard`, `IntegrationCard`, `CanonicalCard`) between floating and docked mode, animate layout bounds smoothly using `layout` and `layoutId`.
+- **Working Step Accordion**:
+  - Step items open and collapse smoothly using `<AnimatePresence>` and `motion.div` height transitions.
+- **Palette & Toast Entrances**:
+  - Draggable tools and status toast notifications enter with spring physics (`y: [10, 0], opacity: [0, 1]`).
+
