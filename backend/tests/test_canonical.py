@@ -6,7 +6,7 @@ from pathlib import Path
 import pytest
 
 from beam_solver.analysis import analyze
-from beam_solver.domain import Beam, PointLoad, Support, SupportKind
+from beam_solver.domain import Beam, DistributedLoad, PointLoad, Support, SupportKind
 from beam_solver.io import beam_from_json
 
 FIXTURES_DIR = Path(__file__).resolve().parents[2] / "shared" / "fixtures"
@@ -111,3 +111,100 @@ def test_non_canonical_fallbacks(fixture_name: str) -> None:
     result = analyze(beam)
     # Non-canonical setups must smoothly return None without crashing
     assert result.canonical is None
+
+
+def test_canonical_propped_cantilever_udl() -> None:
+    beam = Beam(
+        length=6.0,
+        supports=(
+            Support("A", SupportKind.FIXED, 0.0),
+            Support("B", SupportKind.ROLLER, 6.0),
+        ),
+        loads=(DistributedLoad("w1", 0.0, 6.0, -2.0, -2.0),),
+    )
+    result = analyze(beam)
+
+    assert result.canonical is not None
+    c = result.canonical
+    assert c.case_id == "propped_cantilever_udl"
+    assert r"\frac{wL^2}{8}" in c.symbolic_formula
+    assert "-9" in c.result_text
+    assert len(c.derivation) >= 4
+
+
+def test_canonical_propped_cantilever_point_mid() -> None:
+    beam = Beam(
+        length=6.0,
+        supports=(
+            Support("A", SupportKind.FIXED, 0.0),
+            Support("B", SupportKind.ROLLER, 6.0),
+        ),
+        loads=(PointLoad("p1", 3.0, -12.0),),
+    )
+    result = analyze(beam)
+
+    assert result.canonical is not None
+    c = result.canonical
+    assert c.case_id == "propped_cantilever_point_mid"
+    assert r"\frac{3PL}{16}" in c.symbolic_formula
+    assert "-13.5" in c.result_text
+    assert len(c.derivation) >= 4
+
+
+def test_canonical_fixed_fixed_udl() -> None:
+    beam = Beam(
+        length=6.0,
+        supports=(
+            Support("A", SupportKind.FIXED, 0.0),
+            Support("B", SupportKind.FIXED, 6.0),
+        ),
+        loads=(DistributedLoad("w1", 0.0, 6.0, -2.0, -2.0),),
+    )
+    result = analyze(beam)
+
+    assert result.canonical is not None
+    c = result.canonical
+    assert c.case_id == "fixed_fixed_udl"
+    assert r"\frac{wL^2}{12}" in c.symbolic_formula
+    assert "-6" in c.result_text
+    assert len(c.derivation) >= 4
+
+
+def test_canonical_fixed_fixed_point_mid() -> None:
+    beam = Beam(
+        length=6.0,
+        supports=(
+            Support("A", SupportKind.FIXED, 0.0),
+            Support("B", SupportKind.FIXED, 6.0),
+        ),
+        loads=(PointLoad("p1", 3.0, -12.0),),
+    )
+    result = analyze(beam)
+
+    assert result.canonical is not None
+    c = result.canonical
+    assert c.case_id == "fixed_fixed_point_mid"
+    assert r"\frac{PL}{8}" in c.symbolic_formula
+    assert "-9" in c.result_text
+    assert len(c.derivation) >= 4
+
+
+def test_canonical_two_span_continuous_udl() -> None:
+    beam = Beam(
+        length=8.0,
+        supports=(
+            Support("A", SupportKind.PIN, 0.0),
+            Support("B", SupportKind.ROLLER, 4.0),
+            Support("C", SupportKind.ROLLER, 8.0),
+        ),
+        loads=(DistributedLoad("w1", 0.0, 8.0, -2.0, -2.0),),
+    )
+    result = analyze(beam)
+
+    assert result.canonical is not None
+    c = result.canonical
+    assert c.case_id == "two_span_continuous_udl"
+    assert r"\frac{w l^2}{8}" in c.symbolic_formula
+    assert "-4" in c.result_text
+    assert len(c.derivation) >= 4
+

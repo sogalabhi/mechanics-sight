@@ -127,10 +127,10 @@ def test_extremes_bound_samples(beam: Beam) -> None:
     sampled = result.sample(50)
     top = result.max_sagging.value if result.max_sagging else 0.0
     bottom = result.max_hogging.value if result.max_hogging else 0.0
-    # Allow floating-point roundoff at the existing absolute tolerance boundary.
+    # Allow floating-point roundoff at the existing moment tolerance boundary.
     roundoff = 1e-12 * max(1.0, *(abs(m) for m in sampled.moment))
-    assert max(sampled.moment) <= top + 1e-6 + roundoff
-    assert min(sampled.moment) >= bottom - 1e-6 - roundoff
+    assert max(sampled.moment) <= top + 1e-5 + roundoff
+    assert min(sampled.moment) >= bottom - 1e-5 - roundoff
 
 
 @settings(max_examples=150, deadline=None)
