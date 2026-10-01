@@ -1,0 +1,204 @@
+{
+  "name": "18_fixed_fixed_udl",
+  "input": {
+    "schema_version": 1,
+    "length": 6.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "fixed",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "fixed",
+        "position": 6.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "d1",
+        "type": "distributed",
+        "start": 0.0,
+        "end": 6.0,
+        "w_start": -10.0,
+        "w_end": -10.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 30.0,
+      "moment": 30.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 30.0,
+      "moment": -30.0
+    },
+    {
+      "x": 0.0,
+      "side": "right",
+      "shear": 30.0
+    },
+    {
+      "x": 6.0,
+      "side": "left",
+      "shear": -30.0
+    },
+    {
+      "x": 0.0,
+      "side": "right",
+      "moment": -30.0
+    },
+    {
+      "x": 3.0,
+      "side": "left",
+      "moment": 15.0
+    },
+    {
+      "x": 6.0,
+      "side": "left",
+      "moment": -30.0
+    },
+    {
+      "zero_shear": 3.0
+    },
+    {
+      "extreme": "max_sagging",
+      "x": 3.0,
+      "value": 15.0
+    },
+    {
+      "extreme": "max_hogging",
+      "x": 0.0,
+      "value": -30.0
+    },
+    {
+      "classification": {
+        "status": "indeterminate",
+        "axial_degree": 1,
+        "bending_degree": 2
+      }
+    }
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "indeterminate",
+      "restraints": 6,
+      "equations": 3,
+      "degree": 3,
+      "axial_degree": 1,
+      "bending_degree": 2,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "s1",
+        "fx": 0.0,
+        "fy": 30.0,
+        "moment": 30.0
+      },
+      {
+        "support_id": "s2",
+        "fx": 0.0,
+        "fy": 30.0,
+        "moment": -30.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 6.0,
+        "shear": [
+          30.0,
+          -10.0
+        ],
+        "moment": [
+          -30.0,
+          30.0,
+          -5.0
+        ],
+        "axial": [
+          0.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 30.0,
+        "moment_left": 0.0,
+        "moment_right": -30.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      },
+      {
+        "x": 6.0,
+        "shear_left": -30.0,
+        "shear_right": 0.0,
+        "moment_left": -30.0,
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      }
+    ],
+    "zero_shear_points": [
+      3.0
+    ],
+    "extremes": {
+      "max_sagging": {
+        "x": 3.0,
+        "value": 15.0
+      },
+      "max_hogging": {
+        "x": 0.0,
+        "value": -30.0
+      },
+      "max_positive_shear": {
+        "x": 0.0,
+        "value": 30.0
+      },
+      "max_negative_shear": {
+        "x": 6.0,
+        "value": -30.0
+      },
+      "max_tension": null,
+      "max_compression": null
+    },
+    "warnings": [
+      "Horizontal reactions are statically indeterminate but exactly zero: there are no horizontal loads."
+    ],
+    "canonical": {
+      "case_id": "fixed_fixed_udl",
+      "name": "Fixed\u2013Fixed Beam with Uniform Load (UDL)",
+      "symbolic_formula": "M_{\\text{ends}} = -\\frac{wL^2}{12}, \\quad M_{\\text{mid}} = +\\frac{wL^2}{24}",
+      "symbolic_reactions": "R_A = R_B = \\frac{wL}{2}, \\quad M_{\\text{ends}} = -\\frac{wL^2}{12}",
+      "substituted_formula": "M_{\\text{ends}} = -\\frac{(10\\ \\text{kN/m}) \\cdot (6\\ \\text{m})^2}{12}, \\quad M_{\\text{mid}} = +\\frac{(10\\ \\text{kN/m}) \\cdot (6\\ \\text{m})^2}{24}",
+      "result_text": "M_{\\text{ends}} = -30\\ \\text{kN\u00b7m}, \\quad M_{\\text{mid}} = 15\\ \\text{kN\u00b7m}",
+      "location_text": "x = 0, 6\\ \\text{m}\\ (\\text{wall}), \\quad x = 3\\ \\text{m}\\ (\\text{mid})",
+      "derivation": [
+        "1.\\ \\text{Fixed-End Moments by Slope-Deflection}:",
+        "\\theta_A = \\theta_B = 0, \\quad \\psi = 0 \\implies \\mathbf{M_A = M_B = -\\frac{wL^2}{12}}",
+        "2.\\ \\text{Vertical Reactions by Symmetry}:",
+        "\\mathbf{R_A = R_B = \\frac{wL}{2}}",
+        "3.\\ \\text{Midspan Bending Moment}:",
+        "M\\left(\\frac{L}{2}\\right) = M_A + R_A \\left(\\frac{L}{2}\\right) - \\frac{w(L/2)^2}{2} = -\\frac{wL^2}{12} + \\frac{wL^2}{4} - \\frac{wL^2}{8} = \\mathbf{+\\frac{wL^2}{24}}",
+        "4.\\ \\text{Points of Inflection (Contraflexure, } M(x) = 0):",
+        "x = \\frac{L}{2}\\left(1 \\pm \\frac{1}{\\sqrt{3}}\\right) \\approx 0.2113L, \\; 0.7887L"
+      ]
+    },
+    "available_methods": [
+      "direct_stiffness",
+      "force_method",
+      "slope_deflection",
+      "moment_distribution"
+    ],
+    "selected_method": "slope_deflection"
+  }
+}

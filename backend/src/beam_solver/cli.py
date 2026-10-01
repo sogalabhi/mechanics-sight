@@ -44,9 +44,9 @@ def main(argv: list[str] | None = None) -> int:
         print(error_to_schema(exc).model_dump_json(indent=2), file=sys.stderr)
         return 1
 
-    payload = result_to_json(result)
+    payload = result_to_json(result, beam=beam)
     if args.steps:
-        out = result_to_schema(result).model_copy(
+        out = result_to_schema(result, beam=beam).model_copy(
             update={"steps": [step_to_schema(s) for s in build_steps(beam, result)]}
         )
         exclude = {"deflection"} if out.deflection is None else None

@@ -258,8 +258,8 @@ def result_to_schema(
     )
 
 
-def result_to_json(result: AnalysisResult) -> dict[str, Any]:
-    out = result_to_schema(result)
+def result_to_json(result: AnalysisResult, beam: Beam | None = None) -> dict[str, Any]:
+    out = result_to_schema(result, beam=beam)
     exclude = set() if out.steps is not None else {"steps"}
     if out.deflection is None:
         exclude.add("deflection")

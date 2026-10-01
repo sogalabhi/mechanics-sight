@@ -5,9 +5,9 @@ section + section { margin-top: 16px; }
 .entry:hover { background: var(--grid); }
 .del { float: right; margin-top: -24px; font: inherit; font-size: 12px; color: var(--danger); background: none; border: 0; cursor: pointer; }
 .check { display: flex; gap: 6px; align-items: center; }
-.length { display: flex; align-items: center; margin: 0 16px; width: 170px; }
-.length > label { flex-direction: row; align-items: center; margin: 0; gap: 8px; }
-.length > label > span:last-child:not(:first-child) { display: none; }
+.length { display: flex; align-items: center; margin: 0 12px; }
+.length > label { flex-direction: row; align-items: center; margin: 0; gap: 6px; }
+.length input { width: 68px; height: 28px; }
 .banner { padding: 6px 16px; font-size: 12px; border-bottom: 1px solid var(--rule); }
 .danger { color: var(--danger); }
 .warn { color: var(--warn); }

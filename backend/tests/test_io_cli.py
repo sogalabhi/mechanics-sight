@@ -21,7 +21,8 @@ ROLLER_ONLY = {"length": 6, "supports": [{"id": "a", "type": "roller", "position
 def test_snapshot(fixture: dict[str, Any]) -> None:
     """Output must match the committed snapshot (run scripts/update_snapshots.py)."""
     assert "output" in fixture, "run scripts/update_snapshots.py"
-    actual = result_to_json(analyze(beam_from_json(fixture["input"])))
+    beam = beam_from_json(fixture["input"])
+    actual = result_to_json(analyze(beam), beam=beam)
     assert actual == approx_json(fixture["output"])
 
 

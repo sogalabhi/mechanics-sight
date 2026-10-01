@@ -1,0 +1,257 @@
+{
+  "name": "19_continuous_two_span",
+  "input": {
+    "schema_version": 1,
+    "length": 8.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "pin",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "roller",
+        "position": 4.0
+      },
+      {
+        "id": "s3",
+        "type": "roller",
+        "position": 8.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "d1",
+        "type": "distributed",
+        "start": 0.0,
+        "end": 8.0,
+        "w_start": -10.0,
+        "w_end": -10.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 15.0,
+      "moment": 0.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 50.0,
+      "moment": 0.0
+    },
+    {
+      "reaction": "s3",
+      "fx": 0.0,
+      "fy": 15.0,
+      "moment": 0.0
+    },
+    {
+      "x": 0.0,
+      "side": "right",
+      "shear": 15.0
+    },
+    {
+      "x": 4.0,
+      "side": "left",
+      "shear": -25.0
+    },
+    {
+      "x": 4.0,
+      "side": "right",
+      "shear": 25.0
+    },
+    {
+      "x": 8.0,
+      "side": "left",
+      "shear": -15.0
+    },
+    {
+      "x": 1.5,
+      "side": "left",
+      "moment": 11.25
+    },
+    {
+      "x": 4.0,
+      "side": "left",
+      "moment": -20.0
+    },
+    {
+      "zero_shear": 1.5
+    },
+    {
+      "zero_shear": 6.5
+    },
+    {
+      "extreme": "max_sagging",
+      "x": 1.5,
+      "value": 11.25
+    },
+    {
+      "extreme": "max_hogging",
+      "x": 4.0,
+      "value": -20.0
+    },
+    {
+      "classification": {
+        "status": "indeterminate",
+        "axial_degree": 0,
+        "bending_degree": 1
+      }
+    }
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "indeterminate",
+      "restraints": 4,
+      "equations": 3,
+      "degree": 1,
+      "axial_degree": 0,
+      "bending_degree": 1,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "s1",
+        "fx": 0.0,
+        "fy": 15.0,
+        "moment": 0.0
+      },
+      {
+        "support_id": "s2",
+        "fx": 0.0,
+        "fy": 50.0,
+        "moment": 0.0
+      },
+      {
+        "support_id": "s3",
+        "fx": 0.0,
+        "fy": 15.0,
+        "moment": 0.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 4.0,
+        "shear": [
+          15.0,
+          -10.0
+        ],
+        "moment": [
+          0.0,
+          15.0,
+          -5.0
+        ],
+        "axial": [
+          0.0
+        ]
+      },
+      {
+        "x_start": 4.0,
+        "x_end": 8.0,
+        "shear": [
+          25.0,
+          -10.0
+        ],
+        "moment": [
+          -20.0,
+          25.0,
+          -5.0
+        ],
+        "axial": [
+          0.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 15.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      },
+      {
+        "x": 4.0,
+        "shear_left": -25.0,
+        "shear_right": 25.0,
+        "moment_left": -20.0,
+        "moment_right": -20.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      },
+      {
+        "x": 8.0,
+        "shear_left": -15.0,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      }
+    ],
+    "zero_shear_points": [
+      1.5,
+      4.0,
+      6.5
+    ],
+    "extremes": {
+      "max_sagging": {
+        "x": 1.5,
+        "value": 11.25
+      },
+      "max_hogging": {
+        "x": 4.0,
+        "value": -20.0
+      },
+      "max_positive_shear": {
+        "x": 4.0,
+        "value": 25.0
+      },
+      "max_negative_shear": {
+        "x": 4.0,
+        "value": -25.0
+      },
+      "max_tension": null,
+      "max_compression": null
+    },
+    "warnings": [],
+    "canonical": {
+      "case_id": "two_span_continuous_udl",
+      "name": "Two-Span Continuous Beam with Uniform Load (UDL)",
+      "symbolic_formula": "M_B = -\\frac{w l^2}{8}, \\quad R_B = \\frac{10 w l}{8}",
+      "symbolic_reactions": "R_A = R_C = \\frac{3wl}{8}, \\quad R_B = \\frac{10wl}{8}",
+      "substituted_formula": "M_B = -\\frac{(10\\ \\text{kN/m}) \\cdot (4\\ \\text{m})^2}{8}, \\quad R_B = \\frac{10 \\cdot (10\\ \\text{kN/m}) \\cdot (4\\ \\text{m})}{8}",
+      "result_text": "M_B = -20\\ \\text{kN\u00b7m}, \\quad R_B = 50\\ \\text{kN}",
+      "location_text": "x = 4\\ \\text{m}\\ (\\text{intermediate support})",
+      "derivation": [
+        "1.\\ \\text{Theorem of Three Moments (Clapeyron) Across Span AB and BC } (L_1 = L_2 = l):",
+        "M_A l + 2 M_B (l + l) + M_C l = -6 \\left[\\frac{A_1 \\bar{a}_1}{l} + \\frac{A_2 \\bar{b}_2}{l}\\right]",
+        "2.\\ \\text{Boundary Conditions at Exterior Simple Ends}:",
+        "M_A = 0, \\quad M_C = 0",
+        "3.\\ \\text{Free Bending Moment Areas under UDL}:",
+        "A_1 = A_2 = \\frac{2}{3} \\left(\\frac{wl^2}{8}\\right) l = \\frac{wl^3}{12}, \\quad \\bar{a}_1 = \\bar{b}_2 = \\frac{l}{2}",
+        "4.\\ \\text{Solve Intermediate Support Moment } M_B:",
+        "4l M_B = -6 \\left[\\frac{wl^3}{24} + \\frac{wl^3}{24}\\right] = -\\frac{wl^3}{2} \\implies \\mathbf{M_B = -\\frac{wl^2}{8}}",
+        "5.\\ \\text{Reactions by Member Equilibrium}:",
+        "R_A = R_C = \\mathbf{\\frac{3}{8}wl}, \\quad R_B = \\mathbf{\\frac{10}{8}wl}"
+      ]
+    },
+    "available_methods": [
+      "direct_stiffness",
+      "force_method",
+      "slope_deflection",
+      "moment_distribution",
+      "three_moment"
+    ],
+    "selected_method": "three_moment"
+  }
+}

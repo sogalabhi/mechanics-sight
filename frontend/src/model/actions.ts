@@ -17,6 +17,8 @@ export type PaletteKind =
   | 'fixed'
   | 'hinge'
   | 'point'
+  | 'horizontal_point'
+  | 'inclined_point'
   | 'moment'
   | 'udl'
   | 'uvl'
@@ -75,6 +77,8 @@ export function addItem(beam: BeamInput, kind: PaletteKind, x?: number): { beam:
   const at = round3(clamp(x ?? L / 2, 0, L))
   let load: Load
   if (kind === 'point') load = { id: newId('l'), type: 'point', position: at, magnitude: -10, fx: 0 }
+  else if (kind === 'horizontal_point') load = { id: newId('l'), type: 'point', position: at, magnitude: 0, fx: 10 }
+  else if (kind === 'inclined_point') load = { id: newId('l'), type: 'point', position: at, magnitude: -10, fx: 10 }
   else if (kind === 'moment') load = { id: newId('l'), type: 'moment', position: at, magnitude: 10 }
   else {
     const width = Math.min(2, L)

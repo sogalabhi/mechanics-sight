@@ -30,7 +30,14 @@ function inputTables(beam: BeamInput): string {
   const name = letters(beam)
   const sup = [...beam.supports]
     .sort((a, b) => a.position - b.position)
-    .map((s) => `<tr><td>${name.get(s.id)}</td><td>${s.type}</td><td class="n">${formatQty(s.position, 'm')}</td></tr>`)
+    .map((s) => {
+      const extras: string[] = []
+      if (s.settlement) extras.push(`settlement ${formatNumber(s.settlement * 1000)} mm`)
+      if (s.spring_ky) extras.push(`spring ky ${s.spring_ky} kN/m`)
+      if (s.spring_ktheta) extras.push(`spring kθ ${s.spring_ktheta} kN·m/rad`)
+      const typeStr = extras.length ? `${s.type} (${extras.join(', ')})` : s.type
+      return `<tr><td>${name.get(s.id)}</td><td>${typeStr}</td><td class="n">${formatQty(s.position, 'm')}</td></tr>`
+    })
     .join('')
   const loads = (beam.loads ?? [])
     .map((l) => {
@@ -144,6 +151,14 @@ footer{margin-top:32px;color:var(--ink-2);font-size:12px}
 @media print{body{background:#fff}main{padding:0}}
 `
 
+const METHOD_LABELS: Record<string, string> = {
+  force_method: 'Force Method (Consistent Deformations)',
+  slope_deflection: 'Slope-Deflection Method',
+  moment_distribution: 'Moment Distribution Method (Hardy Cross)',
+  three_moment: 'Theorem of Three Moments (Clapeyron)',
+  direct_stiffness: 'Direct Stiffness Method (1D FEM)',
+}
+
 export function buildReportHtml(r: ReportInput): string {
   const cls = r.result.classification
   const status =
@@ -154,6 +169,9 @@ export function buildReportHtml(r: ReportInput): string {
         : cls.bending_degree > 0
           ? `Statically indeterminate, degree ${cls.bending_degree} (bending)`
           : `Statically indeterminate, degree ${cls.axial_degree} (axial)`
+  const methodTitle = r.result.selected_method
+    ? ` — ${METHOD_LABELS[r.result.selected_method] ?? r.result.selected_method}`
+    : ''
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Beam report</title>
@@ -176,7 +194,7 @@ ${r.figures.sfd}
 <h2>Bending moment diagram</h2>
 ${r.figures.bmd}
 
-<h2>Calculation steps</h2>
+<h2>Calculation steps${methodTitle}</h2>
 ${stepsHtml(r.steps)}
 
 <footer>Sign convention: forces and w upward +, couples anticlockwise +, V(x) = sum of vertical forces left of the cut, M(x) sagging +, Fx rightward +, N(x) tension +. Units: m, kN, kN·m, kN/m.</footer>

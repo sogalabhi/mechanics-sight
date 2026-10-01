@@ -39,6 +39,8 @@ def generate_moment_distribution_steps(beam: Beam, result: AnalysisResult) -> li
         )
     )
 
+    letters = {s.id: chr(ord("A") + i) for i, s in enumerate(supports)}
+
     # 2. Stiffness and Distribution Factors (DF)
     df_entries = []
     for i in range(num_supports - 1):
@@ -57,10 +59,11 @@ def generate_moment_distribution_steps(beam: Beam, result: AnalysisResult) -> li
         else:
             df_right = "0.50"
 
+        la, lb = letters[s_left.id], letters[s_right.id]
         df_entries.append(
-            f"\\text{{Span }} {s_left.id}{s_right.id}\\ (L = {_num(l_span)}\\,\\text{{m}}):\\ "
-            f"DF_{{{s_left.id}{s_right.id}}} = {df_left},\\quad "
-            f"DF_{{{s_right.id}{s_left.id}}} = {df_right}"
+            f"\\text{{Span }} {la}{lb}\\ (L = {_num(l_span)}\\,\\text{{m}}):\\ "
+            f"DF_{{{la}{lb}}} = {df_left},\\quad "
+            f"DF_{{{lb}{la}}} = {df_right}"
         )
 
     steps.append(
@@ -98,12 +101,12 @@ def generate_moment_distribution_steps(beam: Beam, result: AnalysisResult) -> li
 
     # 4. Final End Moments & Support Reactions
     sol_reacs = ",\\quad ".join(
-        f"R_{{{s.id}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
         for s in supports
     )
     if any(s.kind is SupportKind.FIXED for s in supports):
         mom_reacs = ",\\quad ".join(
-            f"M_{{{s.id}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
+            f"M_{{{letters[s.id]}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
             for s in supports
             if s.kind is SupportKind.FIXED
         )

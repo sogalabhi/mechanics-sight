@@ -41,7 +41,8 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
     )
 
     reacs = {r.support_id: r for r in result.reactions}
-    supports = list(beam.supports)
+    supports = sorted(beam.supports, key=lambda s: s.position)
+    letters = {s.id: chr(ord("A") + i) for i, s in enumerate(supports)}
 
     # Detect case type for textbook steps
     is_propped_cantilever = (
@@ -65,6 +66,8 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
         ra = reacs[fixed_s.id].fy
         ma = reacs[fixed_s.id].moment
         l_span = beam.length
+        fixed_l = letters[fixed_s.id]
+        prop_l = letters[prop_s.id]
 
         # 2. Primary Structure & Redundant Selection
         steps.append(
@@ -72,11 +75,11 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                 "supports",
                 "reactions",
                 "Select Primary Determinate Structure",
-                symbolic=r"\text{Redundant } X_1 = R_B",
-                result=r"\text{Primary structure: Cantilever beam fixed at support } A",
+                symbolic=f"\\text{{Redundant }} X_1 = R_{{{prop_l}}}",
+                result=f"\\text{{Primary structure: Cantilever beam fixed at support }} {fixed_l}",
                 notes=(
-                    f"Release the vertical restraint at roller support '{prop_s.id}' at x = {_num(prop_s.position)} m. "
-                    f"The redundant force is chosen as the reaction X_1 = R_B.",
+                    f"Release the vertical restraint at support '{prop_l}' at x = {_num(prop_s.position)} m. "
+                    f"The redundant force is chosen as the reaction X_1 = R_{{{prop_l}}}.",
                 ),
             )
         )
@@ -138,7 +141,7 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                     f"\\frac{{{_num(delta_10_ei)}}}{{EI}} + "
                     f"\\left(\\frac{{{_num(l_span**3 / 3.0)}}}{{EI}}\\right) X_1" + settlement_sub
                 ),
-                result=f"X_1 = R_{{{prop_s.id}}} = {_num(rb)}\\,\\text{{kN}}",
+                result=f"X_1 = R_{{{prop_l}}} = {_num(rb)}\\,\\text{{kN}}",
                 notes=(
                     "The net displacement at the support must equal the prescribed boundary displacement.",
                 ),
@@ -153,19 +156,20 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                 "Equilibrium of Remaining Support Reactions",
                 symbolic=r"\sum F_y = 0,\quad \sum M_A = 0",
                 substituted=(
-                    f"R_{{{fixed_s.id}}} + R_{{{prop_s.id}}} + \\sum F_{{\\text{{applied}}}} = 0,\\quad "
-                    f"M_{{{fixed_s.id}}} + R_{{{prop_s.id}}}\\,L + \\sum M_{{\\text{{applied}}}} = 0"
+                    f"R_{{{fixed_l}}} + R_{{{prop_l}}} + \\sum F_{{\\text{{applied}}}} = 0,\\quad "
+                    f"M_{{{fixed_l}}} + R_{{{prop_l}}}\\,L + \\sum M_{{\\text{{applied}}}} = 0"
                 ),
                 result=(
-                    f"R_{{{fixed_s.id}}} = {_num(ra)}\\,\\text{{kN}},\\quad "
-                    f"M_{{{fixed_s.id}}} = {_num(ma)}\\,\\text{{kN·m}},\\quad "
-                    f"R_{{{prop_s.id}}} = {_num(rb)}\\,\\text{{kN}}"
+                    f"R_{{{fixed_l}}} = {_num(ra)}\\,\\text{{kN}},\\quad "
+                    f"M_{{{fixed_l}}} = {_num(ma)}\\,\\text{{kN·m}},\\quad "
+                    f"R_{{{prop_l}}} = {_num(rb)}\\,\\text{{kN}}"
                 ),
             )
         )
 
     elif is_fixed_fixed:
         s_left, s_right = supports[0], supports[1]
+        la, lb = letters[s_left.id], letters[s_right.id]
         l_span = beam.length
         rb = reacs[s_right.id].fy
         mb = reacs[s_right.id].moment
@@ -177,11 +181,11 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                 "supports",
                 "reactions",
                 "Select Primary Determinate Structure",
-                symbolic=r"\text{Redundants: } X_1 = R_B,\quad X_2 = M_B",
-                result=r"\text{Primary structure: Cantilever beam fixed at support } A",
+                symbolic=f"\\text{{Redundants: }} X_1 = R_{{{lb}}},\\quad X_2 = M_{{{lb}}}",
+                result=f"\\text{{Primary structure: Cantilever beam fixed at support }} {la}",
                 notes=(
-                    f"Release the vertical restraint and rotational clamping at support '{s_right.id}' (x = {_num(s_right.position)} m). "
-                    "The two redundant reactions are X_1 = R_B (shear) and X_2 = M_B (moment).",
+                    f"Release the vertical restraint and rotational clamping at support '{lb}' (x = {_num(s_right.position)} m). "
+                    f"The two redundant reactions are X_1 = R_{{{lb}}} (shear) and X_2 = M_{{{lb}}} (moment).",
                 ),
             )
         )
@@ -231,8 +235,8 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                     f"-\\begin{bmatrix} {_num(delta_10)} \\\\ {_num(theta_20)} \\end{bmatrix}"
                 ),
                 result=(
-                    f"X_1 = R_{{{s_right.id}}} = {_num(rb)}\\,\\text{{kN}},\\quad "
-                    f"X_2 = M_{{{s_right.id}}} = {_num(mb)}\\,\\text{{kN·m}}"
+                    f"X_1 = R_{{{lb}}} = {_num(rb)}\\,\\text{{kN}},\\quad "
+                    f"X_2 = M_{{{lb}}} = {_num(mb)}\\,\\text{{kN·m}}"
                 ),
             )
         )
@@ -241,17 +245,20 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
             Step(
                 "reactions",
                 "reactions",
-                "Equilibrium of Support A",
+                "Equilibrium of Support Reactions",
                 symbolic=r"\sum F_y = 0,\quad \sum M_A = 0",
                 result=(
-                    f"R_{{{s_left.id}}} = {_num(ra)}\\,\\text{{kN}},\\quad "
-                    f"M_{{{s_left.id}}} = {_num(ma)}\\,\\text{{kN·m}}"
+                    f"R_{{{la}}} = {_num(ra)}\\,\\text{{kN}},\\quad "
+                    f"M_{{{la}}} = {_num(ma)}\\,\\text{{kN·m}},\\quad "
+                    f"R_{{{lb}}} = {_num(rb)}\\,\\text{{kN}},\\quad "
+                    f"M_{{{lb}}} = {_num(mb)}\\,\\text{{kN·m}}"
                 ),
             )
         )
 
     elif is_continuous_2span:
         s_left, s_mid, s_right = supports[0], supports[1], supports[2]
+        la, lb, lc = letters[s_left.id], letters[s_mid.id], letters[s_right.id]
         l1 = s_mid.position - s_left.position
         l2 = s_right.position - s_mid.position
         rb = reacs[s_mid.id].fy
@@ -263,10 +270,10 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                 "supports",
                 "reactions",
                 "Select Primary Determinate Structure",
-                symbolic=r"\text{Redundant } X_1 = R_B",
-                result=r"\text{Primary structure: Simply supported beam spanning from support } A \text{ to } C",
+                symbolic=f"\\text{{Redundant }} X_1 = R_{{{lb}}}",
+                result=f"\\text{{Primary structure: Simply supported beam spanning from support }} {la} \\text{{ to }} {lc}",
                 notes=(
-                    f"Release the interior roller support '{s_mid.id}' at x = {_num(s_mid.position)} m. "
+                    f"Release the interior roller support '{lb}' at x = {_num(s_mid.position)} m. "
                     "The primary structure is a single span of length L = L_1 + L_2.",
                 ),
             )
@@ -297,7 +304,7 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                 "Compatibility Equation & Redundant Reaction",
                 symbolic=r"\Delta_{10} + f_{11} X_1 = 0 \implies X_1 = -\frac{\Delta_{10}}{f_{11}}",
                 substituted=f"\\frac{{{_num(delta_10_ei)}}}{{EI}} + \\left(\\frac{{{_num(f11_ei)}}}{{EI}}\\right) X_1 = 0",
-                result=f"X_1 = R_{{{s_mid.id}}} = {_num(rb)}\\,\\text{{kN}}",
+                result=f"X_1 = R_{{{lb}}} = {_num(rb)}\\,\\text{{kN}}",
             )
         )
 
@@ -307,7 +314,11 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                 "reactions",
                 "End Reactions from Statics",
                 symbolic=r"\sum M_C = 0,\quad \sum F_y = 0",
-                result=f"R_{{{s_left.id}}} = {_num(ra)}\\,\\text{{kN}},\\quad R_{{{s_right.id}}} = {_num(rc)}\\,\\text{{kN}}",
+                result=(
+                    f"R_{{{la}}} = {_num(ra)}\\,\\text{{kN}},\\quad "
+                    f"R_{{{lb}}} = {_num(rb)}\\,\\text{{kN}},\\quad "
+                    f"R_{{{lc}}} = {_num(rc)}\\,\\text{{kN}}"
+                ),
             )
         )
 
@@ -327,9 +338,16 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
             )
         )
         sol_reacs = ",\\quad ".join(
-            f"R_{{{s.id}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
+            f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
             for s in supports
         )
+        if any(s.kind is SupportKind.FIXED for s in supports):
+            mom_reacs = ",\\quad ".join(
+                f"M_{{{letters[s.id]}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
+                for s in supports
+                if s.kind is SupportKind.FIXED
+            )
+            sol_reacs += f";\\quad {mom_reacs}"
         steps.append(
             Step(
                 "reactions",

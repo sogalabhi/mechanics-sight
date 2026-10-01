@@ -1,0 +1,234 @@
+{
+  "name": "20_fixed_fixed_point_load",
+  "input": {
+    "schema_version": 1,
+    "length": 6.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "fixed",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "fixed",
+        "position": 6.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "p1",
+        "type": "point",
+        "position": 3.0,
+        "magnitude": -12.0,
+        "fx": 0.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 6.0,
+      "moment": 9.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 6.0,
+      "moment": -9.0
+    },
+    {
+      "x": 0.0,
+      "side": "right",
+      "shear": 6.0
+    },
+    {
+      "x": 3.0,
+      "side": "left",
+      "shear": 6.0
+    },
+    {
+      "x": 3.0,
+      "side": "right",
+      "shear": -6.0
+    },
+    {
+      "x": 6.0,
+      "side": "left",
+      "shear": -6.0
+    },
+    {
+      "x": 0.0,
+      "side": "right",
+      "moment": -9.0
+    },
+    {
+      "x": 3.0,
+      "side": "left",
+      "moment": 9.0
+    },
+    {
+      "x": 6.0,
+      "side": "left",
+      "moment": -9.0
+    },
+    {
+      "zero_shear": 3.0
+    },
+    {
+      "extreme": "max_sagging",
+      "x": 3.0,
+      "value": 9.0
+    },
+    {
+      "extreme": "max_hogging",
+      "x": 0.0,
+      "value": -9.0
+    },
+    {
+      "classification": {
+        "status": "indeterminate",
+        "axial_degree": 1,
+        "bending_degree": 2
+      }
+    }
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "indeterminate",
+      "restraints": 6,
+      "equations": 3,
+      "degree": 3,
+      "axial_degree": 1,
+      "bending_degree": 2,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "s1",
+        "fx": 0.0,
+        "fy": 6.0,
+        "moment": 9.0
+      },
+      {
+        "support_id": "s2",
+        "fx": 0.0,
+        "fy": 6.0,
+        "moment": -9.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 3.0,
+        "shear": [
+          6.0
+        ],
+        "moment": [
+          -9.0,
+          6.0
+        ],
+        "axial": [
+          0.0
+        ]
+      },
+      {
+        "x_start": 3.0,
+        "x_end": 6.0,
+        "shear": [
+          -6.0
+        ],
+        "moment": [
+          9.0,
+          -6.0
+        ],
+        "axial": [
+          0.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 6.0,
+        "moment_left": 0.0,
+        "moment_right": -9.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      },
+      {
+        "x": 3.0,
+        "shear_left": 6.0,
+        "shear_right": -6.0,
+        "moment_left": 9.0,
+        "moment_right": 9.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      },
+      {
+        "x": 6.0,
+        "shear_left": -6.0,
+        "shear_right": 0.0,
+        "moment_left": -9.0,
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      }
+    ],
+    "zero_shear_points": [
+      3.0
+    ],
+    "extremes": {
+      "max_sagging": {
+        "x": 3.0,
+        "value": 9.0
+      },
+      "max_hogging": {
+        "x": 0.0,
+        "value": -9.0
+      },
+      "max_positive_shear": {
+        "x": 0.0,
+        "value": 6.0
+      },
+      "max_negative_shear": {
+        "x": 3.0,
+        "value": -6.0
+      },
+      "max_tension": null,
+      "max_compression": null
+    },
+    "warnings": [
+      "Horizontal reactions are statically indeterminate but exactly zero: there are no horizontal loads."
+    ],
+    "canonical": {
+      "case_id": "fixed_fixed_point_mid",
+      "name": "Fixed\u2013Fixed Beam with Central Point Load",
+      "symbolic_formula": "M_{\\text{ends}} = -\\frac{PL}{8}, \\quad M_{\\text{mid}} = +\\frac{PL}{8}",
+      "symbolic_reactions": "R_A = R_B = \\frac{P}{2}, \\quad M_{\\text{ends}} = -\\frac{PL}{8}",
+      "substituted_formula": "M_{\\text{ends}} = -\\frac{(12\\ \\text{kN}) \\cdot (6\\ \\text{m})}{8}, \\quad M_{\\text{mid}} = +\\frac{(12\\ \\text{kN}) \\cdot (6\\ \\text{m})}{8}",
+      "result_text": "M_{\\text{ends}} = -9\\ \\text{kN\u00b7m}, \\quad M_{\\text{mid}} = 9\\ \\text{kN\u00b7m}",
+      "location_text": "x = 0, 6\\ \\text{m}\\ (\\text{wall}), \\quad x = 3\\ \\text{m}\\ (\\text{mid})",
+      "derivation": [
+        "1.\\ \\text{Fixed-End Moments}:",
+        "\\mathbf{M_A = M_B = -\\frac{PL}{8}}\\ \\text{(hogging)}",
+        "2.\\ \\text{Vertical Reactions by Symmetry}:",
+        "\\mathbf{R_A = R_B = \\frac{P}{2}}",
+        "3.\\ \\text{Midspan Bending Moment (Sagging)}:",
+        "M\\left(\\frac{L}{2}\\right) = M_A + R_A \\left(\\frac{L}{2}\\right) = -\\frac{PL}{8} + \\frac{PL}{4} = \\mathbf{+\\frac{PL}{8}}",
+        "4.\\ \\text{Points of Inflection}:",
+        "x = \\frac{L}{4}, \\quad x = \\frac{3L}{4}"
+      ]
+    },
+    "available_methods": [
+      "direct_stiffness",
+      "force_method",
+      "slope_deflection",
+      "moment_distribution"
+    ],
+    "selected_method": "slope_deflection"
+  }
+}

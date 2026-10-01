@@ -13,9 +13,14 @@ const LABELS: Record<string, string> = {
   '10_cantilever_couple_free_end': 'Cantilever, couple at free end',
   '11_no_loads': 'Simply supported, no loads',
   '12_pin_pin': 'Pin–pin (axial degree 1)',
+  '13_gerber_beam': 'Gerber beam (internal hinge, M = 0)',
   '14_ss_inclined': 'Simply supported, inclined load',
   '15_cantilever_compression': 'Cantilever, axial compression',
   '16_axial_tension_compression': 'Axial tension and compression',
+  '17_propped_cantilever_udl': 'Propped cantilever, UDL (degree 1)',
+  '18_fixed_fixed_udl': 'Fixed–fixed, UDL (degree 2)',
+  '19_continuous_two_span': 'Continuous beam, 2 spans UDL (degree 1)',
+  '20_fixed_fixed_point_load': 'Fixed–fixed, point load (degree 2)',
 }
 
 const files = import.meta.glob('../../../shared/fixtures/*.json', { eager: true }) as Record<
@@ -23,28 +28,11 @@ const files = import.meta.glob('../../../shared/fixtures/*.json', { eager: true 
   { default: { name: string; input: BeamInput } }
 >
 
-const GERBER_PRESET = {
-  key: '13_gerber_beam',
-  label: 'Gerber beam (internal hinge, M = 0)',
-  beam: {
-    schema_version: 1 as const,
-    length: 10,
-    supports: [
-      { id: 's1', type: 'fixed' as const, position: 0 },
-      { id: 's2', type: 'roller' as const, position: 10 },
-    ],
-    loads: [
-      { id: 'l1', type: 'point' as const, position: 8, magnitude: -10, fx: 0 },
-    ],
-    hinges: [6],
-  },
-}
-
-export const EXAMPLES = [
-  ...Object.values(files).map((m) => ({
+export const EXAMPLES = Object.values(files)
+  .map((m) => ({
     key: m.default.name,
     label: LABELS[m.default.name] ?? m.default.name,
     beam: m.default.input,
-  })),
-  GERBER_PRESET,
-].sort((a, b) => a.key.localeCompare(b.key))
+  }))
+  .sort((a, b) => a.key.localeCompare(b.key))
+

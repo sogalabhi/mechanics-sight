@@ -112,7 +112,7 @@ export function BeamView() {
               ? `Point load ${formatNumber(Math.hypot(fx, item.magnitude))} kN at ${formatQty(item.position, 'm')}`
               : `Point load ${Math.abs(item.magnitude)} kN ${item.magnitude < 0 ? 'down' : 'up'} at ${formatQty(item.position, 'm')}`
           return (
-            <Selectable key={item.id} item={item} bounds={[x(item.position) - 36, -72, x(item.position) + 36, -2]}
+            <Selectable key={item.id} item={item} bounds={[x(item.position) - 36, -72, x(item.position) + 36, 8]}
               label={desc}>
               <PointLoad x={x(item.position)} magnitude={item.magnitude} fx={fx} state={st} />
             </Selectable>

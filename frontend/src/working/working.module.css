@@ -1,5 +1,4 @@
 .toggle { width: 100%; height: 28px; margin-top: 16px; font: inherit; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
-.length > label > .inputWrap > .unit {display: none;}
 .group { margin: 16px 0 4px; font-size: 11px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
 .list { margin: 0; padding: 0; list-style: none; }
 .step { padding: 8px 0; border-top: 1px solid var(--grid); }

@@ -20,6 +20,14 @@ describe('addItem', () => {
     expect(res.beam.hinges).toEqual([4])
     expect(res.id).toBe('hinge-0')
   })
+  it('creates a horizontal point load with magnitude 0 and fx 10', () => {
+    const l = addItem(emptyBeam(6), 'horizontal_point', 3).beam.loads![0]
+    expect(l).toMatchObject({ type: 'point', position: 3, magnitude: 0, fx: 10 })
+  })
+  it('creates an inclined point load with magnitude -10 and fx 10', () => {
+    const l = addItem(emptyBeam(6), 'inclined_point', 3).beam.loads![0]
+    expect(l).toMatchObject({ type: 'point', position: 3, magnitude: -10, fx: 10 })
+  })
 })
 
 describe('setLength', () => {

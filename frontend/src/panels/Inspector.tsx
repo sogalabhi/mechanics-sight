@@ -1,6 +1,7 @@
 import { useState } from 'react'
+import { formatNumber } from '@/math/format'
 import { gridStep } from '@/math/snap'
-import { findItem, removeItem, round3, updateItem, validateBeam } from '@/model/actions'
+import { findItem, removeItem, round3, setLength, updateItem, validateBeam } from '@/model/actions'
 import { isSupport, type Item } from '@/model/types'
 import { useStore } from '@/store/store'
 import { NumberField } from '@/ui/NumberField'
@@ -13,7 +14,13 @@ function typeName(i: Item): string {
     case 'roller': return 'Roller support'
     case 'fixed': return 'Fixed support'
     case 'hinge': return 'Internal hinge'
-    case 'point': return 'Point load'
+    case 'point': {
+      const hasFx = Math.abs(i.fx ?? 0) > 1e-6
+      const hasFy = Math.abs(i.magnitude) > 1e-6
+      if (hasFx && hasFy) return 'Inclined point load'
+      if (hasFx) return 'Horizontal point load'
+      return 'Point load'
+    }
     case 'moment': return 'Moment'
     case 'distributed':
       if (i.w_start === i.w_end) return 'UDL'
@@ -30,8 +37,29 @@ export function Inspector({ compact = false }: { compact?: boolean }) {
 
   if (!item) return (
     <div>
-      <h2 className={styles.title}>Inspector</h2>
-      <p className={styles.hint}>Select an item on the beam to edit it.</p>
+      <h2 className={styles.title}>Beam Properties</h2>
+      <NumberField
+        label="Beam Length"
+        unit="m"
+        step={0.5}
+        value={beam.length}
+        onCommit={(v) => {
+          if (v <= 0) return 'Must be greater than 0'
+          const next = setLength(beam, v)
+          const err = validateBeam(next)
+          if (err) return err
+          commit(next)
+          return next.length !== v ? `Adjusted to ${next.length} m` : null
+        }}
+      />
+      <div className={styles.hint} style={{ marginTop: 12, fontSize: 12 }}>
+        <p style={{ margin: '4px 0' }}>Supports: {beam.supports.length}</p>
+        <p style={{ margin: '4px 0' }}>Loads: {(beam.loads ?? []).length}</p>
+        {(beam.hinges?.length ?? 0) > 0 && <p style={{ margin: '4px 0' }}>Hinges: {beam.hinges?.length}</p>}
+      </div>
+      <p className={styles.hint} style={{ marginTop: 16 }}>
+        Select an item on the beam to edit its position and properties.
+      </p>
     </div>
   )
 
@@ -108,29 +136,96 @@ export function Inspector({ compact = false }: { compact?: boolean }) {
       ) : (
         <>
           {pos('Position', item.position, 'position')}
-          {item.type === 'point' && (
-            <>
-              <Segmented
-                label="Vertical"
-                value={item.magnitude < 0 ? 'down' : 'up'}
-                options={[{ value: 'down', label: '↓ Down' }, { value: 'up', label: '↑ Up' }]}
-                onChange={(d) => apply({ magnitude: Math.abs(item.magnitude) * (d === 'down' ? -1 : 1) })}
-              />
-              <NumberField label="Fy" unit="kN" value={Math.abs(item.magnitude)}
-                onCommit={positive((v) => apply({ magnitude: v * (item.magnitude < 0 ? -1 : 1) }))} />
-              <Segmented
-                label="Horizontal"
-                value={(item.fx ?? 0) >= 0 ? 'right' : 'left'}
-                options={[{ value: 'right', label: '→ Right' }, { value: 'left', label: '← Left' }]}
-                onChange={(d) => {
-                  const mag = Math.abs(item.fx ?? 0) || 0
-                  apply({ fx: mag * (d === 'left' ? -1 : 1) })
-                }}
-              />
-              <NumberField label="Fx" unit="kN" value={Math.abs(item.fx ?? 0)}
-                onCommit={(v) => apply({ fx: v * ((item.fx ?? 0) < 0 ? -1 : 1) })} />
-            </>
-          )}
+          {item.type === 'point' && (() => {
+            const fx = item.fx ?? 0
+            const fy = item.magnitude
+            const absFx = Math.abs(fx)
+            const absFy = Math.abs(fy)
+            const hasFx = absFx > 1e-6
+            const hasFy = absFy > 1e-6
+            const mode = hasFx && hasFy ? 'inclined' : hasFx ? 'horizontal' : 'vertical'
+            const hypot = Math.hypot(absFx, absFy)
+            const deg = hypot > 1e-6 ? round3((Math.atan2(absFy, absFx) * 180) / Math.PI) : 90
+
+            return (
+              <>
+                <Segmented
+                  label="Load orientation"
+                  value={mode}
+                  options={[
+                    { value: 'vertical', label: 'Vertical' },
+                    { value: 'horizontal', label: 'Horizontal' },
+                    { value: 'inclined', label: 'Inclined' },
+                  ]}
+                  onChange={(m) => {
+                    if (m === 'vertical') {
+                      apply({ fx: 0, magnitude: fy !== 0 ? fy : -10 })
+                    } else if (m === 'horizontal') {
+                      apply({ magnitude: 0, fx: fx !== 0 ? fx : 10 })
+                    } else {
+                      apply({
+                        fx: fx !== 0 ? fx : 10,
+                        magnitude: fy !== 0 ? fy : -10,
+                      })
+                    }
+                  }}
+                />
+
+                {mode !== 'horizontal' && (
+                  <>
+                    <Segmented
+                      label="Vertical direction"
+                      value={fy < 0 ? 'down' : 'up'}
+                      options={[{ value: 'down', label: '↓ Down' }, { value: 'up', label: '↑ Up' }]}
+                      onChange={(d) => apply({ magnitude: Math.abs(fy || 10) * (d === 'down' ? -1 : 1) })}
+                    />
+                    <NumberField
+                      label={mode === 'inclined' ? 'Vertical component |Fy|' : 'Magnitude |Fy|'}
+                      unit="kN"
+                      value={absFy}
+                      onCommit={(v) => {
+                        if (v < 0) return 'Must not be negative'
+                        if (v === 0 && mode === 'vertical') return 'Vertical load cannot be 0'
+                        if (v === 0 && absFx === 0) return 'Load cannot be 0'
+                        return apply({ magnitude: v * (fy < 0 ? -1 : 1) })
+                      }}
+                    />
+                  </>
+                )}
+
+                {mode !== 'vertical' && (
+                  <>
+                    <Segmented
+                      label="Horizontal direction"
+                      value={fx >= 0 ? 'right' : 'left'}
+                      options={[{ value: 'right', label: '→ Right' }, { value: 'left', label: '← Left' }]}
+                      onChange={(d) => {
+                        const mag = Math.abs(fx || 10) || 10
+                        apply({ fx: mag * (d === 'left' ? -1 : 1) })
+                      }}
+                    />
+                    <NumberField
+                      label={mode === 'inclined' ? 'Horizontal component |Fx|' : 'Magnitude |Fx|'}
+                      unit="kN"
+                      value={absFx}
+                      onCommit={(v) => {
+                        if (v < 0) return 'Must not be negative'
+                        if (v === 0 && mode === 'horizontal') return 'Horizontal load cannot be 0'
+                        if (v === 0 && absFy === 0) return 'Load cannot be 0'
+                        return apply({ fx: v * (fx < 0 ? -1 : 1) })
+                      }}
+                    />
+                  </>
+                )}
+
+                {mode === 'inclined' && (
+                  <div style={{ marginTop: 8, padding: '6px 8px', background: 'var(--grid)', borderRadius: 'var(--radius)', fontSize: 12 }}>
+                    <strong>Resultant:</strong> {formatNumber(hypot)} kN at {deg}° to horizontal
+                  </div>
+                )}
+              </>
+            )
+          })()}
           {item.type === 'moment' && (
             <>
               <Segmented

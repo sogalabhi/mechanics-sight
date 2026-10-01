@@ -15,7 +15,8 @@ FIXTURES_DIR = Path(__file__).resolve().parents[2] / "shared" / "fixtures"
 def main() -> None:
     for path in sorted(FIXTURES_DIR.glob("*.json")):
         data = json.loads(path.read_text())
-        data["output"] = result_to_json(analyze(beam_from_json(data["input"])))
+        beam = beam_from_json(data["input"])
+        data["output"] = result_to_json(analyze(beam), beam=beam)
         path.write_text(json.dumps(data, indent=2) + "\n")
         print(f"updated {path.name}")
 

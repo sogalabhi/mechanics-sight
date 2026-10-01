@@ -79,14 +79,15 @@ def generate_direct_stiffness_steps(beam: Beam, result: AnalysisResult) -> list[
     )
 
     # 4. Solved Reactions
+    letters = {s.id: chr(ord("A") + i) for i, s in enumerate(supports)}
     reacs = {r.support_id: r for r in result.reactions}
     sol_reacs = ",\\quad ".join(
-        f"R_{{{s.id}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
         for s in supports
     )
     if any(s.kind is SupportKind.FIXED for s in supports):
         mom_reacs = ",\\quad ".join(
-            f"M_{{{s.id}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
+            f"M_{{{letters[s.id]}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
             for s in supports
             if s.kind is SupportKind.FIXED
         )

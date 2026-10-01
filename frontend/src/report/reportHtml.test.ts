@@ -58,3 +58,28 @@ it('includes axial input, extremes, exact values and AFD in reports', () => {
   expect(report).toContain('Max tension')
   expect(report).toContain('N left (kN)')
 })
+
+it('includes selected solution method and settlement/spring supports in reports', () => {
+  const report = buildReportHtml({
+    beam: {
+      ...input,
+      supports: [
+        { id: 's1', type: 'pin', position: 0, settlement: 0.005 },
+        { id: 's2', type: 'roller', position: 6, spring_ky: 500, spring_ktheta: 200 },
+      ],
+    },
+    result: {
+      ...output,
+      selected_method: 'force_method',
+      classification: { status: 'indeterminate', degree: 1, bending_degree: 1, axial_degree: 0, equations: 3, restraints: 4 },
+    },
+    steps: [],
+    figures: { beam: '', sfd: '', bmd: '' },
+    date: '2026-10-01',
+  })
+  expect(report).toContain('Calculation steps — Force Method (Consistent Deformations)')
+  expect(report).toContain('settlement 5.000 mm')
+  expect(report).toContain('spring ky 500 kN/m')
+  expect(report).toContain('spring kθ 200 kN·m/rad')
+})
+

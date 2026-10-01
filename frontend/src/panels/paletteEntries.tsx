@@ -27,7 +27,9 @@ export const ENTRIES: { group: string; items: { kind: PaletteKind; name: string;
   {
     group: 'Loads',
     items: [
-      { kind: 'point', name: 'Point load', box: '-12 -60 24 60', art: <PointLoad x={0} magnitude={p(-1)} /> },
+      { kind: 'point', name: 'Vertical load', box: '-12 -60 24 60', art: <PointLoad x={0} magnitude={p(-1)} fx={0} /> },
+      { kind: 'horizontal_point', name: 'Horizontal load', box: '-52 -28 56 36', art: <PointLoad x={0} magnitude={0} fx={1} /> },
+      { kind: 'inclined_point', name: 'Inclined load', box: '-45 -58 56 60', art: <PointLoad x={0} magnitude={-1} fx={1} /> },
       { kind: 'moment', name: 'Moment', box: '-20 -24 40 32', art: <Couple x={0} magnitude={1} /> },
       { kind: 'udl', name: 'UDL', box: '-20 -50 40 50', art: <DistributedLoad xs={-16} xe={16} w1={-1} w2={-1} wMax={1} /> },
       { kind: 'uvl', name: 'UVL', box: '-20 -50 40 50', art: <DistributedLoad xs={-16} xe={16} w1={0} w2={-1} wMax={1} /> },

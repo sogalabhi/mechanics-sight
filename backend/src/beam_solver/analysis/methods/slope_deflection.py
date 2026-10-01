@@ -43,6 +43,8 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
 
     reacs = {r.support_id: r for r in result.reactions}
 
+    letters = {s.id: chr(ord("A") + i) for i, s in enumerate(supports)}
+
     # 2. Fixed-End Moments for each span
     fems_summary = []
     for i in range(num_supports - 1):
@@ -55,9 +57,10 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
         fem_left = -reacs[s_left.id].moment if s_left.kind is SupportKind.FIXED else 0.0
         fem_right = reacs[s_right.id].moment if s_right.kind is SupportKind.FIXED else 0.0
 
+        la, lb = letters[s_left.id], letters[s_right.id]
         fems_summary.append(
-            f"M^F_{{{s_left.id}{s_right.id}}} = {_num(fem_left)}\\,\\text{{kN·m}},\\quad "
-            f"M^F_{{{s_right.id}{s_left.id}}} = {_num(fem_right)}\\,\\text{{kN·m}}"
+            f"M^F_{{{la}{lb}}} = {_num(fem_left)}\\,\\text{{kN·m}},\\quad "
+            f"M^F_{{{lb}{la}}} = {_num(fem_right)}\\,\\text{{kN·m}}"
         )
 
     steps.append(
@@ -76,10 +79,11 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
     # 3. Boundary Conditions
     bc_rotations = []
     for s in supports:
+        lbl = letters[s.id]
         if s.kind is SupportKind.FIXED:
-            bc_rotations.append(f"\\theta_{{{s.id}}} = 0\\quad (\\text{{clamped}})")
+            bc_rotations.append(f"\\theta_{{{lbl}}} = 0\\quad (\\text{{clamped}})")
         else:
-            bc_rotations.append(f"\\theta_{{{s.id}}}\\ \\text{{free}}")
+            bc_rotations.append(f"\\theta_{{{lbl}}}\\ \\text{{free}}")
 
     steps.append(
         Step(
@@ -94,7 +98,7 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
     # 4. Joint Equilibrium Equations
     interior_joints = [s for s in supports if s.kind not in (SupportKind.FIXED,) and s != supports[0] and s != supports[-1]]
     if interior_joints:
-        eq_list = [f"\\sum M_{{{s.id}}} = 0 \\implies M_{{{s.id}\\text{{ left}}}} + M_{{{s.id}\\text{{ right}}}} = 0" for s in interior_joints]
+        eq_list = [f"\\sum M_{{{letters[s.id]}}} = 0 \\implies M_{{{letters[s.id]}\\text{{ left}}}} + M_{{{letters[s.id]}\\text{{ right}}}} = 0" for s in interior_joints]
         steps.append(
             Step(
                 "moment_balance",
@@ -108,12 +112,12 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
 
     # 5. Final Solved Support Reactions
     sol_reacs = ",\\quad ".join(
-        f"R_{{{s.id}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
         for s in supports
     )
     if any(s.kind is SupportKind.FIXED for s in supports):
         mom_reacs = ",\\quad ".join(
-            f"M_{{{s.id}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
+            f"M_{{{letters[s.id]}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
             for s in supports
             if s.kind is SupportKind.FIXED
         )

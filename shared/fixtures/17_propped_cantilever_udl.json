@@ -1,0 +1,199 @@
+{
+  "name": "17_propped_cantilever_udl",
+  "input": {
+    "schema_version": 1,
+    "length": 6.0,
+    "supports": [
+      {
+        "id": "s1",
+        "type": "fixed",
+        "position": 0.0
+      },
+      {
+        "id": "s2",
+        "type": "roller",
+        "position": 6.0
+      }
+    ],
+    "loads": [
+      {
+        "id": "d1",
+        "type": "distributed",
+        "start": 0.0,
+        "end": 6.0,
+        "w_start": -10.0,
+        "w_end": -10.0
+      }
+    ]
+  },
+  "checks": [
+    {
+      "reaction": "s1",
+      "fx": 0.0,
+      "fy": 37.5,
+      "moment": 45.0
+    },
+    {
+      "reaction": "s2",
+      "fx": 0.0,
+      "fy": 22.5,
+      "moment": 0.0
+    },
+    {
+      "x": 0.0,
+      "side": "right",
+      "shear": 37.5
+    },
+    {
+      "x": 6.0,
+      "side": "left",
+      "shear": -22.5
+    },
+    {
+      "x": 0.0,
+      "side": "right",
+      "moment": -45.0
+    },
+    {
+      "x": 6.0,
+      "side": "left",
+      "moment": 0.0
+    },
+    {
+      "zero_shear": 3.75
+    },
+    {
+      "extreme": "max_sagging",
+      "x": 3.75,
+      "value": 25.3125
+    },
+    {
+      "extreme": "max_hogging",
+      "x": 0.0,
+      "value": -45.0
+    },
+    {
+      "classification": {
+        "status": "indeterminate",
+        "axial_degree": 0,
+        "bending_degree": 1
+      }
+    }
+  ],
+  "output": {
+    "schema_version": 1,
+    "classification": {
+      "status": "indeterminate",
+      "restraints": 4,
+      "equations": 3,
+      "degree": 1,
+      "axial_degree": 0,
+      "bending_degree": 1,
+      "reason": null
+    },
+    "reactions": [
+      {
+        "support_id": "s1",
+        "fx": 0.0,
+        "fy": 37.5,
+        "moment": 45.0
+      },
+      {
+        "support_id": "s2",
+        "fx": 0.0,
+        "fy": 22.5,
+        "moment": 0.0
+      }
+    ],
+    "segments": [
+      {
+        "x_start": 0.0,
+        "x_end": 6.0,
+        "shear": [
+          37.5,
+          -10.0
+        ],
+        "moment": [
+          -45.0,
+          37.5,
+          -5.0
+        ],
+        "axial": [
+          0.0
+        ]
+      }
+    ],
+    "critical_points": [
+      {
+        "x": 0.0,
+        "shear_left": 0.0,
+        "shear_right": 37.5,
+        "moment_left": 0.0,
+        "moment_right": -45.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      },
+      {
+        "x": 6.0,
+        "shear_left": -22.5,
+        "shear_right": 0.0,
+        "moment_left": 0.0,
+        "moment_right": 0.0,
+        "axial_left": 0.0,
+        "axial_right": 0.0
+      }
+    ],
+    "zero_shear_points": [
+      3.75
+    ],
+    "extremes": {
+      "max_sagging": {
+        "x": 3.75,
+        "value": 25.3125
+      },
+      "max_hogging": {
+        "x": 0.0,
+        "value": -45.0
+      },
+      "max_positive_shear": {
+        "x": 0.0,
+        "value": 37.5
+      },
+      "max_negative_shear": {
+        "x": 6.0,
+        "value": -22.5
+      },
+      "max_tension": null,
+      "max_compression": null
+    },
+    "warnings": [],
+    "canonical": {
+      "case_id": "propped_cantilever_udl",
+      "name": "Propped Cantilever with Uniform Load (UDL)",
+      "symbolic_formula": "M_{\\text{wall}} = -\\frac{wL^2}{8}, \\quad M_{\\max} = \\frac{9wL^2}{128}",
+      "symbolic_reactions": "R_{\\text{roller}} = \\frac{3wL}{8}, \\quad R_{\\text{wall}} = \\frac{5wL}{8}",
+      "substituted_formula": "M_{\\text{wall}} = -\\frac{(10\\ \\text{kN/m}) \\cdot (6\\ \\text{m})^2}{8}, \\quad M_{\\max} = \\frac{9 \\cdot (10\\ \\text{kN/m}) \\cdot (6\\ \\text{m})^2}{128}",
+      "result_text": "M_{\\text{wall}} = -45\\ \\text{kN\u00b7m}, \\quad M_{\\max} = 25.312\\ \\text{kN\u00b7m}",
+      "location_text": "x = 3.75\\ \\text{m}\\ (\\text{peak})",
+      "derivation": [
+        "1.\\ \\text{Primary Released Structure (Cantilever with Roller Removed)}:",
+        "\\Delta_{B0} = -\\frac{wL^4}{8EI}\\ \\text{(free-end deflection)}",
+        "2.\\ \\text{Flexibility Influence of Redundant Force } R_B:",
+        "f_{BB} = \\frac{L^3}{3EI}\\ \\text{(displacement per unit force)}",
+        "3.\\ \\text{Compatibility Equation } (\\Delta_B = 0):",
+        "\\Delta_{B0} + R_B \\cdot f_{BB} = 0 \\implies -\\frac{wL^4}{8EI} + R_B \\left(\\frac{L^3}{3EI}\\right) = 0 \\implies \\mathbf{R_B = \\frac{3}{8}wL}",
+        "4.\\ \\text{Reactions and Moments by Statics}:",
+        "R_{\\text{wall}} = wL - R_B = \\mathbf{\\frac{5}{8}wL}, \\quad M_{\\text{wall}} = \\mathbf{-\\frac{1}{8}wL^2}",
+        "5.\\ \\text{Peak Sagging Moment at Zero Shear } (V=0):",
+        "\\mathbf{M_{\\max} = \\frac{9}{128}wL^2}"
+      ]
+    },
+    "available_methods": [
+      "direct_stiffness",
+      "force_method",
+      "slope_deflection",
+      "moment_distribution"
+    ],
+    "selected_method": "force_method"
+  }
+}

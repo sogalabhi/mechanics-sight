@@ -63,6 +63,8 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
         )
         support_moments.append(m_val)
 
+    letters = {s.id: chr(ord("A") + i) for i, s in enumerate(supports)}
+
     # 2. Clapeyron equation for each interior support
     for i in range(1, num_supports - 1):
         s_prev = supports[i - 1]
@@ -76,6 +78,8 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
         m_curr = support_moments[i]
         m_next = support_moments[i + 1]
 
+        la, lb, lc = letters[s_prev.id], letters[s_curr.id], letters[s_next.id]
+
         # Standard loading term 6Aa/L + 6Ab/L
         # From exact equation: M_prev L1 + 2 M_curr (L1 + L2) + M_next L2 = RHS
         rhs = m_prev * l1 + 2.0 * m_curr * (l1 + l2) + m_next * l2
@@ -84,20 +88,20 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
             Step(
                 "moment_balance",
                 "reactions",
-                f"Three-Moment Equation for Joint '{s_curr.id}' (Spans {i} & {i+1})",
+                f"Three-Moment Equation for Joint '{lb}' (Spans {i} & {i+1})",
                 symbolic=(
-                    f"M_{{{s_prev.id}}}\\,L_{i} + 2 M_{{{s_curr.id}}}\\,(L_{i} + L_{{{i+1}}}) + "
-                    f"M_{{{s_next.id}}}\\,L_{{{i+1}}} = -\\frac{{6 A_{i} \\bar{{a}}_{i}}}{{L_{i}}} - \\frac{{6 A_{{{i+1}}} \\bar{{b}}_{{{i+1}}}}}{{L_{{{i+1}}}}}"
+                    f"M_{{{la}}}\\,L_{i} + 2 M_{{{lb}}}\\,(L_{i} + L_{{{i+1}}}) + "
+                    f"M_{{{lc}}}\\,L_{{{i+1}}} = -\\frac{{6 A_{i} \\bar{{a}}_{i}}}{{L_{i}}} - \\frac{{6 A_{{{i+1}}} \\bar{{b}}_{{{i+1}}}}}{{L_{{{i+1}}}}}"
                 ),
                 substituted=(
-                    f"M_{{{s_prev.id}}}\\,({_num(l1)}) + "
-                    f"2 M_{{{s_curr.id}}}\\,({_num(l1)} + {_num(l2)}) + "
-                    f"M_{{{s_next.id}}}\\,({_num(l2)}) = {_num(rhs)}"
+                    f"M_{{{la}}}\\,({_num(l1)}) + "
+                    f"2 M_{{{lb}}}\\,({_num(l1)} + {_num(l2)}) + "
+                    f"M_{{{lc}}}\\,({_num(l2)}) = {_num(rhs)}"
                 ),
                 result=(
-                    f"{_num(l1)}\\,M_{{{s_prev.id}}} + "
-                    f"{_num(2.0 * (l1 + l2))}\\,M_{{{s_curr.id}}} + "
-                    f"{_num(l2)}\\,M_{{{s_next.id}}} = {_num(rhs)}"
+                    f"{_num(l1)}\\,M_{{{la}}} + "
+                    f"{_num(2.0 * (l1 + l2))}\\,M_{{{lb}}} + "
+                    f"{_num(l2)}\\,M_{{{lc}}} = {_num(rhs)}"
                 ),
                 notes=(
                     f"Free simply-supported bending moment terms on span {i} and span {i+1}.",
@@ -108,9 +112,9 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
     # 3. Boundary Conditions
     bc_notes = []
     if supports[0].kind in (SupportKind.PIN, SupportKind.ROLLER):
-        bc_notes.append(f"Support '{supports[0].id}' is a simple end support: M_{{{supports[0].id}}} = 0")
+        bc_notes.append(f"Support '{letters[supports[0].id]}' is a simple end support: M_{{{letters[supports[0].id]}}} = 0")
     if supports[-1].kind in (SupportKind.PIN, SupportKind.ROLLER):
-        bc_notes.append(f"Support '{supports[-1].id}' is a simple end support: M_{{{supports[-1].id}}} = 0")
+        bc_notes.append(f"Support '{letters[supports[-1].id]}' is a simple end support: M_{{{letters[supports[-1].id]}}} = 0")
 
     steps.append(
         Step(
@@ -118,7 +122,7 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
             "reactions",
             "Support Moment Boundary Conditions",
             result=",\\quad ".join(
-                f"M_{{{s.id}}} = {_num(m)}\\,\\text{{kN·m}}"
+                f"M_{{{letters[s.id]}}} = {_num(m)}\\,\\text{{kN·m}}"
                 for s, m in zip(supports, support_moments, strict=True)
             ),
             notes=tuple(bc_notes) if bc_notes else ("End support moments.",),
@@ -127,9 +131,17 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
 
     # 4. Final Support Reactions from Span Shears
     sol_reacs = ",\\quad ".join(
-        f"R_{{{s.id}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
         for s in supports
     )
+    if any(s.kind is SupportKind.FIXED for s in supports):
+        mom_reacs = ",\\quad ".join(
+            f"M_{{{letters[s.id]}}} = {_num(reacs[s.id].moment)}\\,\\text{{kN·m}}"
+            for s in supports
+            if s.kind is SupportKind.FIXED
+        )
+        sol_reacs += f";\\quad {mom_reacs}"
+
     steps.append(
         Step(
             "reactions",
