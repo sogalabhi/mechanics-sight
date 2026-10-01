@@ -149,7 +149,11 @@ export function buildReportHtml(r: ReportInput): string {
   const status =
     cls.status === 'determinate'
       ? 'Statically determinate'
-      : `Statically indeterminate, degree ${cls.degree} (axial)`
+      : cls.bending_degree > 0 && cls.axial_degree > 0
+        ? `Statically indeterminate, degree ${cls.degree} (${cls.bending_degree} bending, ${cls.axial_degree} axial)`
+        : cls.bending_degree > 0
+          ? `Statically indeterminate, degree ${cls.bending_degree} (bending)`
+          : `Statically indeterminate, degree ${cls.axial_degree} (axial)`
   return `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Beam report</title>
