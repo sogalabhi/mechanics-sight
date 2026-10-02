@@ -72,6 +72,11 @@ jobs:
             -H 'Content-Type: application/json' \
             -d '{"schema_version":1,"length":6,"supports":[{"id":"a","type":"pin","position":0},{"id":"b","type":"roller","position":6}],"loads":[{"id":"p","type":"point","position":3,"magnitude":-10}]}' \
             | grep -q '"fy":5.0'
+          # the steel material lab goes through the same proxy; 5 % strain is on the hardening curve
+          curl -fsS -X POST http://localhost:8080/api/v1/lab/tension \
+            -H 'Content-Type: application/json' \
+            -d '{"preset":"steel_textbook","specimen":{"diameter_mm":10,"gauge_length_mm":50},"history":[{"op":"strain","to":0.05}]}' \
+            | grep -q '"region":"strain_hardening"'
       - name: Logs on failure
         if: failure()
         run: docker compose logs
@@ -80,6 +85,7 @@ jobs:
 
   browser:
     runs-on: ubuntu-latest
+    timeout-minutes: 20 # beam and lab suites take about 2 minutes; this only stops a hang
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v5
@@ -100,4 +106,6 @@ jobs:
         if: failure()
         with:
           name: browser-traces
-          path: frontend/test-results/
+          path: |
+            frontend/test-results/
+            frontend/playwright-report/

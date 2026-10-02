@@ -23,7 +23,7 @@
 .row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .slider { flex: 1; min-width: 180px; display: grid; gap: var(--space-1); }
 .slider label { color: var(--ink-2); font-size: var(--text-sm); }
-.slider input { width: 100%; accent-color: var(--select); }
+.slider input { width: 100%; accent-color: var(--select); touch-action: pan-y; }
 .strain { width: 150px; }
 .strain > label { margin-bottom: 0; }
 .chips { gap: var(--space-2); }
@@ -54,6 +54,7 @@
 .plastic { color: var(--plastic); }
 .unload { color: var(--ok); }
 
+.sidePane { display: flex; flex-direction: column; min-height: 0; flex: 1; }
 .pane { grid-area: pane; display: flex; flex-direction: column; min-height: 0; border-left: 1px solid var(--rule); background: var(--panel); }
 .tabs { display: flex; flex: none; border-bottom: 1px solid var(--rule); }
 .tab { flex: 1; min-height: 40px; padding: 0 var(--space-1); font: inherit; font-weight: 500; color: var(--ink-2); background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }
@@ -77,7 +78,11 @@
   .views { grid-template-columns: minmax(0, 1fr); min-height: 280px; }
   .view + .view { border-left: 0; }
   .viewseg { display: inline-flex; margin: var(--space-2) var(--space-4) 0; align-self: flex-start; }
-  .pane { max-height: 38vh; border-left: 0; border-top: 1px solid var(--ink-2); }
+  .pane { max-height: 46vh; border-left: 0; border-top: 1px solid var(--ink-2); }
+  .sidePane { flex: none; max-height: 46vh; }
+  .strain { width: 100%; }
+  .eq :global(.katex) { font-size: 0.92em; }
+  .eq :global(.katex-display) { margin: 0.3em 0; }
   .hidePhone { display: none; }
   .vhead .badge { display: none; }
   .top { gap: var(--space-1); padding: 0 var(--space-2); }

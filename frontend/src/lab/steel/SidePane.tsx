@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useMediaQuery } from '@/canvas/useMediaQuery'
 import { formatNumber } from '@/math/format'
 import { LANDMARK_TEXT, REGION_TEXT } from './content'
 import { Math as Tex } from '@/working/Math'
@@ -122,24 +124,51 @@ function MathsTab({ out }: { out: TensionOut }) {
   )
 }
 
-/** Preset, Explain and Maths. The explanation and the working follow the point on the curve. */
+/**
+ * Preset, Explain and Maths. The explanation and the working follow the point on the curve.
+ * On a phone the pane is a bottom sheet: only the tab bar until a tab is tapped.
+ */
 export function SidePane() {
+  const phone = useMediaQuery('(max-width: 760px)')
+  const [open, setOpen] = useState(false)
   const tab = useLab((s) => s.tab)
   const setTab = useLab((s) => s.setTab)
   const out = useLab((s) => s.response)
   useLab((s) => s.overlay) // re-render with the replayed point while playing
+  const expanded = !phone || open
   return (
-    <>
+    <div className={styles.sidePane} data-open={expanded}>
       <div className={styles.tabs} role="tablist" aria-label="Side pane">
         {TABS.map((t) => (
-          <button key={t.id} role="tab" aria-selected={tab === t.id} className={styles.tab} onClick={() => setTab(t.id)}>
+          <button
+            key={t.id}
+            role="tab"
+            aria-selected={tab === t.id && expanded}
+            aria-expanded={phone ? open && tab === t.id : undefined}
+            className={styles.tab}
+            onClick={() => {
+              // tapping the open tab on a phone folds the sheet away
+              if (phone && open && tab === t.id) setOpen(false)
+              else {
+                setTab(t.id)
+                setOpen(true)
+              }
+            }}
+          >
             {t.label}
           </button>
         ))}
+        {phone && open && (
+          <button className={styles.tab} style={{ flex: '0 0 64px' }} aria-label="Close the side pane" onClick={() => setOpen(false)}>
+            Hide
+          </button>
+        )}
       </div>
-      <div className={styles.pbody} role="tabpanel">
-        {!out ? <p className={styles.hint}>Solving…</p> : tab === 'preset' ? <PresetTab out={out} /> : tab === 'explain' ? <ExplainTab out={out} /> : <MathsTab out={out} />}
-      </div>
-    </>
+      {expanded && (
+        <div className={styles.pbody} role="tabpanel">
+          {!out ? <p className={styles.hint}>Solving…</p> : tab === 'preset' ? <PresetTab out={out} /> : tab === 'explain' ? <ExplainTab out={out} /> : <MathsTab out={out} />}
+        </div>
+      )}
+    </div>
   )
 }

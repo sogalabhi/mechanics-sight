@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
+import LZString from 'lz-string'
 import { readdirSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
@@ -33,6 +34,12 @@ async function readouts(page: Page): Promise<Record<string, number>> {
   return Object.fromEntries(pairs.map(([k, v]) => [k, num(v)]))
 }
 const explanation = (page: Page) => page.getByTestId('explanation')
+
+/** The loading history recorded in the address bar (what a shared link would restore). */
+const historyOf = (page: Page): Op[] => {
+  const h = new URL(page.url()).hash.match(/\?h=(.+)$/)?.[1]
+  return h ? JSON.parse(LZString.decompressFromEncodedURIComponent(h) ?? '[]') : []
+}
 
 async function apply(page: Page, op: Op) {
   if (op.op === 'strain') {
@@ -385,6 +392,79 @@ test.describe('phone width', () => {
     const box = await page.getByRole('img', { name: /stress–strain curve/ }).boundingBox()
     expect(box!.width).toBeLessThanOrEqual(390)
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+  })
+})
+
+test.describe('phone width: touch', () => {
+  test.use({ viewport: { width: 390, height: 800 }, hasTouch: true })
+
+  /** A real touch gesture on the slider, through the browser's input protocol. */
+  async function drag(page: Page, path: number[]) {
+    const slider = page.locator('#lab-strain-slider')
+    await slider.scrollIntoViewIfNeeded()
+    const box = (await slider.boundingBox())!
+    const x = (u: number) => box.x + 8 + (u / 1000) * (box.width - 16) // 16 px thumb
+    const y = box.y + box.height / 2
+    const cdp = await page.context().newCDPSession(page)
+    const touch = (type: string, px?: number) => cdp.send('Input.dispatchTouchEvent', { type, touchPoints: px === undefined ? [] : [{ x: px, y }] })
+    await touch('touchStart', x(path[0]))
+    for (const [i, u] of path.entries()) {
+      if (i === 0) continue
+      const from = path[i - 1]
+      for (let k = 1; k <= 8; k++) await touch('touchMove', x(from + ((u - from) * k) / 8))
+    }
+    await touch('touchEnd')
+  }
+
+  test('a touch drag moves the specimen, and a reversal in the same drag is a real unloading', async ({ page }) => {
+    await open(page)
+    // up to slider 700 (strain 0.0858: strain hardening), then back to 450 without lifting the finger
+    await drag(page, [0, 700, 450])
+    await settled(page)
+    const r = await readouts(page)
+    await expect(explanation(page)).toHaveAttribute('data-region', 'unloading')
+    expect(r.stress).toBe(0) // unloaded to zero stress: it cannot go below the permanent strain
+    expect(r.plastic).toBeGreaterThan(5) // % permanent strain from the stretch to ~8.6 %
+    expect(Math.abs(r.strain - r.plastic)).toBeLessThanOrEqual(6e-4)
+    // exactly two moves were recorded: up, then back down
+    const ops = historyOf(page)
+    expect(ops.map((o) => o.op)).toEqual(['strain', 'strain'])
+    expect((ops[0] as { to: number }).to).toBeGreaterThan((ops[1] as { to: number }).to)
+  })
+
+  test('a touch drag with small jitter is one loading move', async ({ page }) => {
+    await open(page)
+    await drag(page, [0, 600, 598, 601, 599, 700])
+    await settled(page)
+    const r = await readouts(page)
+    await expect(explanation(page)).toHaveAttribute('data-region', 'strain_hardening')
+    expect(r.stress).toBeGreaterThan(300)
+    expect(Math.abs(r.strain - 8.58)).toBeLessThanOrEqual(0.6) // 0.25*(700/1000)^3 = 8.575 %, within a few slider steps
+    await expect(page.locator('#lab-strain-slider')).toHaveAttribute('aria-valuetext', /% strain/)
+    // the jitter left no trace: one recorded move, not five
+    expect(historyOf(page)).toHaveLength(1)
+  })
+
+  test('the bottom sheet opens on a tab, shows the LaTeX without clipping the page, and folds away', async ({ page }) => {
+    await open(page)
+    const f = page.getByRole('textbox', { name: 'Strain' })
+    await f.fill('5')
+    await f.press('Enter')
+    await settled(page)
+    await expect(page.getByRole('tabpanel')).toHaveCount(0) // closed until a tab is tapped
+    await page.getByRole('tab', { name: 'Maths' }).tap()
+    const pane = page.getByRole('tabpanel')
+    await expect(pane).toContainText('317.70')
+    expect(await pane.locator('.katex').count()).toBeGreaterThanOrEqual(6)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+    const clipped = await pane.locator('.katex-display').evaluateAll((els) => els.filter((e) => e.scrollWidth > e.clientWidth + 1).length)
+    expect(clipped).toBe(0)
+    await page.getByRole('tab', { name: 'Explain' }).tap()
+    await expect(pane.getByRole('heading', { name: 'Proof strength (0.2 % offset)' })).toBeVisible()
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(390)
+    await page.getByRole('button', { name: 'Close the side pane' }).tap()
+    await expect(page.getByRole('tabpanel')).toHaveCount(0)
+    await expect(page.getByRole('textbox', { name: 'Strain' })).toBeVisible() // the controls have their room back
   })
 })
 
