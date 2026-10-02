@@ -12,6 +12,8 @@ export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
   const setSawCutX = useStore((s) => s.setSawCutX)
   const dockHud = useStore((s) => s.dockHud)
   const setDockHud = useStore((s) => s.setDockHud)
+  const fibre = useStore((s) => s.fibre)
+  const setFibre = useStore((s) => s.setFibre)
   const [minimized, setMinimized] = useState(false)
 
   const data = useMemo(() => {
@@ -419,7 +421,15 @@ export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
             </svg>
 
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4, fontSize: 10.5 }}>
-              <div>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={fibre === 'top'}
+                title="Focus this fibre in the stress diagram"
+                onClick={() => setFibre(fibre === 'top' ? null : 'top')}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setFibre(fibre === 'top' ? null : 'top'))}
+                style={{ cursor: 'pointer', padding: '1px 3px', margin: '0 -3px', borderRadius: 3, background: fibre === 'top' ? 'var(--grid)' : 'none' }}
+              >
                 <span style={{ color: 'var(--ink-2)' }}>Top fibre (σ): </span>
                 <strong style={{ fontFamily: 'var(--font-mono)' }}>
                   {formatNumber(stressProfile.sigmaTop / 1000, { sign: true })} MPa
@@ -434,7 +444,15 @@ export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
                   ({stressProfile.sigmaTop > 0 ? 'Tension' : 'Compression'})
                 </span>
               </div>
-              <div>
+              <div
+                role="button"
+                tabIndex={0}
+                aria-pressed={fibre === 'bottom'}
+                title="Focus this fibre in the stress diagram"
+                onClick={() => setFibre(fibre === 'bottom' ? null : 'bottom')}
+                onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), setFibre(fibre === 'bottom' ? null : 'bottom'))}
+                style={{ cursor: 'pointer', padding: '1px 3px', margin: '0 -3px', borderRadius: 3, background: fibre === 'bottom' ? 'var(--grid)' : 'none' }}
+              >
                 <span style={{ color: 'var(--ink-2)' }}>Bottom fibre (σ): </span>
                 <strong style={{ fontFamily: 'var(--font-mono)' }}>
                   {formatNumber(stressProfile.sigmaBottom / 1000, { sign: true })} MPa

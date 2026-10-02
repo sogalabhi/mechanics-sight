@@ -3,7 +3,7 @@ import { Guides } from '@/canvas/Guides'
 import { useLayout, useXScale } from '@/canvas/xscale'
 import { solveElasticCurve, type DeflectionPoint } from '@/math/deflection'
 import { formatNumber } from '@/math/format'
-import { useStore } from '@/store/store'
+import { selectCursorX, useStore } from '@/store/store'
 import { Crosshair } from './Crosshair'
 
 export const DEFLECTION_PANEL_HEIGHT = 160
@@ -66,12 +66,10 @@ export function ElasticCurvePanel({ width }: { width: number }) {
   const beam = useStore((s) => s.draft ?? s.beam)
   const result = useStore((s) => s.result)
   const stale = useStore((s) => s.error !== null)
-  const hoverX = useStore((s) => s.hoverX)
-  const pinnedX = useStore((s) => s.pinnedX)
   const x = useXScale()
   const { gutter: GUTTER, compact } = useLayout()
 
-  const mx = pinnedX ?? hoverX
+  const mx = useStore(selectCursorX)
 
   const curveResult = useMemo(() => {
     if (!result) return null

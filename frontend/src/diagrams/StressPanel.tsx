@@ -3,7 +3,7 @@ import { useMemo } from 'react'
 import { Guides } from '@/canvas/Guides'
 import { useLayout, useXScale } from '@/canvas/xscale'
 import { formatNumber, formatTick } from '@/math/format'
-import { useStore } from '@/store/store'
+import { selectCursorX, useStore } from '@/store/store'
 import { Crosshair } from './Crosshair'
 
 export const STRESS_PANEL_HEIGHT = 190
@@ -20,9 +20,8 @@ interface StressPoint {
 export function StressPanel({ width }: { width: number }) {
   const result = useStore((s) => s.result)
   const beam = useStore((s) => s.draft ?? s.beam)
-  const hoverX = useStore((s) => s.hoverX)
-  const pinnedX = useStore((s) => s.pinnedX)
-  const curX = pinnedX ?? hoverX
+  const curX = useStore(selectCursorX)
+  const fibre = useStore((s) => s.fibre)
   const x = useXScale()
   const { gutter: GUTTER } = useLayout()
 
@@ -126,8 +125,8 @@ export function StressPanel({ width }: { width: number }) {
       })}
 
       {/* Top and Bottom Fibre Stress Curves */}
-      <path d={topPath} fill="none" stroke="var(--moment, #d97706)" strokeWidth={2} strokeDasharray="5 3" />
-      <path d={botPath} fill="none" stroke="var(--axial, #2563eb)" strokeWidth={2} />
+      <path d={topPath} fill="none" stroke="var(--moment, #d97706)" strokeWidth={fibre === 'top' ? 3.2 : 2} strokeDasharray="5 3" opacity={fibre === 'bottom' ? 0.3 : 1} />
+      <path d={botPath} fill="none" stroke="var(--axial, #2563eb)" strokeWidth={fibre === 'bottom' ? 3.2 : 2} opacity={fibre === 'top' ? 0.3 : 1} />
 
       {/* Header Legend & Title */}
       <text x={GUTTER} y={TOP - 12} fontFamily={FONT} fontSize={11} fontWeight={600} fill="var(--ink)">

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { emptyBeam } from '@/model/actions'
-import { useStore } from '@/store/store'
+import { selectCursorX, useStore } from '@/store/store'
 import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
 
@@ -17,8 +17,6 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
     showStress,
     showAxial,
     sawCutX,
-    pinnedX,
-    hoverX,
     dockHud,
     setShowReactions,
     setShowGuides,
@@ -30,6 +28,7 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
     setDockHud,
     commit,
   } = useStore()
+  const cursorX = useStore(selectCursorX)
   const detailsRef = useRef<HTMLDetailsElement>(null)
 
   useEffect(() => {
@@ -64,7 +63,7 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
       <button
         className={ui.btn}
         onClick={() => {
-          const cutX = pinnedX ?? hoverX ?? beam.length / 2
+          const cutX = cursorX ?? beam.length / 2
           setSawCutX(sawCutX !== null ? null : cutX)
         }}
       >

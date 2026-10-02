@@ -5,7 +5,7 @@ import { DEFLECTION_PANEL_HEIGHT, ElasticCurvePanel } from '@/diagrams/ElasticCu
 import { STRESS_PANEL_HEIGHT, StressPanel } from '@/diagrams/StressPanel'
 import { IntegrationCard } from '@/diagrams/IntegrationCard'
 import { VirtualSawCard } from '@/diagrams/VirtualSawCard'
-import { useStore } from '@/store/store'
+import { selectCursorX, useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
 import { EmptyDiagramState } from './EmptyDiagramState'
 import { Guides } from './Guides'
@@ -35,18 +35,13 @@ export function CanvasStack({ width }: { width: number }) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        useStore.getState().setPinned(null)
-        useStore.getState().setIntegrationRange(null)
-        useStore.getState().setSawCutX(null)
-        useStore.getState().select(null)
+        useStore.getState().clearSelection()
       } else if (e.key === 's' || e.key === 'S') {
         const tag = (e.target as HTMLElement)?.tagName
         if (tag === 'INPUT' || tag === 'TEXTAREA') return
         const s = useStore.getState()
-        const curX = s.pinnedX ?? s.hoverX
-        if (curX !== null && curX > 1e-4 && curX < length - 1e-4) {
-          s.setSawCutX(s.sawCutX === curX ? null : curX)
-        }
+        const curX = selectCursorX(s)
+        if (curX !== null && curX > 1e-4 && curX < length - 1e-4) s.toggleSawAt(curX)
       }
     }
     window.addEventListener('keydown', onKey)

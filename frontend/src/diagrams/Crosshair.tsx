@@ -16,7 +16,7 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
   const pinned = useStore((s) => s.pinnedX)
   const hover = useStore((s) => s.hoverX)
   const sawCutX = useStore((s) => s.sawCutX)
-  const setSawCutX = useStore((s) => s.setSawCutX)
+  const toggleSawAt = useStore((s) => s.toggleSawAt)
   const beam = useStore((s) => s.beam)
   const result = useStore((s) => s.result)
   const showCalculus = useStore((s) => s.showCalculus)
@@ -96,7 +96,7 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
           style={{ cursor: 'pointer' }}
           onPointerDown={(e) => {
             e.stopPropagation()
-            setSawCutX(sawCutX === mx ? null : mx)
+            toggleSawAt(mx)
           }}
         >
           <rect

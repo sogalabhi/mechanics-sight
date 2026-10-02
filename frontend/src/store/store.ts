@@ -4,6 +4,8 @@ import { beamFromHash } from '@/model/share'
 import type { AnalysisResult, BeamInput } from '@/model/types'
 
 export type PaneTab = 'inspect' | 'results'
+/** Extreme fibre of the section a view is focused on. */
+export type Fibre = 'top' | 'bottom'
 
 export interface AnalysisError {
   kind: 'beam' | 'network'
@@ -39,6 +41,8 @@ interface State {
   showStress: boolean
   hoverX: number | null
   pinnedX: number | null
+  /** Fibre under focus in the stress views; null = both. */
+  fibre: Fibre | null
   sawCutX: number | null
   integrationRange: [number, number] | null
   dockHud: boolean
@@ -53,6 +57,9 @@ interface State {
   setError: (e: AnalysisError) => void
   setHover: (x: number | null) => void
   setPinned: (x: number | null) => void
+  setFibre: (f: Fibre | null) => void
+  clearSelection: () => void
+  toggleSawAt: (x: number) => void
   setSawCutX: (x: number | null) => void
   setIntegrationRange: (range: [number, number] | null) => void
   setDockHud: (dock: boolean) => void
@@ -97,6 +104,9 @@ const getStoredDockHud = () => {
   }
 }
 
+/** The x every view reads: the pinned position, else wherever the pointer is. */
+export const selectCursorX = (s: Pick<State, 'pinnedX' | 'hoverX'>) => s.pinnedX ?? s.hoverX
+
 export const useStore = create<State>((set) => ({
   beam: beamFromHash(window.location.hash) ?? emptyBeam(6),
   draft: null,
@@ -124,6 +134,7 @@ export const useStore = create<State>((set) => ({
   showStress: true,
   hoverX: null,
   pinnedX: null,
+  fibre: null,
   sawCutX: null,
   integrationRange: null,
   dockHud: getStoredDockHud(),
@@ -152,6 +163,10 @@ export const useStore = create<State>((set) => ({
   setError: (error) => set({ error }),
   setHover: (hoverX) => set({ hoverX }),
   setPinned: (pinnedX) => set({ pinnedX }),
+  setFibre: (fibre) => set({ fibre }),
+  clearSelection: () =>
+    set({ pinnedX: null, integrationRange: null, sawCutX: null, fibre: null, selectedId: null }),
+  toggleSawAt: (x) => set((s) => ({ sawCutX: s.sawCutX === x ? null : x })),
   setSawCutX: (sawCutX) => set({ sawCutX }),
   setIntegrationRange: (integrationRange) => set({ integrationRange }),
   setDockHud: (dockHud) => {

@@ -1,6 +1,6 @@
 import { formatNumber } from '@/math/format'
 import { isJump, valueAt } from '@/math/poly'
-import { useStore } from '@/store/store'
+import { selectCursorX, useStore } from '@/store/store'
 import { SignConvention } from './SignConvention'
 
 const f = (p: { left: number; right: number }) =>
@@ -9,7 +9,7 @@ const f = (p: { left: number; right: number }) =>
     : formatNumber(p.right, { sign: true })
 
 export function StatusBar() {
-  const x = useStore((s) => s.pinnedX ?? s.hoverX)
+  const x = useStore(selectCursorX)
   const result = useStore((s) => s.result)
   return (
     <>
