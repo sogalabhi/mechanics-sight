@@ -64,7 +64,7 @@ test('Escape cancels without adding history or selecting an integration span', a
 test('palette drag adds at the drop position, outside drop adds nothing', async ({ page }) => {
   await example(page)
   const g = await geometry(page)
-  const button = page.getByRole('button', { name: 'Point load', exact: true })
+  const button = page.getByRole('button', { name: 'Vertical load', exact: true })
   const b = await button.boundingBox()
   if (!b) throw new Error('No palette item')
   await page.mouse.move(b.x + b.width / 2, b.y + b.height / 2)
@@ -170,7 +170,7 @@ test('Ctrl+Z cancels an active drag without resurrecting the preview', async ({ 
 test('cancelled palette drag does not turn into a click-to-add on release', async ({ page }) => {
   await example(page)
   const g = await geometry(page)
-  const button = page.getByRole('button', { name: 'Point load', exact: true })
+  const button = page.getByRole('button', { name: 'Vertical load', exact: true })
   const b = await button.boundingBox()
   if (!b) throw new Error('No palette item')
   await page.mouse.move(b.x + 15, b.y + 15)
