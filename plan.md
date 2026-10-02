@@ -1416,7 +1416,11 @@ Key results          Open alongside          View calculations
 ### 16.6 UX delivery steps and acceptance
 
 - [ ] **UX0 — Prototype:** demonstrate starting a beam, inspecting results, exploring a cut, and the Steel Material Lab. Include desktop and phone states. Review the journey before changing the production layout.
-- [ ] **UX1 — Focus and linked views:** consolidate the beam sidebar, group diagrams, dock explanations, and preserve existing editing, sharing and reporting behavior.
+  - *Status:* beam shell mock-up and Steel Lab prototype built (desktop and phone, light and dark; Steel prototype in `docs/STEEL_LAB_CONTRACT.md`). The review with representative students (5-minute tasks, watched silently) has not been run, so this stays open.
+- [x] **UX1 — Focus and linked views:** consolidate the beam sidebar, group diagrams, dock explanations, and preserve existing editing, sharing and reporting behavior.
+  - *Done:* one tabbed, resizable right pane (Inspect, Section, Results, Maths; bottom sheet on phones) replaces the stacked sidebar and both floating cards; selection, pinned x, hover, cut, range and fibre live in one store and every view reads it; diagram toggle bar replaces the View menu and hint line; loading skeleton, re-solve indicator, result cache and a redesigned empty state; colours, spacing and type scale are tokens (tension blue, compression red); keyboard control of the pinned position. Diagram stacking is kept as decided in 16.1, so there is no Forces/Deformation/Stresses grouping.
+  - *Checked by:* `frontend/e2e/golden.spec.ts` (21 golden-case tests of value, sign, unit and position against hand-solved numbers) plus the existing drag tests; `docs/UX_INVENTORY.md` records the before state.
+  - *Still open from this step:* phone-width pass of the four-tab sheet and diagram bar; the crosshair value bubbles still float over the diagrams; "Explain this result" (section 17) does not exist yet; full keyboard pass over palette, pane and bar.
 - [ ] **UX2 — Comparisons and task tabs:** add independent scenarios, clear input differences, scale controls and reusable workspace arrangements after Focus/Linked work well.
 
 Acceptance: a user can open an example, edit a load, inspect a section, explain a result and return to editing without losing context. A material learner can increase strain, identify the current region and unload without navigating away. Check both journeys with representative students/engineers and retain meaningful browser regression coverage for the existing beam workflows.
@@ -1533,7 +1537,7 @@ One short explanation                       Why?   Show maths
 
 ### 18.6 Ordered steel milestones
 
-All items below are pending. UX0 and S0 are the immediate planning/design steps; the first new working feature is the tensile Material Lab. It can ship standalone before the complete multi-tool project system exists.
+**Status:** S0 is drafted for review in `docs/STEEL_LAB_CONTRACT.md` (lab workspace and routing, units, specimen, a textbook mild-steel idealisation with points A to F, behaviour rules, a stateless `POST /api/v1/lab/tension` contract, and 23 hand-solved reference cases) with a clickable prototype. Not yet built: fixtures, backend model, endpoint, frontend lab. S1 onwards are pending. The first new working feature is the tensile Material Lab, and it can ship standalone before the complete multi-tool project system exists.
 
 | ID | Deliverable | Acceptance criteria / boundary |
 |---|---|---|
