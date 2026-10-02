@@ -44,6 +44,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/lab/tension": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Lab Tension
+         * @description Replay a loading history on a fresh round tension specimen (steel material lab).
+         *
+         *     Stateless: the whole history is sent each time, so any state is reproducible. Strain is
+         *     commanded and the preset's material law decides the stress. Engineering stress (MPa) is
+         *     force over the original area; strain is engineering strain (fraction); tension positive.
+         */
+        post: operations["lab_tension_api_v1_lab_tension_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -362,6 +386,25 @@ export interface components {
              */
             web_thickness: number;
         };
+        /** LandmarkOut */
+        LandmarkOut: {
+            /**
+             * Id
+             * @description A proportional limit … F fracture
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /**
+             * Reached
+             * @description The specimen has reached or passed this strain
+             */
+            reached: boolean;
+            /** Strain */
+            strain: number;
+            /** Stress Mpa */
+            stress_mpa: number;
+        };
         /** MaterialIn */
         MaterialIn: {
             /**
@@ -373,6 +416,20 @@ export interface components {
              * Young Modulus Gpa
              * @description Young's modulus in GPa
              */
+            young_modulus_gpa: number;
+        };
+        /** ModelOut */
+        ModelOut: {
+            /**
+             * Kind
+             * @constant
+             */
+            kind: "idealisation";
+            /** Name */
+            name: string;
+            /** Preset */
+            preset: string;
+            /** Young Modulus Gpa */
             young_modulus_gpa: number;
         };
         /** PointLoadIn */
@@ -465,6 +522,14 @@ export interface components {
              */
             width: number;
         };
+        /** ResetOpIn */
+        ResetOpIn: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "reset";
+        };
         /** SegmentOut */
         SegmentOut: {
             /**
@@ -490,6 +555,31 @@ export interface components {
         /** ShearStressOut */
         ShearStressOut: {
             max_shear_stress: components["schemas"]["ExtremeOut"] | null;
+        };
+        /** SpecimenIn */
+        SpecimenIn: {
+            /**
+             * Diameter Mm
+             * @description mm, original diameter d0
+             */
+            diameter_mm: number;
+            /**
+             * Gauge Length Mm
+             * @description mm, original gauge length L0
+             */
+            gauge_length_mm: number;
+        };
+        /** SpecimenOut */
+        SpecimenOut: {
+            /**
+             * Area Mm2
+             * @description Original area A0, mm²
+             */
+            area_mm2: number;
+            /** Diameter Mm */
+            diameter_mm: number;
+            /** Gauge Length Mm */
+            gauge_length_mm: number;
         };
         /** StepOut */
         StepOut: {
@@ -531,6 +621,19 @@ export interface components {
             x_end?: number | null;
             /** X Start */
             x_start?: number | null;
+        };
+        /** StrainOpIn */
+        StrainOpIn: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "strain";
+            /**
+             * To
+             * @description Total engineering strain to move to (fraction). Lower than now unloads.
+             */
+            to: number;
         };
         /** SupportIn */
         SupportIn: {
@@ -589,6 +692,113 @@ export interface components {
              * @description m
              */
             web_thickness: number;
+        };
+        /** TensionIn */
+        TensionIn: {
+            /**
+             * History
+             * @description Loading history, replayed on a fresh specimen. Empty is a fresh specimen.
+             */
+            history?: (components["schemas"]["StrainOpIn"] | components["schemas"]["UnloadOpIn"] | components["schemas"]["ResetOpIn"])[];
+            /**
+             * Preset
+             * @description Material preset id
+             */
+            preset: string;
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            specimen: components["schemas"]["SpecimenIn"];
+        };
+        /** TensionOut */
+        TensionOut: {
+            /**
+             * Landmarks
+             * @description All six points A to F
+             */
+            landmarks: components["schemas"]["LandmarkOut"][];
+            model: components["schemas"]["ModelOut"];
+            /**
+             * Schema Version
+             * @default 1
+             * @constant
+             */
+            schema_version: 1;
+            specimen: components["schemas"]["SpecimenOut"];
+            state: components["schemas"]["TensionStateOut"];
+            /**
+             * Trace
+             * @description The stress-strain path taken, in order: dense on curved pieces, exact corners
+             */
+            trace: components["schemas"]["TracePointOut"][];
+            /** Warnings */
+            warnings?: string[];
+        };
+        /** TensionStateOut */
+        TensionStateOut: {
+            /**
+             * Elastic Strain
+             * @description strain minus plastic_strain; 0 after fracture (the recoverable part is lost)
+             */
+            elastic_strain: number;
+            /**
+             * Extension Mm
+             * @description Extension of the gauge length, mm (strain times L0)
+             */
+            extension_mm: number;
+            /**
+             * Force Kn
+             * @description Force, kN
+             */
+            force_kn: number;
+            /**
+             * Landmark
+             * @description A to F when the strain equals that point exactly, otherwise null
+             */
+            landmark: string | null;
+            /**
+             * Max Strain
+             * @description Largest strain reached on the loading curve
+             */
+            max_strain: number;
+            /**
+             * Plastic Strain
+             * @description Permanent strain left if unloaded now (fraction)
+             */
+            plastic_strain: number;
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "elastic" | "elastic_curving" | "yield_onset" | "yield_drop" | "yield_plateau" | "strain_hardening" | "necking" | "unloading" | "reloading" | "fractured";
+            /**
+             * Strain
+             * @description Total engineering strain (fraction)
+             */
+            strain: number;
+            /**
+             * Stress Mpa
+             * @description Engineering stress F/A0, MPa (never negative)
+             */
+            stress_mpa: number;
+        };
+        /** TracePointOut */
+        TracePointOut: {
+            /** Strain */
+            strain: number;
+            /** Stress Mpa */
+            stress_mpa: number;
+        };
+        /** UnloadOpIn */
+        UnloadOpIn: {
+            /**
+             * @description discriminator enum property added by openapi-typescript
+             * @enum {string}
+             */
+            op: "unload_to_zero_stress";
         };
     };
     responses: never;
@@ -662,6 +872,48 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    lab_tension_api_v1_lab_tension_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TensionIn"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TensionOut"];
+                };
+            };
+            /** @description Unprocessable Content */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
+                };
+            };
+            /** @description Internal Server Error */
+            500: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorOut"];
                 };
             };
         };

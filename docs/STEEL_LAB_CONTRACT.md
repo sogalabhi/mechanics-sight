@@ -80,10 +80,9 @@ State is (ε, ε_max), where ε_max is the largest strain reached on the backbon
 
 ## 6. API (additive, stateless)
 
-The server is stateless. The client sends the whole loading history, so any state is reproducible from its inputs.
+`POST /api/v1/lab/tension` (implemented). The server is stateless. The client sends the whole loading history, so any state is reproducible from its inputs. Nothing about the beam endpoint changes.
 
 ```
-POST /api/v1/lab/tension
 {
   "schema_version": 1,
   "preset": "steel_textbook",
@@ -95,24 +94,33 @@ POST /api/v1/lab/tension
 }
 ```
 
-Ops: `strain` (move total strain to `to`), `unload_to_zero_stress`, `reset` (discard everything before it and start a fresh specimen, so a recorded session that included a reset replays exactly). Response:
+- `preset` and `specimen` are required. `history` may be empty (a fresh specimen), at most 500 operations. Unknown fields are rejected.
+- Ops: `strain` (move total strain to `to`), `unload_to_zero_stress`, `reset` (discard everything before it and start a fresh specimen, so a recorded session that included a reset replays exactly).
+- Specimen limits: diameter 0 to 1000 mm, gauge length 0 to 10000 mm, both greater than zero.
+
+Response (all numbers as in section 2):
 
 ```
 {
+  "schema_version": 1,
   "state": {
     "strain": 0.04841152, "stress_mpa": 0.0, "force_kn": 0.0, "extension_mm": 2.420576,
-    "plastic_strain": 0.04841152, "elastic_strain": 0.0, "max_strain": 0.05, "region": "unloading"
+    "plastic_strain": 0.04841152, "elastic_strain": 0.0, "max_strain": 0.05,
+    "region": "unloading", "landmark": null
   },
   "trace": [ { "strain": 0.0, "stress_mpa": 0.0 }, ... ],
   "landmarks": [ { "id": "A", "name": "proportional_limit", "strain": 0.00115, "stress_mpa": 230.0, "reached": true }, ... ],   // all six, A to F
-  "model": { "preset": "steel_textbook", "E_gpa": 200, "kind": "idealisation" },
+  "model": { "preset": "steel_textbook", "name": "Mild steel, textbook curve", "kind": "idealisation", "young_modulus_gpa": 200.0 },
+  "specimen": { "diameter_mm": 10.0, "gauge_length_mm": 50.0, "area_mm2": 78.5398 },
   "warnings": []
 }
 ```
 
-- `trace` samples the **analytic** backbone densely (never more than 0.004 strain apart) and always includes the landmark points and the exact corner points of elastic lines. It does not interpolate between measured source points, so it cannot invent a peak or plateau.
+- `region` is one of `elastic`, `elastic_curving`, `yield_onset`, `yield_drop`, `yield_plateau`, `strain_hardening`, `necking`, `unloading`, `reloading`, `fractured` (a closed set in the OpenAPI schema, so the frontend can map it exhaustively).
+- `trace` samples the **analytic** backbone densely (never more than 0.004 strain apart) and always includes the landmark points and the exact corner points of elastic lines. It does not interpolate between measured source points, so it cannot invent a peak or plateau. After fracture it ends with the drop to `(ε_f − σ_f/E, 0)`.
 - `elastic_strain` is `strain − plastic_strain`. After fracture it is 0: the recoverable part is lost when the bar separates, and `strain` stays the strain at the break (`plastic_strain` is the strain left, 0.2485).
-- Errors use the existing error envelope: `strain_out_of_range`, `unsupported_op`, `invalid_specimen`, `test_finished` (an op after fracture).
+- Errors use the existing envelope `{ "error": { "code", "message", "details" } }` with HTTP 422:
+  `strain_out_of_range`, `test_finished` (an op other than `reset` after fracture), `unknown_preset`, and `invalid_input` for malformed requests (unknown op, missing or wrong-typed field, non-finite number, zero or negative specimen size, schema version, history too long).
 
 ## 7. Reference cases (hand solved, written before any solver code)
 

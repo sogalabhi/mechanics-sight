@@ -856,6 +856,42 @@
         "title": "ISectionIn",
         "type": "object"
       },
+      "LandmarkOut": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "description": "A proportional limit \u2026 F fracture",
+            "title": "Id",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "reached": {
+            "description": "The specimen has reached or passed this strain",
+            "title": "Reached",
+            "type": "boolean"
+          },
+          "strain": {
+            "title": "Strain",
+            "type": "number"
+          },
+          "stress_mpa": {
+            "title": "Stress Mpa",
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "strain",
+          "stress_mpa",
+          "reached"
+        ],
+        "title": "LandmarkOut",
+        "type": "object"
+      },
       "MaterialIn": {
         "additionalProperties": false,
         "properties": {
@@ -877,6 +913,36 @@
           "yield_strength_mpa"
         ],
         "title": "MaterialIn",
+        "type": "object"
+      },
+      "ModelOut": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "const": "idealisation",
+            "title": "Kind",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "preset": {
+            "title": "Preset",
+            "type": "string"
+          },
+          "young_modulus_gpa": {
+            "title": "Young Modulus Gpa",
+            "type": "number"
+          }
+        },
+        "required": [
+          "preset",
+          "name",
+          "kind",
+          "young_modulus_gpa"
+        ],
+        "title": "ModelOut",
         "type": "object"
       },
       "PointLoadIn": {
@@ -1074,6 +1140,21 @@
         "title": "RectangularSectionIn",
         "type": "object"
       },
+      "ResetOpIn": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "reset",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "title": "ResetOpIn",
+        "type": "object"
+      },
       "SegmentOut": {
         "additionalProperties": false,
         "properties": {
@@ -1137,6 +1218,56 @@
           "max_shear_stress"
         ],
         "title": "ShearStressOut",
+        "type": "object"
+      },
+      "SpecimenIn": {
+        "additionalProperties": false,
+        "properties": {
+          "diameter_mm": {
+            "description": "mm, original diameter d0",
+            "exclusiveMinimum": 0.0,
+            "maximum": 1000.0,
+            "title": "Diameter Mm",
+            "type": "number"
+          },
+          "gauge_length_mm": {
+            "description": "mm, original gauge length L0",
+            "exclusiveMinimum": 0.0,
+            "maximum": 10000.0,
+            "title": "Gauge Length Mm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "diameter_mm",
+          "gauge_length_mm"
+        ],
+        "title": "SpecimenIn",
+        "type": "object"
+      },
+      "SpecimenOut": {
+        "additionalProperties": false,
+        "properties": {
+          "area_mm2": {
+            "description": "Original area A0, mm\u00b2",
+            "title": "Area Mm2",
+            "type": "number"
+          },
+          "diameter_mm": {
+            "title": "Diameter Mm",
+            "type": "number"
+          },
+          "gauge_length_mm": {
+            "title": "Gauge Length Mm",
+            "type": "number"
+          }
+        },
+        "required": [
+          "diameter_mm",
+          "gauge_length_mm",
+          "area_mm2"
+        ],
+        "title": "SpecimenOut",
         "type": "object"
       },
       "StepOut": {
@@ -1266,6 +1397,27 @@
         "title": "StepOut",
         "type": "object"
       },
+      "StrainOpIn": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "strain",
+            "title": "Op",
+            "type": "string"
+          },
+          "to": {
+            "description": "Total engineering strain to move to (fraction). Lower than now unloads.",
+            "title": "To",
+            "type": "number"
+          }
+        },
+        "required": [
+          "op",
+          "to"
+        ],
+        "title": "StrainOpIn",
+        "type": "object"
+      },
       "SupportIn": {
         "additionalProperties": false,
         "properties": {
@@ -1376,6 +1528,227 @@
         ],
         "title": "TSectionIn",
         "type": "object"
+      },
+      "TensionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "history": {
+            "description": "Loading history, replayed on a fresh specimen. Empty is a fresh specimen.",
+            "items": {
+              "discriminator": {
+                "mapping": {
+                  "reset": "#/components/schemas/ResetOpIn",
+                  "strain": "#/components/schemas/StrainOpIn",
+                  "unload_to_zero_stress": "#/components/schemas/UnloadOpIn"
+                },
+                "propertyName": "op"
+              },
+              "oneOf": [
+                {
+                  "$ref": "#/components/schemas/StrainOpIn"
+                },
+                {
+                  "$ref": "#/components/schemas/UnloadOpIn"
+                },
+                {
+                  "$ref": "#/components/schemas/ResetOpIn"
+                }
+              ]
+            },
+            "maxItems": 500,
+            "title": "History",
+            "type": "array"
+          },
+          "preset": {
+            "description": "Material preset id",
+            "maxLength": 32,
+            "minLength": 1,
+            "title": "Preset",
+            "type": "string"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "specimen": {
+            "$ref": "#/components/schemas/SpecimenIn"
+          }
+        },
+        "required": [
+          "preset",
+          "specimen"
+        ],
+        "title": "TensionIn",
+        "type": "object"
+      },
+      "TensionOut": {
+        "additionalProperties": false,
+        "properties": {
+          "landmarks": {
+            "description": "All six points A to F",
+            "items": {
+              "$ref": "#/components/schemas/LandmarkOut"
+            },
+            "title": "Landmarks",
+            "type": "array"
+          },
+          "model": {
+            "$ref": "#/components/schemas/ModelOut"
+          },
+          "schema_version": {
+            "const": 1,
+            "default": 1,
+            "title": "Schema Version",
+            "type": "integer"
+          },
+          "specimen": {
+            "$ref": "#/components/schemas/SpecimenOut"
+          },
+          "state": {
+            "$ref": "#/components/schemas/TensionStateOut"
+          },
+          "trace": {
+            "description": "The stress-strain path taken, in order: dense on curved pieces, exact corners",
+            "items": {
+              "$ref": "#/components/schemas/TracePointOut"
+            },
+            "title": "Trace",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "state",
+          "trace",
+          "landmarks",
+          "model",
+          "specimen"
+        ],
+        "title": "TensionOut",
+        "type": "object"
+      },
+      "TensionStateOut": {
+        "additionalProperties": false,
+        "properties": {
+          "elastic_strain": {
+            "description": "strain minus plastic_strain; 0 after fracture (the recoverable part is lost)",
+            "title": "Elastic Strain",
+            "type": "number"
+          },
+          "extension_mm": {
+            "description": "Extension of the gauge length, mm (strain times L0)",
+            "title": "Extension Mm",
+            "type": "number"
+          },
+          "force_kn": {
+            "description": "Force, kN",
+            "title": "Force Kn",
+            "type": "number"
+          },
+          "landmark": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "A to F when the strain equals that point exactly, otherwise null",
+            "title": "Landmark"
+          },
+          "max_strain": {
+            "description": "Largest strain reached on the loading curve",
+            "title": "Max Strain",
+            "type": "number"
+          },
+          "plastic_strain": {
+            "description": "Permanent strain left if unloaded now (fraction)",
+            "title": "Plastic Strain",
+            "type": "number"
+          },
+          "region": {
+            "enum": [
+              "elastic",
+              "elastic_curving",
+              "yield_onset",
+              "yield_drop",
+              "yield_plateau",
+              "strain_hardening",
+              "necking",
+              "unloading",
+              "reloading",
+              "fractured"
+            ],
+            "title": "Region",
+            "type": "string"
+          },
+          "strain": {
+            "description": "Total engineering strain (fraction)",
+            "title": "Strain",
+            "type": "number"
+          },
+          "stress_mpa": {
+            "description": "Engineering stress F/A0, MPa (never negative)",
+            "title": "Stress Mpa",
+            "type": "number"
+          }
+        },
+        "required": [
+          "strain",
+          "stress_mpa",
+          "force_kn",
+          "extension_mm",
+          "plastic_strain",
+          "elastic_strain",
+          "max_strain",
+          "region",
+          "landmark"
+        ],
+        "title": "TensionStateOut",
+        "type": "object"
+      },
+      "TracePointOut": {
+        "additionalProperties": false,
+        "properties": {
+          "strain": {
+            "title": "Strain",
+            "type": "number"
+          },
+          "stress_mpa": {
+            "title": "Stress Mpa",
+            "type": "number"
+          }
+        },
+        "required": [
+          "strain",
+          "stress_mpa"
+        ],
+        "title": "TracePointOut",
+        "type": "object"
+      },
+      "UnloadOpIn": {
+        "additionalProperties": false,
+        "properties": {
+          "op": {
+            "const": "unload_to_zero_stress",
+            "title": "Op",
+            "type": "string"
+          }
+        },
+        "required": [
+          "op"
+        ],
+        "title": "UnloadOpIn",
+        "type": "object"
       }
     }
   },
@@ -1483,6 +1856,55 @@
           }
         },
         "summary": "Health"
+      }
+    },
+    "/api/v1/lab/tension": {
+      "post": {
+        "description": "Replay a loading history on a fresh round tension specimen (steel material lab).\n\nStateless: the whole history is sent each time, so any state is reproducible. Strain is\ncommanded and the preset's material law decides the stress. Engineering stress (MPa) is\nforce over the original area; strain is engineering strain (fraction); tension positive.",
+        "operationId": "lab_tension_api_v1_lab_tension_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TensionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TensionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Unprocessable Content"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorOut"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          }
+        },
+        "summary": "Lab Tension"
       }
     }
   }

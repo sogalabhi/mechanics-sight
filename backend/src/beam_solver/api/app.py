@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse, Response
 from beam_solver.analysis import analyze, build_steps
 from beam_solver.api.errors import install_error_handlers
 from beam_solver.io import beam_from_schema, result_to_schema, step_to_schema
+from beam_solver.io.lab import TensionIn, TensionOut, run_tension_request
 from beam_solver.io.schemas import AnalysisOut, BeamIn, ErrorOut
 
 DEV_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]  # Vite dev server
@@ -63,6 +64,20 @@ def create_app(allowed_origins: list[str] | None = None) -> FastAPI:
             exclude.add("available_methods")
             exclude.add("selected_method")
         return JSONResponse(out.model_dump(mode="json", exclude=exclude))
+
+    @app.post(
+        "/api/v1/lab/tension",
+        response_model=TensionOut,
+        responses={422: {"model": ErrorOut}, 500: {"model": ErrorOut}},
+    )
+    def lab_tension(request: TensionIn) -> TensionOut:
+        """Replay a loading history on a fresh round tension specimen (steel material lab).
+
+        Stateless: the whole history is sent each time, so any state is reproducible. Strain is
+        commanded and the preset's material law decides the stress. Engineering stress (MPa) is
+        force over the original area; strain is engineering strain (fraction); tension positive.
+        """
+        return run_tension_request(request)
 
     @app.get("/api/v1/health")
     def health() -> dict[str, str]:
