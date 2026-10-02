@@ -427,6 +427,13 @@ export interface components {
             kind: "idealisation";
             /** Name */
             name: string;
+            /**
+             * Parameters
+             * @description The preset's numeric parameters (stresses in MPa, strains as fractions)
+             */
+            parameters: {
+                [key: string]: number;
+            };
             /** Preset */
             preset: string;
             /** Young Modulus Gpa */
@@ -787,6 +794,16 @@ export interface components {
         };
         /** TracePointOut */
         TracePointOut: {
+            /**
+             * Plastic Strain
+             * @description Permanent strain at this point (fraction)
+             */
+            plastic_strain: number;
+            /**
+             * Region
+             * @enum {string}
+             */
+            region: "elastic" | "elastic_curving" | "yield_onset" | "yield_drop" | "yield_plateau" | "strain_hardening" | "necking" | "unloading" | "reloading" | "fractured";
             /** Strain */
             strain: number;
             /** Stress Mpa */

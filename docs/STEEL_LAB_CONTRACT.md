@@ -108,15 +108,16 @@ Response (all numbers as in section 2):
     "plastic_strain": 0.04841152, "elastic_strain": 0.0, "max_strain": 0.05,
     "region": "unloading", "landmark": null
   },
-  "trace": [ { "strain": 0.0, "stress_mpa": 0.0 }, ... ],
+  "trace": [ { "strain": 0.0, "stress_mpa": 0.0, "plastic_strain": 0.0, "region": "elastic" }, ... ],
   "landmarks": [ { "id": "A", "name": "proportional_limit", "strain": 0.00115, "stress_mpa": 230.0, "reached": true }, ... ],   // all six, A to F
-  "model": { "preset": "steel_textbook", "name": "Mild steel, textbook curve", "kind": "idealisation", "young_modulus_gpa": 200.0 },
+  "model": { "preset": "steel_textbook", "name": "Mild steel, textbook curve", "kind": "idealisation", "young_modulus_gpa": 200.0, "parameters": { "lower_yield_mpa": 250.0, "strain_hardening": 0.015, ... } },
   "specimen": { "diameter_mm": 10.0, "gauge_length_mm": 50.0, "area_mm2": 78.5398 },
   "warnings": []
 }
 ```
 
 - `region` is one of `elastic`, `elastic_curving`, `yield_onset`, `yield_drop`, `yield_plateau`, `strain_hardening`, `necking`, `unloading`, `reloading`, `fractured` (a closed set in the OpenAPI schema, so the frontend can map it exhaustively).
+- Every `trace` point is a complete state (strain, stress, plastic strain and region), so a replay can show exact backend values. `model.parameters` lists the preset's numeric parameters for display.
 - `trace` samples the **analytic** backbone densely (never more than 0.004 strain apart) and always includes the landmark points and the exact corner points of elastic lines. It does not interpolate between measured source points, so it cannot invent a peak or plateau. After fracture it ends with the drop to `(ε_f − σ_f/E, 0)`.
 - `elastic_strain` is `strain − plastic_strain`. After fracture it is 0: the recoverable part is lost when the bar separates, and `strain` stays the strain at the break (`plastic_strain` is the strain left, 0.2485).
 - Errors use the existing envelope `{ "error": { "code", "message", "details" } }` with HTTP 422:

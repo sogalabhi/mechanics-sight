@@ -4,6 +4,7 @@ Units: strain dimensionless (engineering), stress MPa (engineering), force kN, l
 Tension positive. Contract: docs/STEEL_LAB_CONTRACT.md.
 """
 
+from dataclasses import asdict
 from typing import Annotated, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -94,6 +95,8 @@ class TensionStateOut(_Model):
 class TracePointOut(_Model):
     strain: float
     stress_mpa: float
+    plastic_strain: float = Field(description="Permanent strain at this point (fraction)")
+    region: Region
 
 
 class LandmarkOut(_Model):
@@ -109,6 +112,9 @@ class ModelOut(_Model):
     name: str
     kind: Literal["idealisation"]
     young_modulus_gpa: float
+    parameters: dict[str, float] = Field(
+        description="The preset's numeric parameters (stresses in MPa, strains as fractions)"
+    )
 
 
 class SpecimenOut(_Model):
@@ -160,7 +166,15 @@ def tension_result_to_schema(
             region=s.region,  # type: ignore[arg-type]  # the model only emits the Region names
             landmark=s.landmark,
         ),
-        trace=[TracePointOut(strain=t.strain, stress_mpa=t.stress_mpa) for t in result.trace],
+        trace=[
+            TracePointOut(
+                strain=t.strain,
+                stress_mpa=t.stress_mpa,
+                plastic_strain=t.plastic_strain,
+                region=t.region,  # type: ignore[arg-type]  # the model only emits the Region names
+            )
+            for t in result.trace
+        ],
         landmarks=[
             LandmarkOut(
                 id=m.id, name=m.name, strain=m.strain, stress_mpa=m.stress_mpa, reached=m.reached
@@ -172,6 +186,7 @@ def tension_result_to_schema(
             name=preset.name,
             kind="idealisation",
             young_modulus_gpa=preset.young_modulus_gpa,
+            parameters={k: v for k, v in asdict(preset).items() if isinstance(v, float)},
         ),
         specimen=SpecimenOut(
             diameter_mm=specimen.diameter_mm,

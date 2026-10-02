@@ -84,10 +84,12 @@ class TensionState:
 
 @dataclass(frozen=True)
 class TracePoint:
-    """One point of the stress-strain path."""
+    """One point of the stress-strain path: a complete state, so a replay can show exact values."""
 
     strain: float
     stress_mpa: float
+    plastic_strain: float
+    region: str
 
 
 @dataclass(frozen=True)
@@ -133,7 +135,7 @@ class _Machine:
         self.back = 0.0
         self.direction = 0
         self.broken = False
-        self.trace: list[TracePoint] = [TracePoint(0.0, 0.0)]
+        self.trace: list[TracePoint] = [TracePoint(0.0, 0.0, 0.0, "elastic")]
 
     # ---- operations -----------------------------------------------------------------------
     def apply(self, op: Operation) -> None:
@@ -169,22 +171,32 @@ class _Machine:
                 if reversible:  # rejoin the maximum along the reversible curve
                     self._follow(self.e, self.back)
                 else:  # elastic reloading line ends on the backbone at the old maximum
-                    self.trace.append(TracePoint(self.back, p.stress(self.back)))
+                    self._add(
+                        self.back,
+                        p.stress(self.back),
+                        p.plastic_strain(self.back),
+                        self._zone(self.back),
+                    )
             self._follow(max(self.e, self.back), e1)
             self.back = max(self.back, e1)
         elif reversible:
             self._follow(self.e, e1)  # retrace the reversible curve downwards
         else:
-            self.trace.append(
-                TracePoint(e1, p.young_modulus_mpa * (e1 - p.plastic_strain(self.back)))
+            self._add(
+                e1,
+                p.young_modulus_mpa * (e1 - p.plastic_strain(self.back)),
+                p.plastic_strain(self.back),
+                "unloading",
             )
         self.direction = 1 if e1 > self.e else -1
         self.e = e1
         if e1 >= p.strain_fracture - STRAIN_TOL:
             self.broken = True
-            self.trace.append(
-                TracePoint(p.strain_fracture - p.fracture_mpa / p.young_modulus_mpa, 0.0)
-            )
+            drop = p.strain_fracture - p.fracture_mpa / p.young_modulus_mpa
+            self._add(drop, 0.0, drop, "fractured")
+
+    def _add(self, strain: float, stress: float, plastic: float, region: str) -> None:
+        self.trace.append(TracePoint(strain, stress, plastic, region))
 
     def _follow(self, a: float, b: float) -> None:
         """Append the backbone between two strains (either order), dropping the start point."""
@@ -192,7 +204,7 @@ class _Machine:
         if b < a:
             pts.reverse()
         for e in pts[1:]:
-            self.trace.append(TracePoint(e, self.p.stress(e)))
+            self._add(e, self.p.stress(e), self.p.plastic_strain(e), self._zone(e))
 
     def _samples(self, a: float, b: float) -> list[float]:
         """Strains from ``a`` to ``b``: every landmark inside, and a dense grid on curved pieces."""
@@ -227,7 +239,11 @@ class _Machine:
         beyond_b = self.back > p.strain_b + STRAIN_TOL
         if beyond_b and not on_backbone:
             return "unloading" if self.direction < 0 else "reloading"
-        e = self.e
+        return self._zone(self.e)
+
+    def _zone(self, e: float) -> str:
+        """Backbone piece a strain lies on (a limit belongs to the lower piece)."""
+        p = self.p
         for limit, name in (
             (p.strain_a, "elastic"),
             (p.strain_b, "elastic_curving"),

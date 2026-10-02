@@ -927,6 +927,14 @@
             "title": "Name",
             "type": "string"
           },
+          "parameters": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "description": "The preset's numeric parameters (stresses in MPa, strains as fractions)",
+            "title": "Parameters",
+            "type": "object"
+          },
           "preset": {
             "title": "Preset",
             "type": "string"
@@ -940,7 +948,8 @@
           "preset",
           "name",
           "kind",
-          "young_modulus_gpa"
+          "young_modulus_gpa",
+          "parameters"
         ],
         "title": "ModelOut",
         "type": "object"
@@ -1719,6 +1728,27 @@
       "TracePointOut": {
         "additionalProperties": false,
         "properties": {
+          "plastic_strain": {
+            "description": "Permanent strain at this point (fraction)",
+            "title": "Plastic Strain",
+            "type": "number"
+          },
+          "region": {
+            "enum": [
+              "elastic",
+              "elastic_curving",
+              "yield_onset",
+              "yield_drop",
+              "yield_plateau",
+              "strain_hardening",
+              "necking",
+              "unloading",
+              "reloading",
+              "fractured"
+            ],
+            "title": "Region",
+            "type": "string"
+          },
           "strain": {
             "title": "Strain",
             "type": "number"
@@ -1730,7 +1760,9 @@
         },
         "required": [
           "strain",
-          "stress_mpa"
+          "stress_mpa",
+          "plastic_strain",
+          "region"
         ],
         "title": "TracePointOut",
         "type": "object"

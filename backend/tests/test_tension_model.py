@@ -30,6 +30,18 @@ P = STEEL_TEXTBOOK
 E = P.young_modulus_mpa
 SPEC = Specimen(diameter_mm=10.0, gauge_length_mm=50.0)
 EPS = 1e-9
+REGIONS = {
+    "elastic",
+    "elastic_curving",
+    "yield_onset",
+    "yield_drop",
+    "yield_plateau",
+    "strain_hardening",
+    "necking",
+    "unloading",
+    "reloading",
+    "fractured",
+}
 
 
 def run(*ops: Operation, specimen: Specimen = SPEC) -> TensionResult:
@@ -261,6 +273,8 @@ def test_state_invariants_hold_for_any_history(history: list[Operation]) -> None
     if s.max_strain <= P.strain_b + 1e-12:
         assert s.plastic_strain == 0.0  # up to the elastic limit nothing is permanent
     assert all(t.stress_mpa >= -1e-9 for t in result.trace)
+    assert all(-1e-12 <= t.plastic_strain <= t.strain + 1e-9 for t in result.trace)
+    assert {t.region for t in result.trace} <= REGIONS
     assert [lm.reached for lm in result.landmarks] == [
         s.max_strain >= lm.strain - 1e-12 for lm in P.landmarks()
     ]

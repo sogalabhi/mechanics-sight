@@ -74,14 +74,23 @@ def test_response_shape(client: TestClient) -> None:
     assert out["schema_version"] == 1
     assert [m["id"] for m in out["landmarks"]] == list("ABCDEF")
     assert [m["reached"] for m in out["landmarks"]] == [True, True, True, True, False, False]
-    assert out["model"] == {
+    model = out["model"]
+    assert {k: model[k] for k in ("preset", "name", "kind", "young_modulus_gpa")} == {
         "preset": "steel_textbook",
         "name": "Mild steel, textbook curve",
         "kind": "idealisation",
         "young_modulus_gpa": 200.0,
     }
+    assert model["parameters"]["lower_yield_mpa"] == 250.0
+    assert model["parameters"]["strain_hardening"] == 0.015
+    assert model["parameters"]["strain_fracture"] == 0.25
     assert out["specimen"]["area_mm2"] == pytest.approx(78.5398163, abs=1e-6)
-    assert out["trace"][0] == {"strain": 0.0, "stress_mpa": 0.0}
+    assert out["trace"][0] == {
+        "strain": 0.0,
+        "stress_mpa": 0.0,
+        "plastic_strain": 0.0,
+        "region": "elastic",
+    }
     assert out["warnings"] == []
 
 
@@ -164,3 +173,30 @@ def test_beam_analysis_is_untouched(client: TestClient) -> None:
         "loads": [{"id": "p", "type": "point", "position": 3, "magnitude": -10}],
     }
     assert client.post("/api/v1/analyze", json=beam).status_code == 200
+
+
+def test_every_trace_point_is_a_full_state(client: TestClient) -> None:
+    out = client.post(URL, json=body([{"op": "strain", "to": 0.25}])).json()
+    trace = out["trace"]
+    assert trace[-1]["region"] == "fractured"
+    assert trace[-1]["plastic_strain"] == pytest.approx(0.2485)
+    assert trace[-2]["region"] == "necking"
+    peak = next(t for t in trace if t["strain"] == pytest.approx(0.15))
+    assert peak["stress_mpa"] == pytest.approx(400.0)
+    assert peak["plastic_strain"] == pytest.approx(0.148)
+    assert peak["region"] == "strain_hardening"
+    plateau = next(t for t in trace if t["strain"] == pytest.approx(0.015))
+    assert plateau["region"] == "yield_plateau"
+    assert all(0.0 <= t["plastic_strain"] <= t["strain"] + 1e-9 for t in trace)
+
+
+def test_unloading_points_are_labelled_unloading_with_the_permanent_strain(
+    client: TestClient,
+) -> None:
+    out = client.post(
+        URL, json=body([{"op": "strain", "to": 0.05}, {"op": "unload_to_zero_stress"}])
+    ).json()
+    last = out["trace"][-1]
+    assert last["region"] == "unloading"
+    assert last["stress_mpa"] == 0.0
+    assert last["plastic_strain"] == pytest.approx(last["strain"])
