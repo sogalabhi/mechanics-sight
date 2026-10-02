@@ -18,7 +18,7 @@ def test_bending_stress_basic() -> None:
     # y_top = 0.1m, y_bottom = -0.1m
     # σ_top = -M * y_top / I = -12.5 * 0.1 / 6.6667e-5 = -18750 kN/m² (compression)
     # σ_bot = -M * y_bottom / I = -12.5 * -0.1 / 6.6667e-5 = 18750 kN/m² (tension)
-    
+
     mat = Material(young_modulus_gpa=200, yield_strength_mpa=250)
     sec = RectangularSection(width=0.1, height=0.2)
     beam = Beam(
@@ -31,24 +31,24 @@ def test_bending_stress_basic() -> None:
         material=mat,
         section=sec,
     )
-    
+
     # 0 to 2.5: V = 5, M = 5x
     # 2.5 to 5: V = -5, M = 12.5 - 5(x-2.5) = 25 - 5x
     segments = [
         Segment(0.0, 2.5, shear=(5.0,), moment=(0.0, 5.0)),
         Segment(2.5, 5.0, shear=(-5.0,), moment=(12.5, -5.0)),
     ]
-    
+
     result = solve_bending_stress(beam, segments)
-    
+
     assert len(result.segments) == 2
-    
+
     assert result.max_tension is not None
     assert result.max_compression is not None
     assert math.isclose(result.max_tension.value, 18750.0)
     assert math.isclose(result.max_compression.value, -18750.0)
     assert math.isclose(result.max_tension.x, 2.5)
-    
+
     assert not result.yield_exceeded
     assert math.isclose(result.yield_ratio, 18750.0 / (250 * 1000))
     assert result.yield_location is not None
@@ -98,4 +98,3 @@ def test_stepped_beam_bending_stress() -> None:
     # In span 2 at x=2+: M = -20, sigma_top = -(-20)*0.2 / (0.1*0.4^3/12) = 7500 kN/m²
     seg2 = result.bending_stress.segments[1]
     assert math.isclose(seg2.sigma_top_poly()(0.0), 7500.0)
-

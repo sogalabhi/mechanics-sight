@@ -33,7 +33,9 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
         s_left = supports[i]
         s_right = supports[i + 1]
         l_span = s_right.position - s_left.position
-        spans_desc.append(f"\\text{{Span }} {i+1}\\ (L_{{{i+1}}} = {_num(l_span)}\\,\\text{{m}})")
+        spans_desc.append(
+            f"\\text{{Span }} {i + 1}\\ (L_{{{i + 1}}} = {_num(l_span)}\\,\\text{{m}})"
+        )
 
     steps.append(
         Step(
@@ -88,10 +90,10 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
             Step(
                 "moment_balance",
                 "reactions",
-                f"Three-Moment Equation for Joint '{lb}' (Spans {i} & {i+1})",
+                f"Three-Moment Equation for Joint '{lb}' (Spans {i} & {i + 1})",
                 symbolic=(
-                    f"M_{{{la}}}\\,L_{i} + 2 M_{{{lb}}}\\,(L_{i} + L_{{{i+1}}}) + "
-                    f"M_{{{lc}}}\\,L_{{{i+1}}} = -\\frac{{6 A_{i} \\bar{{a}}_{i}}}{{L_{i}}} - \\frac{{6 A_{{{i+1}}} \\bar{{b}}_{{{i+1}}}}}{{L_{{{i+1}}}}}"
+                    f"M_{{{la}}}\\,L_{i} + 2 M_{{{lb}}}\\,(L_{i} + L_{{{i + 1}}}) + "
+                    f"M_{{{lc}}}\\,L_{{{i + 1}}} = -\\frac{{6 A_{i} \\bar{{a}}_{i}}}{{L_{i}}} - \\frac{{6 A_{{{i + 1}}} \\bar{{b}}_{{{i + 1}}}}}{{L_{{{i + 1}}}}}"
                 ),
                 substituted=(
                     f"M_{{{la}}}\\,({_num(l1)}) + "
@@ -104,7 +106,7 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
                     f"{_num(l2)}\\,M_{{{lc}}} = {_num(rhs)}"
                 ),
                 notes=(
-                    f"Free simply-supported bending moment terms on span {i} and span {i+1}.",
+                    f"Free simply-supported bending moment terms on span {i} and span {i + 1}.",
                 ),
             )
         )
@@ -112,9 +114,13 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
     # 3. Boundary Conditions
     bc_notes = []
     if supports[0].kind in (SupportKind.PIN, SupportKind.ROLLER):
-        bc_notes.append(f"Support '{letters[supports[0].id]}' is a simple end support: M_{{{letters[supports[0].id]}}} = 0")
+        bc_notes.append(
+            f"Support '{letters[supports[0].id]}' is a simple end support: M_{{{letters[supports[0].id]}}} = 0"
+        )
     if supports[-1].kind in (SupportKind.PIN, SupportKind.ROLLER):
-        bc_notes.append(f"Support '{letters[supports[-1].id]}' is a simple end support: M_{{{letters[supports[-1].id]}}} = 0")
+        bc_notes.append(
+            f"Support '{letters[supports[-1].id]}' is a simple end support: M_{{{letters[supports[-1].id]}}} = 0"
+        )
 
     steps.append(
         Step(
@@ -131,8 +137,7 @@ def generate_three_moment_steps(beam: Beam, result: AnalysisResult) -> list[Step
 
     # 4. Final Support Reactions from Span Shears
     sol_reacs = ",\\quad ".join(
-        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
-        for s in supports
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}" for s in supports
     )
     if any(s.kind is SupportKind.FIXED for s in supports):
         mom_reacs = ",\\quad ".join(

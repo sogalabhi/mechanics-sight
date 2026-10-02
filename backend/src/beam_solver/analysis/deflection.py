@@ -57,8 +57,7 @@ def solve_deflection(
     if spans is None:
         raise SolverConsistencyError("physical deflection requires material and section")
     particulars = tuple(
-        _particular(segment, _span_for_segment(spans, segment).ei)
-        for segment in segments
+        _particular(segment, _span_for_segment(spans, segment).ei) for segment in segments
     )
     rows: list[np.ndarray] = []
     rhs: list[float] = []
@@ -134,7 +133,7 @@ def solve_deflection(
         except np.linalg.LinAlgError as exc:
             raise SolverConsistencyError("deflection boundary conditions are singular") from exc
     else:
-        constants, residuals, rank, _ = np.linalg.lstsq(matrix, vector, rcond=None)
+        constants, _residuals, rank, _ = np.linalg.lstsq(matrix, vector, rcond=None)
         if rank < expected:
             raise SolverConsistencyError("deflection boundary conditions are rank deficient")
 

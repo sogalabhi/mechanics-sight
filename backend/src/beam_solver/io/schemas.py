@@ -120,7 +120,9 @@ class BeamIn(_Model):
     )
     spans: list[PropertySpanIn] | None = Field(
         default=None,
-        description="Contiguous property spans covering [0, L]; alternative to uniform material/section",
+        description=(
+            "Contiguous property spans covering [0, L]; alternative to uniform material/section"
+        ),
     )
 
     @model_validator(mode="after")

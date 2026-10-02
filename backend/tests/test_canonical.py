@@ -207,4 +207,3 @@ def test_canonical_two_span_continuous_udl() -> None:
     assert r"\frac{w l^2}{8}" in c.symbolic_formula
     assert "-4" in c.result_text
     assert len(c.derivation) >= 4
-

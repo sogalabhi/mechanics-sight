@@ -50,13 +50,9 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
         and any(s.kind is SupportKind.FIXED for s in supports)
         and any(s.kind in (SupportKind.ROLLER, SupportKind.PIN) for s in supports)
     )
-    is_fixed_fixed = (
-        len(supports) == 2
-        and all(s.kind is SupportKind.FIXED for s in supports)
-    )
-    is_continuous_2span = (
-        len(supports) == 3
-        and all(s.kind in (SupportKind.PIN, SupportKind.ROLLER) for s in supports)
+    is_fixed_fixed = len(supports) == 2 and all(s.kind is SupportKind.FIXED for s in supports)
+    is_continuous_2span = len(supports) == 3 and all(
+        s.kind in (SupportKind.PIN, SupportKind.ROLLER) for s in supports
     )
 
     if is_propped_cantilever:
@@ -338,8 +334,7 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
             )
         )
         sol_reacs = ",\\quad ".join(
-            f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
-            for s in supports
+            f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}" for s in supports
         )
         if any(s.kind is SupportKind.FIXED for s in supports):
             mom_reacs = ",\\quad ".join(

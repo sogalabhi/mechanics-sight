@@ -49,10 +49,7 @@ def generate_moment_distribution_steps(beam: Beam, result: AnalysisResult) -> li
         l_span = s_right.position - s_left.position
 
         # Left joint DF
-        if i == 0:
-            df_left = "0" if s_left.kind is SupportKind.FIXED else "1"
-        else:
-            df_left = "0.50"
+        df_left = ("0" if s_left.kind is SupportKind.FIXED else "1") if i == 0 else "0.50"
         # Right joint DF
         if i == num_supports - 2:
             df_right = "0" if s_right.kind is SupportKind.FIXED else "1"
@@ -101,8 +98,7 @@ def generate_moment_distribution_steps(beam: Beam, result: AnalysisResult) -> li
 
     # 4. Final End Moments & Support Reactions
     sol_reacs = ",\\quad ".join(
-        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
-        for s in supports
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}" for s in supports
     )
     if any(s.kind is SupportKind.FIXED for s in supports):
         mom_reacs = ",\\quad ".join(

@@ -298,4 +298,3 @@ def test_multi_pinned_axial_indeterminate():
     assert pytest.approx(reacs["B"].fx, abs=1e-5) == -4.0
     assert pytest.approx(reacs["A"].fy, abs=1e-5) == 0.0
     assert pytest.approx(reacs["B"].fy, abs=1e-5) == 0.0
-

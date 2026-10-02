@@ -24,16 +24,12 @@ def _max_tau_at_section(section: Section, abs_shear: float) -> float:
     return abs_shear * q_na / (inertia * b_na)
 
 
-def solve_shear_stress(
-    beam: Beam, segments: Sequence[Segment]
-) -> ShearStressResult:
+def solve_shear_stress(beam: Beam, segments: Sequence[Segment]) -> ShearStressResult:
     """Find the maximum transverse shear stress along the beam."""
-    spans = getattr(beam, 'resolved_spans', None)
-    if spans is None:
-        if beam.material is not None and beam.section is not None:
-            pass
-        else:
-            raise SolverConsistencyError("shear stress requires material and section")
+    spans = getattr(beam, "resolved_spans", None)
+    uniform_section = beam.section
+    if spans is None and (beam.material is None or uniform_section is None):
+        raise SolverConsistencyError("shear stress requires material and section")
 
     candidates: list[Extreme] = []
 
@@ -50,8 +46,10 @@ def solve_shear_stress(
                     f"no property span covers segment [{segment.x_start}, {segment.x_end}]"
                 )
         else:
-            section = beam.section
-            
+            if uniform_section is None:  # unreachable: checked before the loop
+                raise SolverConsistencyError("shear stress requires material and section")
+            section = uniform_section
+
         shear_poly = segment.shear_poly()
         h = segment.length
 

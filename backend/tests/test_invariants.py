@@ -15,6 +15,7 @@ from beam_solver.domain import (
     Support,
     SupportKind,
 )
+from beam_solver.tolerances import force_tol, load_scale
 
 L = 10.0
 positions = st.floats(0.0, L).map(lambda x: round(x, 3))
@@ -61,6 +62,20 @@ def all_loads(beam: Beam, result: AnalysisResult) -> tuple[Load, ...]:
     from beam_solver.analysis.analyze import reaction_loads
 
     return beam.loads + reaction_loads(result.reactions, beam)
+
+
+def force_noise(beam: Beam, loads: tuple[Load, ...]) -> float:
+    """Force values the solver treats as numerical noise: its own tolerance for this load scale.
+
+    The solver trims anything within `force_tol(scale)` of zero, so a check against an
+    independent calculation cannot demand better agreement than that (plus roundoff).
+    """
+    scale = load_scale(
+        sum(abs(load.resultant()) + abs(load.horizontal_resultant()) for load in loads),
+        sum(abs(load.moment_about(0.0)) for load in loads),
+        beam.length,
+    )
+    return force_tol(scale)
 
 
 def from_right(loads: tuple[Load, ...], x: float) -> tuple[float, float]:
@@ -139,19 +154,20 @@ def test_axial_right_section_and_jumps(beam: Beam) -> None:
     """Independent right-section equilibrium, point-force jumps and closure for N."""
     result = analyze(beam)
     loads = all_loads(beam, result)
+    tol = 1e-7 + force_noise(beam, loads)
     for x in interior_samples(result):
         right_force = sum(
             right.horizontal_resultant()
             for load in loads
             if (right := load.split(x)[1]) is not None
         )
-        assert result.axial_at(x, side=Side.RIGHT) == pytest.approx(right_force, abs=1e-7)
+        assert result.axial_at(x, side=Side.RIGHT) == pytest.approx(right_force, abs=tol)
     for cp in result.critical_points:
         applied = sum(
             load.horizontal_resultant()
             for load in loads
             if isinstance(load, PointLoad) and abs(load.position - cp.x) < 1e-6
         )
-        assert cp.axial_right - cp.axial_left == pytest.approx(-applied, abs=1e-7)
+        assert cp.axial_right - cp.axial_left == pytest.approx(-applied, abs=tol)
     assert result.critical_points[-1].axial_right == 0.0
     assert all(len(seg.axial) == 1 for seg in result.segments)

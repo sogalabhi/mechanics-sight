@@ -142,5 +142,6 @@ class Beam:
             return self.spans
         if self.material is not None and self.section is not None:
             from beam_solver.domain.sections import PropertySpan
+
             return (PropertySpan(0.0, self.length, self.material, self.section),)
         return None

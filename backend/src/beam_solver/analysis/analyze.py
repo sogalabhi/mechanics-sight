@@ -44,7 +44,9 @@ def analyze(beam: Beam) -> AnalysisResult:
     points = build_critical_points(segments, all_loads, beam.length, f_tol, m_tol)
     extremes = find_extremes(segments, points, f_tol, m_tol)
 
-    can_do_physical = getattr(beam, 'resolved_spans', None) is not None or (beam.material is not None and beam.section is not None)
+    can_do_physical = getattr(beam, "resolved_spans", None) is not None or (
+        beam.material is not None and beam.section is not None
+    )
 
     initial_result = AnalysisResult(
         classification=solution.classification,

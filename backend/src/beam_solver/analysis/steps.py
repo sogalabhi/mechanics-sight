@@ -15,7 +15,7 @@ from numpy.polynomial import Polynomial
 from beam_solver.analysis.analyze import reaction_loads
 from beam_solver.analysis.results import AnalysisResult, Segment, Side
 from beam_solver.domain import Beam, DistributedLoad, Load, PointLoad, PointMoment, PropertySpan
-from beam_solver.solvers import Determinacy, EquilibriumSystem
+from beam_solver.solvers import EquilibriumSystem
 
 _ZERO_TOL = 5e-4  # below this a value prints as 0 (3 decimals)
 MAX_STEP_SEGMENTS = 60  # beyond this the per-segment working is left out
@@ -674,7 +674,9 @@ def _physical_steps(beam: Beam, result: AnalysisResult) -> list[Step]:
                 "physical",
                 "Extreme-fibre normal bending stress",
                 symbolic=r"\sigma(x, y) = -\frac{M(x)\,y}{I_x},\quad \text{positive} = \text{tension}",
-                result=",\\quad ".join(sub_stress_parts) if sub_stress_parts else r"\sigma \equiv 0",
+                result=",\\quad ".join(sub_stress_parts)
+                if sub_stress_parts
+                else r"\sigma \equiv 0",
                 at=b_stress.yield_location.x if b_stress.yield_location else None,
             )
         )
@@ -690,7 +692,7 @@ def _physical_steps(beam: Beam, result: AnalysisResult) -> list[Step]:
                         f"{{f_y}} = {_num(b_stress.yield_ratio)}"
                     ),
                     result=(
-                        f"\\text{{{ 'Yield exceeded!' if b_stress.yield_exceeded else 'Within elastic limit' }}}"
+                        f"\\text{{{'Yield exceeded!' if b_stress.yield_exceeded else 'Within elastic limit'}}}"
                         f"\\quad (\\text{{ratio}} = {_num(b_stress.yield_ratio)})"
                     ),
                     at=b_stress.yield_location.x,
@@ -717,9 +719,7 @@ def _physical_steps(beam: Beam, result: AnalysisResult) -> list[Step]:
     return steps
 
 
-def build_steps(
-    beam: Beam, result: AnalysisResult, method: str | None = None
-) -> tuple[Step, ...]:
+def build_steps(beam: Beam, result: AnalysisResult, method: str | None = None) -> tuple[Step, ...]:
     """Worked steps for an already-analysed beam."""
     labels = _make_labels(beam)
     all_loads = beam.loads + reaction_loads(result.reactions, beam)

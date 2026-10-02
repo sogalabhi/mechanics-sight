@@ -59,7 +59,9 @@ def _section_from_schema(data: SectionIn | None) -> Section | None:
     elif isinstance(data, ISectionIn):
         return ISection(data.height, data.flange_width, data.flange_thickness, data.web_thickness)
     elif isinstance(data, TSectionIn):
-        return TSection(data.flange_width, data.flange_thickness, data.web_depth, data.web_thickness)
+        return TSection(
+            data.flange_width, data.flange_thickness, data.web_depth, data.web_thickness
+        )
     return None
 
 
@@ -93,13 +95,16 @@ def beam_from_schema(data: BeamIn) -> Beam:
     if data.spans:
         spans_domain = tuple(
             PropertySpan(
-                sp.x_start, sp.x_end,
+                sp.x_start,
+                sp.x_end,
                 Material(sp.material.young_modulus_gpa, sp.material.yield_strength_mpa),
                 _section_from_schema(sp.section),  # type: ignore[arg-type]
             )
             for sp in data.spans
         )
-    return Beam(data.length, supports, tuple(loads), tuple(data.hinges), material, section, spans_domain)
+    return Beam(
+        data.length, supports, tuple(loads), tuple(data.hinges), material, section, spans_domain
+    )
 
 
 def beam_from_json(data: dict[str, Any]) -> Beam:

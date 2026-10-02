@@ -1,7 +1,7 @@
 """Tests for the Multi-Method Pedagogical Engine (Milestones 4.2 & 4.3)."""
 
-from fastapi.testclient import TestClient
 import pytest
+from fastapi.testclient import TestClient
 
 from beam_solver.analysis import analyze, build_steps
 from beam_solver.analysis.methods.router import available_methods, default_method_for
@@ -134,7 +134,16 @@ def test_api_method_query_param(client: TestClient):
             {"id": "a", "type": "fixed", "position": 0.0},
             {"id": "b", "type": "roller", "position": 6.0},
         ],
-        "loads": [{"id": "w", "type": "distributed", "start": 0.0, "end": 6.0, "w_start": -10.0, "w_end": -10.0}],
+        "loads": [
+            {
+                "id": "w",
+                "type": "distributed",
+                "start": 0.0,
+                "end": 6.0,
+                "w_start": -10.0,
+                "w_end": -10.0,
+            }
+        ],
     }
     # Request without method: defaults to recommended
     r1 = client.post("/api/v1/analyze?steps=true", json=body)

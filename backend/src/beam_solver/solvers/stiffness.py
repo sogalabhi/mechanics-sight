@@ -4,7 +4,6 @@ Euler--Bernoulli beam elements with exact cubic Hermite interpolation for bendin
 and linear elements for axial deformation.
 """
 
-
 import numpy as np
 
 from beam_solver.domain import (

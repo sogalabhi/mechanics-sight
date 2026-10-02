@@ -155,4 +155,3 @@ def test_stepped_cantilever_deflection_and_continuity() -> None:
     assert seg2.deflection_poly()(2.0) == pytest.approx(expected_tip_deflection)
     assert result.deflection.max_downward is not None
     assert result.deflection.max_downward.value == pytest.approx(expected_tip_deflection)
-

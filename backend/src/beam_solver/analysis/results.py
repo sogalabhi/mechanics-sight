@@ -66,7 +66,7 @@ class BendingStressSegment:
 
     x_start: float
     x_end: float
-    sigma_top: tuple[float, ...]     # positive = tension
+    sigma_top: tuple[float, ...]  # positive = tension
     sigma_bottom: tuple[float, ...]  # positive = tension
 
     def sigma_top_poly(self) -> Polynomial:
@@ -81,11 +81,11 @@ class BendingStressResult:
     """Extreme-fibre bending stress results along the beam."""
 
     segments: tuple[BendingStressSegment, ...]
-    max_tension: Extreme | None       # most positive σ (tension), kN/m²
-    max_compression: Extreme | None   # most negative σ (compression), kN/m²
-    yield_ratio: float                # max |σ| / σ_y
+    max_tension: Extreme | None  # most positive σ (tension), kN/m²
+    max_compression: Extreme | None  # most negative σ (compression), kN/m²
+    yield_ratio: float  # max |σ| / σ_y
     yield_exceeded: bool
-    yield_location: Extreme | None    # where max |σ| occurs
+    yield_location: Extreme | None  # where max |σ| occurs
 
 
 @dataclass(frozen=True)

@@ -82,8 +82,7 @@ def generate_direct_stiffness_steps(beam: Beam, result: AnalysisResult) -> list[
     letters = {s.id: chr(ord("A") + i) for i, s in enumerate(supports)}
     reacs = {r.support_id: r for r in result.reactions}
     sol_reacs = ",\\quad ".join(
-        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
-        for s in supports
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}" for s in supports
     )
     if any(s.kind is SupportKind.FIXED for s in supports):
         mom_reacs = ",\\quad ".join(
@@ -100,9 +99,7 @@ def generate_direct_stiffness_steps(beam: Beam, result: AnalysisResult) -> list[
             "Support Reaction Recovery",
             symbolic=r"\mathbf{R}_p = \mathbf{K}_{pf} \mathbf{U}_f + \mathbf{K}_{pp} \mathbf{U}_p - \mathbf{F}_p",
             result=sol_reacs,
-            notes=(
-                "Exact support reactions extracted from the global equilibrium equations.",
-            ),
+            notes=("Exact support reactions extracted from the global equilibrium equations.",),
         )
     )
 

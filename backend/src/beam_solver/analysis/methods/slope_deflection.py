@@ -50,7 +50,6 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
     for i in range(num_supports - 1):
         s_left = supports[i]
         s_right = supports[i + 1]
-        l_span = s_right.position - s_left.position
 
         # Look up or approximate fixed end moment
         # For propped cantilever or fixed-fixed:
@@ -96,9 +95,16 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
     )
 
     # 4. Joint Equilibrium Equations
-    interior_joints = [s for s in supports if s.kind not in (SupportKind.FIXED,) and s != supports[0] and s != supports[-1]]
+    interior_joints = [
+        s
+        for s in supports
+        if s.kind not in (SupportKind.FIXED,) and s != supports[0] and s != supports[-1]
+    ]
     if interior_joints:
-        eq_list = [f"\\sum M_{{{letters[s.id]}}} = 0 \\implies M_{{{letters[s.id]}\\text{{ left}}}} + M_{{{letters[s.id]}\\text{{ right}}}} = 0" for s in interior_joints]
+        eq_list = [
+            f"\\sum M_{{{letters[s.id]}}} = 0 \\implies M_{{{letters[s.id]}\\text{{ left}}}} + M_{{{letters[s.id]}\\text{{ right}}}} = 0"
+            for s in interior_joints
+        ]
         steps.append(
             Step(
                 "moment_balance",
@@ -112,8 +118,7 @@ def generate_slope_deflection_steps(beam: Beam, result: AnalysisResult) -> list[
 
     # 5. Final Solved Support Reactions
     sol_reacs = ",\\quad ".join(
-        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}"
-        for s in supports
+        f"R_{{{letters[s.id]}}} = {_num(reacs[s.id].fy)}\\,\\text{{kN}}" for s in supports
     )
     if any(s.kind is SupportKind.FIXED for s in supports):
         mom_reacs = ",\\quad ".join(

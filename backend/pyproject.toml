@@ -37,6 +37,14 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP", "SIM", "N", "RUF", "PT"]
+# Physics notation in comments, docstrings and worked-step text is deliberate.
+allowed-confusables = ["–", "−", "σ"]
+
+[tool.ruff.lint.per-file-ignores]
+# Worked steps are LaTeX in long string literals: wrapping them would change the text.
+"src/beam_solver/analysis/canonical.py" = ["E501"]
+"src/beam_solver/analysis/steps.py" = ["E501"]
+"src/beam_solver/analysis/methods/*.py" = ["E501"]
 
 [tool.mypy]
 strict = true

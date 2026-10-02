@@ -8,41 +8,35 @@ from beam_solver.errors import SolverConsistencyError
 from beam_solver.tolerances import POSITION_TOL
 
 
-def solve_bending_stress(
-    beam: Beam, segments: Sequence[Segment]
-) -> BendingStressResult:
+def solve_bending_stress(beam: Beam, segments: Sequence[Segment]) -> BendingStressResult:
     """Compute σ_top(x) = −M(x)·y_top/I and σ_bottom(x) = −M(x)·y_bottom/I."""
-    spans = getattr(beam, 'resolved_spans', None)
-    if spans is None:
-        if beam.material is not None and beam.section is not None:
-            # We create a dummy span for constant-EI backward compatibility,
-            # but wait, let's just use beam.section directly if spans is None.
-            pass
-        else:
-            raise SolverConsistencyError("bending stress requires material and section")
+    spans = getattr(beam, "resolved_spans", None)
+    material = beam.material
+    uniform_section = beam.section
+    if spans is None and (material is None or uniform_section is None):
+        raise SolverConsistencyError("bending stress requires material and section")
 
     stress_segments: list[BendingStressSegment] = []
     candidates: list[Extreme] = []
 
     for segment in segments:
         section = None
-        yield_strength = 0.0
-        
+
         if spans is not None:
             mid = (segment.x_start + segment.x_end) / 2.0
             for span in spans:
                 if span.x_start - POSITION_TOL <= mid <= span.x_end + POSITION_TOL:
                     section = span.section
-                    yield_strength = span.material.yield_strength_kn_m2
                     break
             if section is None:
                 raise SolverConsistencyError(
                     f"no property span covers segment [{segment.x_start}, {segment.x_end}]"
                 )
         else:
-            section = beam.section
-            yield_strength = beam.material.yield_strength_kn_m2
-            
+            if uniform_section is None:  # unreachable: checked before the loop
+                raise SolverConsistencyError("bending stress requires material and section")
+            section = uniform_section
+
         inertia = section.second_moment
         y_top = section.y_top
         y_bottom = section.y_bottom
@@ -61,9 +55,14 @@ def solve_bending_stress(
         sigma_top_coef = tuple(float(c) for c in sigma_top_poly.coef)
         sigma_bottom_coef = tuple(float(c) for c in sigma_bottom_poly.coef)
 
-        stress_segments.append(BendingStressSegment(
-            segment.x_start, segment.x_end, sigma_top_coef, sigma_bottom_coef,
-        ))
+        stress_segments.append(
+            BendingStressSegment(
+                segment.x_start,
+                segment.x_end,
+                sigma_top_coef,
+                sigma_bottom_coef,
+            )
+        )
 
         # Evaluate extremes at segment endpoints and interior stationary points
         h = segment.length
@@ -86,7 +85,12 @@ def solve_bending_stress(
     # Find overall extremes
     if not candidates:
         return BendingStressResult(
-            tuple(stress_segments), None, None, 0.0, False, None,
+            tuple(stress_segments),
+            None,
+            None,
+            0.0,
+            False,
+            None,
         )
 
     max_tension_cand = max(candidates, key=lambda e: e.value)
@@ -95,11 +99,13 @@ def solve_bending_stress(
 
     zero_tol = 1e-9
     max_tension_result = max_tension_cand if max_tension_cand.value > zero_tol else None
-    max_compression_result = max_compression_cand if max_compression_cand.value < -zero_tol else None
+    max_compression_result = (
+        max_compression_cand if max_compression_cand.value < -zero_tol else None
+    )
 
     # Yield check
     max_abs_stress = abs(max_abs_cand.value)
-    
+
     # Get yield strength from the span at the location of max stress
     yield_s = 0.0
     if spans is not None:
@@ -107,8 +113,8 @@ def solve_bending_stress(
             if span.x_start - POSITION_TOL <= max_abs_cand.x <= span.x_end + POSITION_TOL:
                 yield_s = span.material.yield_strength_kn_m2
                 break
-    else:
-        yield_s = beam.material.yield_strength_kn_m2
+    elif material is not None:
+        yield_s = material.yield_strength_kn_m2
 
     yield_ratio = max_abs_stress / yield_s if yield_s > 0 else 0.0
 

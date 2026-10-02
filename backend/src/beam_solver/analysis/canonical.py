@@ -355,6 +355,9 @@ def _match_cantilever(beam: Beam, result: AnalysisResult) -> CanonicalCase | Non
                 ),
             )
 
+    return None
+
+
 def _match_propped_cantilever(beam: Beam, result: AnalysisResult) -> CanonicalCase | None:
     """Check for propped cantilever benchmark cases (fixed at one end, roller/pin at the other)."""
     if len(beam.supports) != 2:
@@ -388,8 +391,6 @@ def _match_propped_cantilever(beam: Beam, result: AnalysisResult) -> CanonicalCa
             w_str = _num(w_val)
             expected_m_wall = -(w_val * l_len**2) / 8.0
             expected_m_max = (9.0 * w_val * l_len**2) / 128.0
-            expected_r_roller = (3.0 * w_val * l_len) / 8.0
-            expected_r_fixed = (5.0 * w_val * l_len) / 8.0
 
             wall_x = 0.0 if fixed_left else l_len
             wall_m = result.moment_at(wall_x, side=Side.RIGHT if fixed_left else Side.LEFT)
@@ -597,7 +598,6 @@ def _match_two_span_continuous(beam: Beam, result: AnalysisResult) -> CanonicalC
             w_str = _num(w_val)
             expected_m_b = -(w_val * span**2) / 8.0
             expected_r_b = (10.0 * w_val * span) / 8.0
-            expected_r_ends = (3.0 * w_val * span) / 8.0
 
             mb = result.moment_at(span, side=Side.RIGHT)
             if abs(mb - expected_m_b) > 1e-4:
@@ -645,4 +645,3 @@ def detect_canonical(beam: Beam, result: AnalysisResult) -> CanonicalCase | None
         or _match_fixed_fixed(beam, result)
         or _match_two_span_continuous(beam, result)
     )
-
