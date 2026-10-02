@@ -1,0 +1,40 @@
+{
+  "case": "L8",
+  "name": "L08_plateau_0p01",
+  "milestone": "S2",
+  "description": "On the yield plateau.",
+  "input": {
+    "schema_version": 1,
+    "preset": "steel_textbook",
+    "specimen": {
+      "diameter_mm": 10,
+      "gauge_length_mm": 50
+    },
+    "history": [
+      {
+        "op": "strain",
+        "to": 0.01
+      }
+    ]
+  },
+  "tolerance": {
+    "strain": 1e-12,
+    "stress_mpa": 1e-06,
+    "force_kn": 1e-06,
+    "extension_mm": 1e-09,
+    "plastic_strain": 1e-12,
+    "elastic_strain": 1e-12
+  },
+  "expected": {
+    "strain": 0.01,
+    "stress_mpa": 250.0,
+    "force_kn": 19.634954084936208,
+    "extension_mm": 0.5,
+    "plastic_strain": 0.00875,
+    "elastic_strain": 0.00125,
+    "max_strain": 0.01,
+    "region": "yield_plateau",
+    "landmark": null
+  },
+  "derivation": "sigma = f_y = 250 MPa; F = 19.635 kN; dL = 0.5 mm; eps_p = 0.01 - 0.00125 = 0.00875."
+}

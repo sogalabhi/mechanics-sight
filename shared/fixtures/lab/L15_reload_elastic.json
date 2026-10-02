@@ -1,0 +1,47 @@
+{
+  "case": "L15",
+  "name": "L15_reload_elastic",
+  "milestone": "S2",
+  "description": "Reloading follows the elastic line, no new plastic strain.",
+  "input": {
+    "schema_version": 1,
+    "preset": "steel_textbook",
+    "specimen": {
+      "diameter_mm": 10,
+      "gauge_length_mm": 50
+    },
+    "history": [
+      {
+        "op": "strain",
+        "to": 0.05
+      },
+      {
+        "op": "unload_to_zero_stress"
+      },
+      {
+        "op": "strain",
+        "to": 0.049411522633744855
+      }
+    ]
+  },
+  "tolerance": {
+    "strain": 1e-12,
+    "stress_mpa": 1e-06,
+    "force_kn": 1e-06,
+    "extension_mm": 1e-09,
+    "plastic_strain": 1e-12,
+    "elastic_strain": 1e-12
+  },
+  "expected": {
+    "strain": 0.049411522633744855,
+    "stress_mpa": 200.0,
+    "force_kn": 15.707963267948966,
+    "extension_mm": 2.4705761316872428,
+    "plastic_strain": 0.048411522633744854,
+    "elastic_strain": 0.001,
+    "max_strain": 0.05,
+    "region": "reloading",
+    "landmark": null
+  },
+  "derivation": "sigma = E*(eps - eps_p) = 200000*0.001 = 200 MPa; F = 15.708 kN; eps_p unchanged = 0.04841152."
+}

@@ -1,0 +1,50 @@
+{
+  "case": "L13",
+  "name": "L13_point_F_fracture",
+  "milestone": "S2",
+  "description": "Fracture F: the test ends.",
+  "input": {
+    "schema_version": 1,
+    "preset": "steel_textbook",
+    "specimen": {
+      "diameter_mm": 10,
+      "gauge_length_mm": 50
+    },
+    "history": [
+      {
+        "op": "strain",
+        "to": 0.25
+      }
+    ]
+  },
+  "tolerance": {
+    "strain": 1e-12,
+    "stress_mpa": 1e-06,
+    "force_kn": 1e-06,
+    "extension_mm": 1e-09,
+    "plastic_strain": 1e-12,
+    "elastic_strain": 1e-12
+  },
+  "expected": {
+    "strain": 0.25,
+    "stress_mpa": 0.0,
+    "force_kn": 0.0,
+    "extension_mm": 12.5,
+    "plastic_strain": 0.2485,
+    "elastic_strain": 0.0,
+    "max_strain": 0.25,
+    "region": "fractured",
+    "landmark": "F"
+  },
+  "derivation": "At the break sigma = 300 MPa (F = 23.562 kN); afterwards sigma = 0, eps_p = 0.25 - 300/200000 = 0.2485; dL = 12.5 mm. Controls end. strain stays the strain at the break (0.25); elastic_strain is 0 because the recoverable part is lost on separation.",
+  "trace_ends_with": [
+    [
+      0.25,
+      300.0
+    ],
+    [
+      0.2485,
+      0.0
+    ]
+  ]
+}

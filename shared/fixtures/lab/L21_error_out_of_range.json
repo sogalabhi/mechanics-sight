@@ -1,0 +1,30 @@
+{
+  "case": "L21",
+  "name": "L21_error_out_of_range",
+  "milestone": "S2",
+  "description": "Strain above the fracture strain is rejected, not extrapolated.",
+  "input": {
+    "schema_version": 1,
+    "preset": "steel_textbook",
+    "specimen": {
+      "diameter_mm": 10,
+      "gauge_length_mm": 50
+    },
+    "history": [
+      {
+        "op": "strain",
+        "to": 0.3
+      }
+    ]
+  },
+  "tolerance": {
+    "strain": 1e-12,
+    "stress_mpa": 1e-06,
+    "force_kn": 1e-06,
+    "extension_mm": 1e-09,
+    "plastic_strain": 1e-12,
+    "elastic_strain": 1e-12
+  },
+  "expected_error": "strain_out_of_range",
+  "derivation": "Valid range is 0 to 0.25."
+}

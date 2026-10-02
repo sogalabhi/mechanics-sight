@@ -1,0 +1,40 @@
+{
+  "case": "L3",
+  "name": "L03_point_A",
+  "milestone": "S1",
+  "description": "Proportional limit A.",
+  "input": {
+    "schema_version": 1,
+    "preset": "steel_textbook",
+    "specimen": {
+      "diameter_mm": 10,
+      "gauge_length_mm": 50
+    },
+    "history": [
+      {
+        "op": "strain",
+        "to": 0.00115
+      }
+    ]
+  },
+  "tolerance": {
+    "strain": 1e-12,
+    "stress_mpa": 1e-06,
+    "force_kn": 1e-06,
+    "extension_mm": 1e-09,
+    "plastic_strain": 1e-12,
+    "elastic_strain": 1e-12
+  },
+  "expected": {
+    "strain": 0.00115,
+    "stress_mpa": 230.0,
+    "force_kn": 18.06415775814131,
+    "extension_mm": 0.0575,
+    "plastic_strain": 0.0,
+    "elastic_strain": 0.00115,
+    "max_strain": 0.00115,
+    "region": "elastic",
+    "landmark": "A"
+  },
+  "derivation": "eps_A = sigma_A/E = 230/200000 = 0.00115; sigma = 230 MPa; F = 18.064 kN; dL = 0.0575 mm."
+}

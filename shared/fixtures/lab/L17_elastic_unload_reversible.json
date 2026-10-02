@@ -1,0 +1,43 @@
+{
+  "case": "L17",
+  "name": "L17_elastic_unload_reversible",
+  "milestone": "S1",
+  "description": "Unloading inside the reversible zone retraces the curve: nothing permanent.",
+  "input": {
+    "schema_version": 1,
+    "preset": "steel_textbook",
+    "specimen": {
+      "diameter_mm": 10,
+      "gauge_length_mm": 50
+    },
+    "history": [
+      {
+        "op": "strain",
+        "to": 0.001
+      },
+      {
+        "op": "unload_to_zero_stress"
+      }
+    ]
+  },
+  "tolerance": {
+    "strain": 1e-12,
+    "stress_mpa": 1e-06,
+    "force_kn": 1e-06,
+    "extension_mm": 1e-09,
+    "plastic_strain": 1e-12,
+    "elastic_strain": 1e-12
+  },
+  "expected": {
+    "strain": 0.0,
+    "stress_mpa": 0.0,
+    "force_kn": 0.0,
+    "extension_mm": 0.0,
+    "plastic_strain": 0.0,
+    "elastic_strain": 0.0,
+    "max_strain": 0.001,
+    "region": "elastic",
+    "landmark": null
+  },
+  "derivation": "max strain 0.001 <= eps_B so the zone is reversible; unloading to zero stress gives eps = 0, eps_p = 0."
+}

@@ -95,7 +95,7 @@ POST /api/v1/lab/tension
 }
 ```
 
-Ops: `strain` (move total strain to `to`), `unload_to_zero_stress`. Response:
+Ops: `strain` (move total strain to `to`), `unload_to_zero_stress`, `reset` (discard everything before it and start a fresh specimen, so a recorded session that included a reset replays exactly). Response:
 
 ```
 {
@@ -111,11 +111,12 @@ Ops: `strain` (move total strain to `to`), `unload_to_zero_stress`. Response:
 ```
 
 - `trace` samples the **analytic** backbone densely (never more than 0.004 strain apart) and always includes the landmark points and the exact corner points of elastic lines. It does not interpolate between measured source points, so it cannot invent a peak or plateau.
+- `elastic_strain` is `strain − plastic_strain`. After fracture it is 0: the recoverable part is lost when the bar separates, and `strain` stays the strain at the break (`plastic_strain` is the strain left, 0.2485).
 - Errors use the existing error envelope: `strain_out_of_range`, `unsupported_op`, `invalid_specimen`, `test_finished` (an op after fracture).
 
 ## 7. Reference cases (hand solved, written before any solver code)
 
-Specimen d₀ = 10 mm, L₀ = 50 mm, A₀ = 78.5398 mm². Preset `steel_textbook`. These become `shared/fixtures/lab/*.json`. F = σ·A₀. ΔL = ε·L₀.
+Specimen d₀ = 10 mm, L₀ = 50 mm, A₀ = 78.5398 mm². Preset `steel_textbook`. These are `shared/fixtures/lab/*.json` (format in its README); the expected values there are exact rational arithmetic on the formulas above, not solver output. F = σ·A₀. ΔL = ε·L₀.
 
 | # | History | Expected |
 |---|---|---|
@@ -141,7 +142,7 @@ Specimen d₀ = 10 mm, L₀ = 50 mm, A₀ = 78.5398 mm². Preset `steel_textbook
 | L20 | ε = 0.05, then ε = 0.01 | clamped at zero stress: ε = 0.048412, σ = 0 (tension only, no compression). |
 | L21 | ε = 0.30 | error `strain_out_of_range`. |
 | L22 | ε = 0.25, then ε = 0.1 | error `test_finished`. |
-| L23 | Any history, Reset | fresh specimen equal to L1. |
+| L23 | Any history, then a `reset` op | fresh specimen equal to L1. |
 
 Arithmetic checks: (0.10/0.135)² = 0.548697, so L10 σ = 400 − 82.30 = 317.70. (0.09/0.135)² = 0.444444, so L16 σ = 400 − 66.67 = 333.33. L13: F = 300 × 78.5398 / 1000 = 23.562 kN. ε_B: σ_B/E = 0.0012, κ·(240 − 230)² = 2×10⁻⁷ × 100 = 0.00002, so ε_B = 0.00122. The A to B curve at ε_B gives s = 10 MPa (check: s/E + κ·s² = 0.00005 + 0.00002 = 0.00007 = ε_B − ε_A).
 
