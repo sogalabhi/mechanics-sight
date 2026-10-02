@@ -27,6 +27,8 @@ interface State {
   /** Last good result. Kept while `error` is set so the diagrams can be greyed out. */
   result: AnalysisResult | null
   error: AnalysisError | null
+  /** A request for the current beam is queued or in flight. */
+  analyzing: boolean
   /** Ask the solver for worked steps too. Off unless the Working panel is open. */
   showWorking: boolean
   /** Solution method requested for indeterminate beams */
@@ -54,6 +56,7 @@ interface State {
   setPaneWidth: (w: number) => void
   setResult: (r: AnalysisResult | null) => void
   setError: (e: AnalysisError) => void
+  setAnalyzing: (on: boolean) => void
   setHover: (x: number | null) => void
   setPinned: (x: number | null) => void
   setFibre: (f: Fibre | null) => void
@@ -108,6 +111,7 @@ export const useStore = create<State>((set) => ({
   paneWidth: getStoredPaneWidth(),
   result: null,
   error: null,
+  analyzing: false,
   showWorking: false,
   selectedMethod: null,
   stepsUnsupported: false,
@@ -144,8 +148,9 @@ export const useStore = create<State>((set) => ({
     } catch {}
     set({ paneWidth })
   },
-  setResult: (result) => set({ result, error: null }),
-  setError: (error) => set({ error }),
+  setResult: (result) => set({ result, error: null, analyzing: false }),
+  setError: (error) => set({ error, analyzing: false }),
+  setAnalyzing: (analyzing) => set({ analyzing }),
   setHover: (hoverX) => set({ hoverX }),
   setPinned: (pinnedX) => set({ pinnedX }),
   setFibre: (fibre) => set({ fibre }),

@@ -33,7 +33,7 @@ function StepView({ step }: { step: Step }) {
 }
 
 const METHOD_LABELS: Record<string, string> = {
-  force: 'Force Method (Consistent Deformations)',
+  force_method: 'Force Method (Consistent Deformations)',
   three_moment: 'Three-Moment Equation (Clapeyron)',
   slope_deflection: 'Slope-Deflection Method',
   moment_distribution: 'Moment Distribution (Hardy Cross)',

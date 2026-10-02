@@ -5,8 +5,11 @@ import { DEFLECTION_PANEL_HEIGHT, ElasticCurvePanel } from '@/diagrams/ElasticCu
 import { STRESS_PANEL_HEIGHT, StressPanel } from '@/diagrams/StressPanel'
 import { selectCursorX, useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
+import { DiagramSkeleton } from './DiagramSkeleton'
+import skeleton from './DiagramSkeleton.module.css'
 import { EmptyDiagramState } from './EmptyDiagramState'
 import { Guides } from './Guides'
+import { useDelayedFlag } from './useDelayedFlag'
 import { useXScale } from './xscale'
 
 const SNAP_PX = 6
@@ -19,6 +22,10 @@ export function CanvasStack({ width }: { width: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const length = useStore((s) => s.beam.length)
   const result = useStore((s) => s.result)
+  const analyzing = useStore((s) => s.analyzing)
+  const slow = useDelayedFlag(analyzing && result !== null)
+  const hasSupports = useStore((s) => s.beam.supports.length > 0)
+  const hasLoads = useStore((s) => (s.beam.loads ?? []).length > 0)
   const showDeflection = useStore((s) => s.showDeflection)
   const showStress = useStore((s) => s.showStress)
   const hasStress = Boolean(useStore((s) => s.result?.bending_stress))
@@ -126,8 +133,14 @@ export function CanvasStack({ width }: { width: number }) {
         <BeamView />
         <Crosshair height={BEAM_PANEL_HEIGHT} />
       </svg>
+      {slow && <div className={skeleton.progress} role="progressbar" aria-label="Updating diagrams" />}
       {result ? (
-        <>
+        <div style={{ opacity: slow ? 0.55 : 1, transition: 'opacity 0.15s' }}>
+          {!hasLoads && hasSupports && (
+            <p style={{ margin: 0, padding: '6px 12px', fontSize: 12, color: 'var(--ink-2)', borderTop: '1px solid var(--rule)' }}>
+              No loads yet. Drag a load from the palette onto the beam to see shear and moment.
+            </p>
+          )}
           {showAxial && (
             <svg width={width} height={DIAGRAM_HEIGHT} style={{ display: 'block', ...rule, cursor: 'crosshair' }}>
               <DiagramPanel kind="axial" width={width} />
@@ -148,7 +161,9 @@ export function CanvasStack({ width }: { width: number }) {
               <StressPanel width={width} />
             </svg>
           )}
-        </>
+        </div>
+      ) : analyzing && hasSupports ? (
+        <DiagramSkeleton width={width} />
       ) : (
         <EmptyDiagramState width={width} />
       )}

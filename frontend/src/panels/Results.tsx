@@ -21,9 +21,19 @@ function badge(r: AnalysisResult): { text: string; tone: string } {
 
 export function Results() {
   const result = useStore((s) => s.result)
+  const analyzing = useStore((s) => s.analyzing)
   const setPinned = useStore((s) => s.setPinned)
   const beam = useStore((s) => s.draft ?? s.beam)
   const commit = useStore((s) => s.commit)
+
+  if (!result && analyzing) {
+    return (
+      <div role="status" aria-live="polite">
+        <h2 className={styles.title}>Results</h2>
+        <p className={styles.hint}>Solving…</p>
+      </div>
+    )
+  }
 
   if (!result) {
     return (
