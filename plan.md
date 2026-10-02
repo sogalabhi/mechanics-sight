@@ -1348,6 +1348,9 @@ A guided lesson opens the relevant workspace with a prepared example and staged 
 
 The current desktop layout combines editing, material inputs, result tables, textbook formulas, and worked steps in one narrow sidebar. Beam diagrams accumulate vertically. The section-cut and integration cards can overlap the model; the canonical explanation is repeated when working is expanded. The empty state displays unused result panels.
 
+> [!NOTE]
+> **Design Decision (Diagram Stacking)**: The simultaneous vertical stacking of all diagrams (AFD, SFD, BMD, Elastic Curve, and Stresses) is intentional and confirmed as the desired behavior. All diagrams remain visible and directly comparable on a single screen without tab-switching or hiding views. Do not replace or hide diagrams behind tabs; preserve full vertical stacked alignment.
+
 The redesign should preserve a clear main object, expose details according to the user's current task, and keep related views available together.
 
 ### 16.2 Four ways to work

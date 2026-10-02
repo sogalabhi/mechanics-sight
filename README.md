@@ -183,10 +183,12 @@ Mechanics Sight adheres to standard civil and structural engineering sign conven
 | Action / Quantity | Positive (+) Convention | Negative (-) Convention |
 | :--- | :--- | :--- |
 | **Axial Force ($N$)** | Tension (pulling outward) | Compression (pushing inward) |
-| **Shear Force ($V$)** | Clockwise shear couple (upwards on left face, downwards on right face) | Counter-clockwise shear couple |
+| **Shear Force ($V$)** | Sum of vertical forces left of the cut (left part pushed up) | Left part pushed down |
 | **Bending Moment ($M$)** | Sagging (compression at top fibres, tension at bottom fibres) | Hogging (tension at top fibres, compression at bottom fibres) |
-| **Vertical Deflection ($v$)** | Downward displacement | Upward displacement |
-| **Rotation ($\theta$)** | Counter-clockwise rotation | Clockwise rotation |
+| **Vertical Deflection ($y$)** | Upward displacement | Downward displacement |
+| **Rotation ($\theta$)** | Anticlockwise rotation | Clockwise rotation |
+| **Loads, reactions, UDL ($w$)** | Upward (a downward 10 kN load is stored as −10) | Downward |
+| **Applied couples / reaction moments** | Anticlockwise | Clockwise |
 
 For full mathematical definitions and derivation diagrams, see [docs/SIGN_CONVENTIONS.md](docs/SIGN_CONVENTIONS.md).
 
