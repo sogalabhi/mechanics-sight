@@ -204,9 +204,9 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                     r"\frac{1}{EI} \begin{bmatrix} \frac{L^3}{3} & \frac{L^2}{2} \\ \frac{L^2}{2} & L \end{bmatrix}"
                 ),
                 result=(
-                    f"[f] = \\frac{{1}}{{EI}} \\begin{bmatrix} "
+                    f"[f] = \\frac{{1}}{{EI}} \\begin{{bmatrix}} "
                     f"{_num(f11_ei)} & {_num(f12_ei)} \\\\ "
-                    f"{_num(f12_ei)} & {_num(f22_ei)} \\end{bmatrix}"
+                    f"{_num(f12_ei)} & {_num(f22_ei)} \\end{{bmatrix}}"
                 ),
                 notes=(
                     "Flexibility terms computed via standard virtual work integrals "
@@ -229,10 +229,10 @@ def generate_force_method_steps(beam: Beam, result: AnalysisResult) -> list[Step
                     r"-\begin{bmatrix} \Delta_{10} \\ \theta_{20} \end{bmatrix}"
                 ),
                 substituted=(
-                    f"\\begin{bmatrix} {_num(f11_ei)} & {_num(f12_ei)} \\\\ "
-                    f"{_num(f12_ei)} & {_num(f22_ei)} \\end{bmatrix} "
-                    f"\\begin{bmatrix} X_1 \\\\ X_2 \\end{bmatrix} = "
-                    f"-\\begin{bmatrix} {_num(delta_10)} \\\\ {_num(theta_20)} \\end{bmatrix}"
+                    f"\\begin{{bmatrix}} {_num(f11_ei)} & {_num(f12_ei)} \\\\ "
+                    f"{_num(f12_ei)} & {_num(f22_ei)} \\end{{bmatrix}} "
+                    f"\\begin{{bmatrix}} X_1 \\\\ X_2 \\end{{bmatrix}} = "
+                    f"-\\begin{{bmatrix}} {_num(delta_10)} \\\\ {_num(theta_20)} \\end{{bmatrix}}"
                 ),
                 result=(
                     f"X_1 = R_{{{lb}}} = {_num(rb)}\\,\\text{{kN}},\\quad "
