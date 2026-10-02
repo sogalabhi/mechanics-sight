@@ -60,7 +60,7 @@ The six textbook points, and the loading curve (the "backbone"), engineering str
 - The curve is continuous. It has zero slope at the peak E (both E–F and hardening formulas give f_u there) and an upper-yield peak at C.
 - It is a textbook shape with illustrative numbers, not a fit to data. A, B and C lie within about 35 MPa of each other and are hard to tell apart in real steel; real grades differ, and many have no upper yield at all.
 - After E the **engineering** stress falls because force is divided by the original area. The UI says so. No true-stress view in this version.
-- Valid range: 0 to ε_f. Asking for more is `strain_out_of_range`, not an extrapolation.
+- Valid range: 0 to ε_f. Anything outside it (negative, above ε_f, NaN or infinite) is `strain_out_of_range`, not an extrapolation. Moving the strain *back* is not an error: it stops at zero stress (L20).
 - Later presets (measured data, other grades, no upper yield, cold-worked) are added only with a stated source and model (plan 18.5).
 
 ## 5. Behaviour contract (model `steel_textbook`)
@@ -104,7 +104,7 @@ Ops: `strain` (move total strain to `to`), `unload_to_zero_stress`, `reset` (dis
     "plastic_strain": 0.04841152, "elastic_strain": 0.0, "max_strain": 0.05, "region": "unloading"
   },
   "trace": [ { "strain": 0.0, "stress_mpa": 0.0 }, ... ],
-  "landmarks": [ { "id": "A", "name": "proportional_limit", "strain": 0.00115, "stress_mpa": 230.0 }, ... ],
+  "landmarks": [ { "id": "A", "name": "proportional_limit", "strain": 0.00115, "stress_mpa": 230.0, "reached": true }, ... ],   // all six, A to F
   "model": { "preset": "steel_textbook", "E_gpa": 200, "kind": "idealisation" },
   "warnings": []
 }

@@ -25,3 +25,7 @@ def force_tol(scale: float) -> float:
 def moment_tol(scale: float, length: float) -> float:
     """Tolerance for moments (kN·m)."""
     return RELATIVE_VALUE_TOL * scale * length
+
+
+STRAIN_TOL = 1e-12
+"""Two engineering strains (dimensionless) closer than this are the same state (material lab)."""

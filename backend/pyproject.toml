@@ -64,3 +64,17 @@ layers = [
     "beam_solver.solvers",
     "beam_solver.domain",
 ]
+
+[[tool.importlinter.contracts]]
+name = "The material lab does not depend on the beam analysis layers"
+type = "forbidden"
+source_modules = ["beam_solver.material"]
+forbidden_modules = [
+    "beam_solver.analysis",
+    "beam_solver.solvers",
+    "beam_solver.domain",
+    "beam_solver.io",
+    "beam_solver.api",
+    "beam_solver.plotting",
+    "beam_solver.cli",
+]

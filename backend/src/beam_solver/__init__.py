@@ -7,9 +7,15 @@ from beam_solver.errors import (
     InvalidLoadError,
     InvalidPositionError,
     InvalidSectionError,
+    InvalidSpecimenError,
     InvalidSupportError,
+    LabError,
     SolverConsistencyError,
+    SpecimenBrokenError,
+    StrainOutOfRangeError,
+    UnknownPresetError,
     UnstableBeamError,
+    UnsupportedOperationError,
 )
 
 __all__ = [
@@ -19,7 +25,13 @@ __all__ = [
     "InvalidLoadError",
     "InvalidPositionError",
     "InvalidSectionError",
+    "InvalidSpecimenError",
     "InvalidSupportError",
+    "LabError",
     "SolverConsistencyError",
+    "SpecimenBrokenError",
+    "StrainOutOfRangeError",
+    "UnknownPresetError",
     "UnstableBeamError",
+    "UnsupportedOperationError",
 ]

@@ -62,6 +62,42 @@ class IndeterminateBeamError(ClassifiedBeamError):
     code = "indeterminate"
 
 
+class LabError(BeamError):
+    """Base class for material-lab (tension test) errors."""
+
+    code = "lab_error"
+
+
+class UnknownPresetError(LabError):
+    """The requested material preset does not exist."""
+
+    code = "unknown_preset"
+
+
+class InvalidSpecimenError(LabError):
+    """A specimen dimension is invalid."""
+
+    code = "invalid_specimen"
+
+
+class StrainOutOfRangeError(LabError):
+    """A requested strain lies outside the preset's valid range (0 to fracture strain)."""
+
+    code = "strain_out_of_range"
+
+
+class UnsupportedOperationError(LabError):
+    """A loading-history operation is not known."""
+
+    code = "unsupported_op"
+
+
+class SpecimenBrokenError(LabError):
+    """An operation was requested after the specimen fractured. Only a reset applies."""
+
+    code = "test_finished"
+
+
 class SolverConsistencyError(BeamError):
     """An internal consistency check failed. This is a bug, never a user error."""
 
