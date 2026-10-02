@@ -4,8 +4,6 @@ import { useStore } from '@/store/store'
 import { ValuesTable } from './ValuesTable'
 import { WorkingPanel } from '@/working/WorkingPanel'
 import { CanonicalCard } from '@/working/CanonicalCard'
-import { IntegrationCard } from '@/diagrams/IntegrationCard'
-import { VirtualSawCard } from '@/diagrams/VirtualSawCard'
 import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
 
@@ -27,9 +25,6 @@ export function Results() {
   const setPinned = useStore((s) => s.setPinned)
   const beam = useStore((s) => s.draft ?? s.beam)
   const commit = useStore((s) => s.commit)
-  const dockHud = useStore((s) => s.dockHud)
-  const sawCutX = useStore((s) => s.sawCutX)
-  const integrationRange = useStore((s) => s.integrationRange)
 
   if (!result) {
     return (
@@ -92,8 +87,6 @@ export function Results() {
       <h2 className={styles.title}>Results</h2>
       <p className={`${styles.badge} ${b.tone}`}>{b.text}</p>
       {result.canonical && <CanonicalCard canonical={result.canonical} />}
-      {dockHud && sawCutX !== null && <VirtualSawCard docked />}
-      {dockHud && integrationRange !== null && <IntegrationCard docked />}
 
       <h3 className={styles.sub}>Reactions</h3>
       <table className={`${styles.table} num`}>

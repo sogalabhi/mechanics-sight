@@ -1,12 +1,10 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useMediaQuery } from '@/canvas/useMediaQuery'
 import { EXAMPLES } from '@/model/examples'
-import { setLength, validateBeam } from '@/model/actions'
 import { shareUrl } from '@/model/share'
 import { applyTheme, loadTheme, type Theme } from '@/model/theme'
 import { downloadReport } from '@/report/downloadReport'
 import { useStore } from '@/store/store'
-import { NumberField } from '@/ui/NumberField'
 import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
 import { ViewMenu } from './ViewMenu'
@@ -52,21 +50,6 @@ export function TopBar() {
     }
   }
 
-  const lengthField = (
-    <NumberField
-      label="Length"
-      unit="m"
-      step={0.5}
-      value={beam.length}
-      onCommit={(v) => {
-        const next = setLength(beam, v)
-        const err = validateBeam(next)
-        if (err) return err
-        commit(next)
-        return next.length !== v ? `Adjusted to ${next.length} m` : null
-      }}
-    />
-  )
   const undoBtn = <button className={ui.btn} onClick={undo} disabled={!past.length} title="Undo (Ctrl+Z)" aria-label="Undo">{phone ? '↶' : 'Undo'}</button>
   const redoBtn = <button className={ui.btn} onClick={redo} disabled={!future.length} title="Redo (Ctrl+Shift+Z)" aria-label="Redo">{phone ? '↷' : 'Redo'}</button>
   const examples = (
@@ -126,7 +109,6 @@ export function TopBar() {
           <>
             <div className={styles.scrim} style={{ top: 48 }} onClick={() => setMenuOpen(false)} aria-hidden />
             <nav className={styles.drawer} aria-label="Menu">
-              {lengthField}
               {examples}
               {shareBtn}
               {reportBtn}
@@ -144,7 +126,6 @@ export function TopBar() {
   return (
     <>
       <strong>Mechanics Sight</strong>
-      <div className={styles.length}>{lengthField}</div>
       {undoBtn}
       {redoBtn}
       {examples}

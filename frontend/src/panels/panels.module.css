@@ -5,9 +5,6 @@ section + section { margin-top: 16px; }
 .entry:hover { background: var(--grid); }
 .del { float: right; margin-top: -24px; font: inherit; font-size: 12px; color: var(--danger); background: none; border: 0; cursor: pointer; }
 .check { display: flex; gap: 6px; align-items: center; }
-.length { display: flex; align-items: center; margin: 0 12px; }
-.length > label { flex-direction: row; align-items: center; margin: 0; gap: 6px; }
-.length input { width: 68px; height: 28px; }
 .banner { padding: 6px 16px; font-size: 12px; border-bottom: 1px solid var(--rule); }
 .danger { color: var(--danger); }
 .warn { color: var(--warn); }
@@ -67,7 +64,7 @@ section + section { margin-top: 16px; }
 .inlineView label { display: flex; align-items: center; gap: 8px; min-height: 32px; }
 .inlineView input[type='checkbox'] { width: 20px; height: 20px; }
 
-.fab { position: fixed; z-index: 15; right: 16px; bottom: 44px; height: 48px; padding: 0 20px; font: inherit; font-weight: 500; color: var(--paper); background: var(--ink); border: 0; border-radius: 24px; cursor: pointer; }
+.fab { position: fixed; z-index: 15; right: 16px; bottom: 92px; height: 48px; padding: 0 20px; font: inherit; font-weight: 500; color: var(--paper); background: var(--ink); border: 0; border-radius: 24px; cursor: pointer; }
 .addSheet { z-index: 30; }
 .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 16px; }
 .tile { display: flex; align-items: center; gap: 10px; min-height: 64px; padding: 6px 10px; font: inherit; color: var(--ink); text-align: left; background: var(--paper); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
@@ -120,3 +117,20 @@ section + section { margin-top: 16px; }
   gap: 6px;
 }
 
+
+/* --- right pane --- */
+.tabs { display: flex; flex: none; border-bottom: 1px solid var(--rule); }
+.tab { flex: 1; min-height: 40px; padding: 0 4px; font: inherit; font-weight: 500; color: var(--ink-2); background: none; border: 0; border-bottom: 2px solid transparent; cursor: pointer; }
+.tab:hover { color: var(--ink); }
+.tab[aria-selected='true'] { color: var(--ink); border-bottom-color: var(--select); }
+.tab:focus-visible { outline: 2px solid var(--select); outline-offset: -2px; }
+.paneBody { flex: 1; min-height: 0; padding: 12px; overflow: auto; }
+.rule { margin: 16px 0; border: 0; border-top: 1px solid var(--rule); }
+.sheetBar .tabs { flex: 1; border-bottom: 0; }
+
+.resize { position: absolute; z-index: 5; top: 0; bottom: 0; left: -4px; width: 8px; cursor: col-resize; touch-action: none; }
+.resize:hover, .resize:focus-visible, .resize:active { background: var(--select); opacity: 0.35; outline: none; }
+.widen { position: absolute; z-index: 6; top: 7px; right: 8px; width: 28px; height: 28px; padding: 0; font: inherit; color: var(--ink-2); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
+.widen:hover { color: var(--ink); border-color: var(--ink-2); }
+.tabs { padding-right: 44px; }
+.sheetBar .tabs { padding-right: 0; }

@@ -3,6 +3,8 @@ import { emptyBeam } from '@/model/actions'
 import { beamFromHash } from '@/model/share'
 import type { AnalysisResult, BeamInput } from '@/model/types'
 
+export type PaneTab = 'inspect' | 'results'
+
 export interface AnalysisError {
   kind: 'beam' | 'network'
   message: string
@@ -16,6 +18,10 @@ interface State {
   past: BeamInput[]
   future: BeamInput[]
   selectedId: string | null
+  /** Active tab of the right-hand pane. */
+  paneTab: PaneTab
+  /** Width of the right pane in px (desktop). The canvas takes the rest. */
+  paneWidth: number
   /** Last good result. Kept while `error` is set so the diagrams can be greyed out. */
   result: AnalysisResult | null
   error: AnalysisError | null
@@ -41,6 +47,8 @@ interface State {
   undo: () => void
   redo: () => void
   select: (id: string | null) => void
+  setPaneTab: (tab: PaneTab) => void
+  setPaneWidth: (w: number) => void
   setResult: (r: AnalysisResult | null) => void
   setError: (e: AnalysisError) => void
   setHover: (x: number | null) => void
@@ -57,6 +65,23 @@ interface State {
   setShowAxial: (v: boolean | null) => void
   setShowDeflection: (v: boolean) => void
   setShowStress: (v: boolean) => void
+}
+
+export const PANE_W_DEFAULT = 360
+export const PANE_W_MIN = 280
+export const PANE_W_WIDE = 600
+const PANE_W_KEY = 'ms_pane_w'
+/** Widest the pane may get while the canvas keeps at least 320 px (palette is 184 px). */
+export const paneWidthMax = () =>
+  Math.max(PANE_W_MIN, Math.min(760, (typeof window === 'undefined' ? 1440 : window.innerWidth) - 184 - 320))
+const clampPane = (w: number) => Math.round(Math.min(paneWidthMax(), Math.max(PANE_W_MIN, w)))
+const getStoredPaneWidth = () => {
+  try {
+    const v = Number(window.localStorage.getItem(PANE_W_KEY))
+    return Number.isFinite(v) && v > 0 ? clampPane(v) : PANE_W_DEFAULT
+  } catch {
+    return PANE_W_DEFAULT
+  }
 }
 
 const DOCK_HUD_KEY = 'ms_dock_hud'
@@ -84,6 +109,8 @@ export const useStore = create<State>((set) => ({
   past: [],
   future: [],
   selectedId: null,
+  paneTab: 'inspect',
+  paneWidth: getStoredPaneWidth(),
   result: null,
   error: null,
   showWorking: false,
@@ -112,7 +139,15 @@ export const useStore = create<State>((set) => ({
     set((s) => (s.draft ? { draft: null } : s.past.length ? { beam: s.past[s.past.length - 1], past: s.past.slice(0, -1), future: [s.beam, ...s.future] } : s)),
   redo: () =>
     set((s) => (s.draft ? { draft: null } : s.future.length ? { beam: s.future[0], past: [...s.past, s.beam], future: s.future.slice(1) } : s)),
-  select: (id) => set({ selectedId: id }),
+  select: (id) => set(id === null ? { selectedId: null } : { selectedId: id, paneTab: 'inspect' }),
+  setPaneTab: (paneTab) => set({ paneTab }),
+  setPaneWidth: (w) => {
+    const paneWidth = clampPane(w)
+    try {
+      window.localStorage.setItem(PANE_W_KEY, String(paneWidth))
+    } catch {}
+    set({ paneWidth })
+  },
   setResult: (result) => set({ result, error: null }),
   setError: (error) => set({ error }),
   setHover: (hoverX) => set({ hoverX }),

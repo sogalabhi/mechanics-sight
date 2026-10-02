@@ -6,13 +6,10 @@ import { XScaleProvider } from '@/canvas/XScaleContext'
 import { useMediaQuery } from '@/canvas/useMediaQuery'
 import { useWidth } from '@/canvas/useWidth'
 import SymbolGallery from '@/dev/SymbolGallery'
-import { Inspector } from '@/panels/Inspector'
 import { AddSheet } from '@/panels/AddSheet'
 import { Banner } from '@/panels/Banner'
-import { BottomSheet } from '@/panels/BottomSheet'
 import { Palette } from '@/panels/Palette'
-import { PhysicalProperties } from '@/panels/PhysicalProperties'
-import { Results } from '@/panels/Results'
+import { RightPane } from '@/panels/RightPane'
 import { StatusBar } from '@/panels/StatusBar'
 import { TopBar } from '@/panels/TopBar'
 import { useShortcuts } from '@/panels/useShortcuts'
@@ -25,9 +22,10 @@ function Editor() {
   useEffect(() => startLiveAnalysis(), [])
   useEffect(() => applyTheme(loadTheme()), [])
   useShortcuts()
+  const paneWidth = useStore((s) => s.paneWidth)
   const phone = useMediaQuery('(max-width: 699px)')
   return (
-    <div className={styles.shell}>
+    <div className={styles.shell} style={{ '--pane-w': `${paneWidth}px` } as React.CSSProperties}>
       <header className={styles.top}><TopBar /></header>
       {!phone && <aside className={styles.palette}><Palette /></aside>}
       <main className={styles.canvas} ref={ref}>
@@ -36,25 +34,8 @@ function Editor() {
           <CanvasStack width={width} />
         </XScaleProvider>
       </main>
-      <aside className={styles.inspector}>
-        {phone ? (
-          <>
-            <PhysicalProperties />
-            <hr className={styles.hr} />
-            <Results />
-            <BottomSheet><Inspector compact /></BottomSheet>
-            <AddSheet />
-          </>
-        ) : (
-          <>
-            <Inspector />
-            <hr className={styles.hr} />
-            <PhysicalProperties />
-            <hr className={styles.hr} />
-            <Results />
-          </>
-        )}
-      </aside>
+      <aside className={styles.pane}><RightPane phone={phone} /></aside>
+      {phone && <AddSheet />}
       <footer className={`${styles.status} num`}><StatusBar /></footer>
     </div>
   )
