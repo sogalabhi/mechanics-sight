@@ -479,6 +479,24 @@ export interface components {
              */
             type: "moment";
         };
+        /** ProofOut */
+        ProofOut: {
+            /**
+             * Offset Strain
+             * @description The offset (fraction): 0.002 is the usual 0.2 %
+             */
+            offset_strain: number;
+            /**
+             * Strain
+             * @description Total strain where the offset line meets the curve
+             */
+            strain: number;
+            /**
+             * Stress Mpa
+             * @description The offset proof strength, MPa
+             */
+            stress_mpa: number;
+        };
         /** PropertySpanIn */
         PropertySpanIn: {
             material: components["schemas"]["MaterialIn"];
@@ -728,6 +746,8 @@ export interface components {
              */
             landmarks: components["schemas"]["LandmarkOut"][];
             model: components["schemas"]["ModelOut"];
+            /** @description 0.2 % offset proof point of the preset curve. Unloading from it leaves exactly the offset as permanent strain. */
+            proof: components["schemas"]["ProofOut"];
             /**
              * Schema Version
              * @default 1

@@ -1026,6 +1026,33 @@
         "title": "PointMomentIn",
         "type": "object"
       },
+      "ProofOut": {
+        "additionalProperties": false,
+        "properties": {
+          "offset_strain": {
+            "description": "The offset (fraction): 0.002 is the usual 0.2 %",
+            "title": "Offset Strain",
+            "type": "number"
+          },
+          "strain": {
+            "description": "Total strain where the offset line meets the curve",
+            "title": "Strain",
+            "type": "number"
+          },
+          "stress_mpa": {
+            "description": "The offset proof strength, MPa",
+            "title": "Stress Mpa",
+            "type": "number"
+          }
+        },
+        "required": [
+          "offset_strain",
+          "strain",
+          "stress_mpa"
+        ],
+        "title": "ProofOut",
+        "type": "object"
+      },
       "PropertySpanIn": {
         "additionalProperties": false,
         "properties": {
@@ -1606,6 +1633,10 @@
           "model": {
             "$ref": "#/components/schemas/ModelOut"
           },
+          "proof": {
+            "$ref": "#/components/schemas/ProofOut",
+            "description": "0.2 % offset proof point of the preset curve. Unloading from it leaves exactly the offset as permanent strain."
+          },
           "schema_version": {
             "const": 1,
             "default": 1,
@@ -1638,6 +1669,7 @@
           "state",
           "trace",
           "landmarks",
+          "proof",
           "model",
           "specimen"
         ],

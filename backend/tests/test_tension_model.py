@@ -202,6 +202,44 @@ def test_reloading_stress_is_e_times_the_elastic_strain(to: float) -> None:
     assert s.elastic_strain == pytest.approx(to - s.plastic_strain, abs=1e-12)
 
 
+# ---- offset proof strength --------------------------------------------------------------------
+@pytest.mark.parametrize("offset", [0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.1])
+def test_proof_point_is_on_the_curve_and_on_the_offset_line(offset: float) -> None:
+    strain, stress = P.proof_point(offset)
+    assert stress == pytest.approx(P.stress(strain), abs=1e-9)
+    assert stress == pytest.approx(E * (strain - offset), abs=1e-6)
+
+
+@pytest.mark.parametrize("offset", [0.0005, 0.001, 0.002, 0.005, 0.01, 0.1])
+def test_unloading_from_the_proof_point_leaves_exactly_the_offset(offset: float) -> None:
+    """Definition: an offset proof strength leaves `offset` of permanent strain."""
+    strain, _ = P.proof_point(offset)
+    result = run(StrainTo(strain), UnloadToZeroStress())
+    assert result.state.plastic_strain == pytest.approx(offset, abs=1e-9)
+    assert result.state.strain == pytest.approx(offset, abs=1e-9)
+    assert result.state.stress_mpa == pytest.approx(0.0, abs=1e-6)
+
+
+def test_the_proof_strength_of_this_steel_is_its_lower_yield_on_the_plateau() -> None:
+    strain, stress = P.proof_point(0.002)
+    assert stress == pytest.approx(250.0, abs=1e-9)
+    assert strain == pytest.approx(0.00325, abs=1e-12)
+    assert P.strain_lower_yield < strain < P.strain_hardening
+    assert run().proof.stress_mpa == pytest.approx(stress)
+
+
+def test_the_proof_point_matches_an_exact_symbolic_solution() -> None:
+    e = sp.symbols("e")
+    exact = sp.solve(sp.Eq(250, 200000 * (e - R(2, 1000))), e)[0]  # on the plateau
+    assert P.proof_point(0.002)[0] == pytest.approx(float(exact), abs=1e-12)
+
+
+@pytest.mark.parametrize("offset", [0.0, -0.001, 0.25, 0.3])
+def test_a_proof_offset_outside_the_curve_is_rejected(offset: float) -> None:
+    with pytest.raises(ValueError, match="proof offset"):
+        P.proof_point(offset)
+
+
 # ---- specimen scaling and errors --------------------------------------------------------------
 def test_force_scales_with_area_and_extension_with_gauge_length() -> None:
     big = Specimen(diameter_mm=20.0, gauge_length_mm=100.0)

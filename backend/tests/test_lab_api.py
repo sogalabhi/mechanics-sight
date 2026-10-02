@@ -67,6 +67,7 @@ def test_response_shape(client: TestClient) -> None:
         "state",
         "trace",
         "landmarks",
+        "proof",
         "model",
         "specimen",
         "warnings",
@@ -91,6 +92,12 @@ def test_response_shape(client: TestClient) -> None:
         "plastic_strain": 0.0,
         "region": "elastic",
     }
+    assert out["proof"]["offset_strain"] == 0.002
+    assert out["proof"]["strain"] == pytest.approx(0.00325, abs=1e-12)
+    assert out["proof"]["stress_mpa"] == pytest.approx(250.0)
+    assert out["proof"]["offset_strain"] == 0.002
+    assert out["proof"]["strain"] == pytest.approx(0.00325, abs=1e-12)
+    assert out["proof"]["stress_mpa"] == pytest.approx(250.0)
     assert out["warnings"] == []
 
 

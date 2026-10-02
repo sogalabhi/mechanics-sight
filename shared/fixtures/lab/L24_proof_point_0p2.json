@@ -1,0 +1,45 @@
+{
+  "case": "L24",
+  "name": "L24_proof_point_0p2",
+  "milestone": "S2",
+  "description": "The 0.2 % offset proof point: where the line parallel to the elastic line, offset by 0.002 strain, meets the curve.",
+  "input": {
+    "schema_version": 1,
+    "preset": "steel_textbook",
+    "specimen": {
+      "diameter_mm": 10,
+      "gauge_length_mm": 50
+    },
+    "history": [
+      {
+        "op": "strain",
+        "to": 0.00325
+      }
+    ]
+  },
+  "tolerance": {
+    "strain": 1e-12,
+    "stress_mpa": 1e-06,
+    "force_kn": 1e-06,
+    "extension_mm": 1e-09,
+    "plastic_strain": 1e-12,
+    "elastic_strain": 1e-12
+  },
+  "expected": {
+    "strain": 0.00325,
+    "stress_mpa": 250.0,
+    "force_kn": 19.634954084936208,
+    "extension_mm": 0.1625,
+    "plastic_strain": 0.002,
+    "elastic_strain": 0.00125,
+    "max_strain": 0.00325,
+    "region": "yield_plateau",
+    "landmark": null
+  },
+  "expected_proof": {
+    "offset_strain": 0.002,
+    "strain": 0.00325,
+    "stress_mpa": 250.0
+  },
+  "derivation": "Solve sigma_curve(eps) = E*(eps - 0.002). On the plateau sigma = 250, so eps = 0.002 + 250/200000 = 0.00325. The point lies on the plateau (0.0016 <= 0.00325 <= 0.015), so the 0.2 % proof strength equals the lower yield, 250 MPa. eps_p there = 0.00325 - 0.00125 = 0.002 = the offset."
+}

@@ -61,6 +61,7 @@ The six textbook points, and the loading curve (the "backbone"), engineering str
 - It is a textbook shape with illustrative numbers, not a fit to data. A, B and C lie within about 35 MPa of each other and are hard to tell apart in real steel; real grades differ, and many have no upper yield at all.
 - After E the **engineering** stress falls because force is divided by the original area. The UI says so. No true-stress view in this version.
 - Valid range: 0 to ε_f. Anything outside it (negative, above ε_f, NaN or infinite) is `strain_out_of_range`, not an extrapolation. Moving the strain *back* is not an error: it stops at zero stress (L20).
+- **Offset proof strength.** Metals without a distinct yield point (aluminium, cold-worked steel) use the stress that leaves a fixed *permanent* strain, usually 0.2 %. The response carries the preset's proof point: where the loading curve meets the line `E·(ε − 0.002)`. Unloading from it on a line of slope E leaves exactly 0.002 of permanent strain, so the offset is a residual strain, not the total strain at the point. For this steel the point lies on the yield plateau (ε = 0.00325, σ = 250 MPa), so σ₀.₂ equals the lower yield. The curve never rises faster than E, so the crossing is unique. This is an explanatory concept for this preset, not a claim about any grade.
 - Later presets (measured data, other grades, no upper yield, cold-worked) are added only with a stated source and model (plan 18.5).
 
 ## 5. Behaviour contract (model `steel_textbook`)
@@ -110,6 +111,7 @@ Response (all numbers as in section 2):
   },
   "trace": [ { "strain": 0.0, "stress_mpa": 0.0, "plastic_strain": 0.0, "region": "elastic" }, ... ],
   "landmarks": [ { "id": "A", "name": "proportional_limit", "strain": 0.00115, "stress_mpa": 230.0, "reached": true }, ... ],   // all six, A to F
+  "proof": { "offset_strain": 0.002, "strain": 0.00325, "stress_mpa": 250.0 },   // 0.2 % offset proof point, independent of the history
   "model": { "preset": "steel_textbook", "name": "Mild steel, textbook curve", "kind": "idealisation", "young_modulus_gpa": 200.0, "parameters": { "lower_yield_mpa": 250.0, "strain_hardening": 0.015, ... } },
   "specimen": { "diameter_mm": 10.0, "gauge_length_mm": 50.0, "area_mm2": 78.5398 },
   "warnings": []
@@ -152,6 +154,8 @@ Specimen d₀ = 10 mm, L₀ = 50 mm, A₀ = 78.5398 mm². Preset `steel_textbook
 | L21 | ε = 0.30 | error `strain_out_of_range`. |
 | L22 | ε = 0.25, then ε = 0.1 | error `test_finished`. |
 | L23 | Any history, then a `reset` op | fresh specimen equal to L1. |
+| L24 | ε = 0.00325 (the 0.2 % proof point) | σ = 250 MPa, F = 19.635 kN, ε_p = 0.002, `yield_plateau`. The response `proof` is (0.00325, 250): solve `250 = 200000·(ε − 0.002)` on the plateau. |
+| L25 | ε = 0.00325, then unload to zero stress | σ = 0, ε = ε_p = **0.002**: exactly the offset is left. The offset is residual strain; the total strain at the proof point was 0.325 %. |
 
 Arithmetic checks: (0.10/0.135)² = 0.548697, so L10 σ = 400 − 82.30 = 317.70. (0.09/0.135)² = 0.444444, so L16 σ = 400 − 66.67 = 333.33. L13: F = 300 × 78.5398 / 1000 = 23.562 kN. ε_B: σ_B/E = 0.0012, κ·(240 − 230)² = 2×10⁻⁷ × 100 = 0.00002, so ε_B = 0.00122. The A to B curve at ε_B gives s = 10 MPa (check: s/E + κ·s² = 0.00005 + 0.00002 = 0.00007 = ε_B − ε_A).
 

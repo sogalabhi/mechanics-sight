@@ -2,6 +2,7 @@
 
 from beam_solver.material.presets import (
     PRESETS,
+    PROOF_OFFSET,
     STEEL_TEXTBOOK,
     Landmark,
     TensilePreset,
@@ -10,6 +11,7 @@ from beam_solver.material.presets import (
 from beam_solver.material.tension import (
     LandmarkStatus,
     Operation,
+    ProofStrength,
     Reset,
     Specimen,
     StrainTo,
@@ -22,10 +24,12 @@ from beam_solver.material.tension import (
 
 __all__ = [
     "PRESETS",
+    "PROOF_OFFSET",
     "STEEL_TEXTBOOK",
     "Landmark",
     "LandmarkStatus",
     "Operation",
+    "ProofStrength",
     "Reset",
     "Specimen",
     "StrainTo",

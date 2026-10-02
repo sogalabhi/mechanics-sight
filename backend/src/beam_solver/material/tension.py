@@ -19,7 +19,7 @@ from beam_solver.errors import (
     StrainOutOfRangeError,
     UnsupportedOperationError,
 )
-from beam_solver.material.presets import Landmark, TensilePreset
+from beam_solver.material.presets import PROOF_OFFSET, Landmark, TensilePreset
 from beam_solver.tolerances import STRAIN_TOL
 
 MAX_TRACE_STEP = 0.004
@@ -104,12 +104,22 @@ class LandmarkStatus:
 
 
 @dataclass(frozen=True)
+class ProofStrength:
+    """The offset proof point of the preset's curve (independent of the loading history)."""
+
+    offset_strain: float
+    strain: float
+    stress_mpa: float
+
+
+@dataclass(frozen=True)
 class TensionResult:
-    """Final state, the exact path taken, and the landmarks of the preset."""
+    """Final state, the exact path taken, the landmarks and the proof point of the preset."""
 
     state: TensionState
     trace: tuple[TracePoint, ...]
     landmarks: tuple[LandmarkStatus, ...]
+    proof: ProofStrength
 
 
 def run_tension(
@@ -294,4 +304,6 @@ class _Machine:
             )
             for lm in self.p.landmarks()
         )
-        return TensionResult(self.state(), tuple(self.trace), marks)
+        strain, stress = self.p.proof_point()
+        proof = ProofStrength(PROOF_OFFSET, strain, stress)
+        return TensionResult(self.state(), tuple(self.trace), marks, proof)

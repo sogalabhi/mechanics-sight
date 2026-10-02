@@ -1,6 +1,6 @@
 # Steel Material Lab fixtures
 
-Hand-solved reference cases for `POST /api/v1/lab/tension`, written **before** the solver exists. They implement cases L1 to L23 of `docs/STEEL_LAB_CONTRACT.md` section 7. They live in a subfolder so the beam fixture loaders (which glob `shared/fixtures/*.json`) and the Examples menu never see them.
+Hand-solved reference cases for `POST /api/v1/lab/tension`, written **before** the solver exists. They implement cases L1 to L25 of `docs/STEEL_LAB_CONTRACT.md` section 7. They live in a subfolder so the beam fixture loaders (which glob `shared/fixtures/*.json`) and the Examples menu never see them.
 
 ## File format
 
@@ -17,6 +17,7 @@ Hand-solved reference cases for `POST /api/v1/lab/tension`, written **before** t
                 "elastic_strain", "max_strain", "region", "landmark" },   // the response `state`
   "expected_error": "strain_out_of_range",   // instead of `expected` for the error cases
   "trace_ends_with": [[eps, sigma], ...],    // optional: the last points of `trace`
+  "expected_proof": { "offset_strain", "strain", "stress_mpa" },   // optional: the response `proof`
   "derivation": "the hand arithmetic"
 }
 ```

@@ -48,7 +48,7 @@ def run_fixture(fixture: dict[str, Any]) -> Any:
 
 
 def test_all_cases_are_present() -> None:
-    assert [f["case"] for f in FIXTURES] == [f"L{n}" for n in range(1, 24)]
+    assert [f["case"] for f in FIXTURES] == [f"L{n}" for n in range(1, 26)]
     assert {f["milestone"] for f in FIXTURES} == {"S1", "S2"}
 
 
@@ -69,6 +69,11 @@ def test_fixture(fixture: dict[str, Any]) -> None:
     assert state.max_strain == pytest.approx(expected["max_strain"], abs=tol["strain"])
     assert state.region == expected["region"]
     assert state.landmark == expected["landmark"]
+    proof = fixture.get("expected_proof")
+    assert result.proof.offset_strain == pytest.approx(0.002)
+    if proof:  # the proof point does not depend on the history, but is stated by hand in L24
+        assert result.proof.strain == pytest.approx(proof["strain"], abs=1e-12)
+        assert result.proof.stress_mpa == pytest.approx(proof["stress_mpa"], abs=1e-9)
     ends = fixture.get("trace_ends_with", [])
     if ends:
         for want, got in zip(ends, result.trace[-len(ends) :], strict=True):

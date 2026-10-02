@@ -10,6 +10,9 @@ from dataclasses import dataclass
 
 from beam_solver.errors import UnknownPresetError
 
+PROOF_OFFSET = 0.002
+"""The usual proof offset: 0.2 % residual strain (dimensionless)."""
+
 
 @dataclass(frozen=True)
 class Landmark:
@@ -112,6 +115,27 @@ class TensilePreset:
         if max_strain <= self.strain_b:
             return 0.0
         return max_strain - self.stress(max_strain) / self.young_modulus_mpa
+
+    def proof_point(self, offset: float = PROOF_OFFSET) -> tuple[float, float]:
+        """Offset proof point: where the loading curve meets the line ``E*(strain - offset)``.
+
+        Returns ``(strain, stress_mpa)``. Unloading from this point on a line of slope E leaves
+        exactly ``offset`` of permanent strain, which is what an offset proof strength means
+        (the offset is a *residual* strain, not the total strain at the point). The curve never
+        rises faster than E, so the gap curve minus line only shrinks and the crossing is unique.
+        """
+        if not 0.0 < offset < self.strain_fracture:
+            raise ValueError("the proof offset must lie between zero and the fracture strain")
+        e_mod = self.young_modulus_mpa
+        lo, hi = offset, self.strain_fracture
+        for _ in range(200):
+            mid = (lo + hi) / 2.0
+            if self.stress(mid) - e_mod * (mid - offset) > 0.0:
+                lo = mid
+            else:
+                hi = mid
+        strain = (lo + hi) / 2.0
+        return strain, self.stress(strain)
 
     def landmarks(self) -> tuple[Landmark, ...]:
         """The six textbook points, in order A to F."""

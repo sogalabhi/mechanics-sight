@@ -123,6 +123,12 @@ class SpecimenOut(_Model):
     area_mm2: float = Field(description="Original area A0, mm²")
 
 
+class ProofOut(_Model):
+    offset_strain: float = Field(description="The offset (fraction): 0.002 is the usual 0.2 %")
+    strain: float = Field(description="Total strain where the offset line meets the curve")
+    stress_mpa: float = Field(description="The offset proof strength, MPa")
+
+
 class TensionOut(_Model):
     schema_version: Literal[1] = SCHEMA_VERSION
     state: TensionStateOut
@@ -130,6 +136,12 @@ class TensionOut(_Model):
         description="The stress-strain path taken, in order: dense on curved pieces, exact corners"
     )
     landmarks: list[LandmarkOut] = Field(description="All six points A to F")
+    proof: ProofOut = Field(
+        description=(
+            "0.2 % offset proof point of the preset curve. Unloading from it leaves exactly "
+            "the offset as permanent strain."
+        )
+    )
     model: ModelOut
     specimen: SpecimenOut
     warnings: list[str] = Field(default_factory=list)
@@ -181,6 +193,11 @@ def tension_result_to_schema(
             )
             for m in result.landmarks
         ],
+        proof=ProofOut(
+            offset_strain=result.proof.offset_strain,
+            strain=result.proof.strain,
+            stress_mpa=result.proof.stress_mpa,
+        ),
         model=ModelOut(
             preset=preset.id,
             name=preset.name,
