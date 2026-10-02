@@ -38,7 +38,7 @@ export function CalculusTangent({ yOf, height: _height }: Props) {
             y1={fullSegment.y1}
             x2={fullSegment.x2}
             y2={fullSegment.y2}
-            stroke="#10b981"
+            stroke="var(--ok)"
             strokeWidth={7}
             strokeOpacity={0.25}
             strokeLinecap="round"
@@ -49,15 +49,15 @@ export function CalculusTangent({ yOf, height: _height }: Props) {
             y1={fullSegment.y1}
             x2={fullSegment.x2}
             y2={fullSegment.y2}
-            stroke="#10b981"
+            stroke="var(--ok)"
             strokeWidth={2.5}
             strokeLinecap="round"
           />
           {/* End tick markers */}
-          <circle cx={fullSegment.x1} cy={fullSegment.y1} r={2.5} fill="#10b981" />
-          <circle cx={fullSegment.x2} cy={fullSegment.y2} r={2.5} fill="#10b981" />
+          <circle cx={fullSegment.x1} cy={fullSegment.y1} r={2.5} fill="var(--ok)" />
+          <circle cx={fullSegment.x2} cy={fullSegment.y2} r={2.5} fill="var(--ok)" />
           {/* Center contact point */}
-          <circle cx={px} cy={py} r={5} fill="#10b981" stroke="var(--panel)" strokeWidth={2} />
+          <circle cx={px} cy={py} r={5} fill="var(--ok)" stroke="var(--panel)" strokeWidth={2} />
         </g>
       ) : isKink ? (
         // Cusp kink (e.g. concentrated point load)
@@ -68,7 +68,7 @@ export function CalculusTangent({ yOf, height: _height }: Props) {
             y1={leftRay.y1}
             x2={leftRay.x2}
             y2={leftRay.y2}
-            stroke={isZeroCrossing ? '#10b981' : 'var(--shear)'}
+            stroke={isZeroCrossing ? 'var(--ok)' : 'var(--shear)'}
             strokeWidth={2.2}
             strokeLinecap="round"
           />
@@ -78,19 +78,19 @@ export function CalculusTangent({ yOf, height: _height }: Props) {
             y1={rightRay.y1}
             x2={rightRay.x2}
             y2={rightRay.y2}
-            stroke={isZeroCrossing ? '#10b981' : 'var(--shear)'}
+            stroke={isZeroCrossing ? 'var(--ok)' : 'var(--shear)'}
             strokeWidth={2.2}
             strokeLinecap="round"
           />
           {/* End dots */}
-          <circle cx={leftRay.x1} cy={leftRay.y1} r={2.5} fill={isZeroCrossing ? '#10b981' : 'var(--shear)'} />
-          <circle cx={rightRay.x2} cy={rightRay.y2} r={2.5} fill={isZeroCrossing ? '#10b981' : 'var(--shear)'} />
+          <circle cx={leftRay.x1} cy={leftRay.y1} r={2.5} fill={isZeroCrossing ? 'var(--ok)' : 'var(--shear)'} />
+          <circle cx={rightRay.x2} cy={rightRay.y2} r={2.5} fill={isZeroCrossing ? 'var(--ok)' : 'var(--shear)'} />
           {/* Cusp contact point */}
           <circle
             cx={px}
             cy={py}
             r={5}
-            fill={isZeroCrossing ? '#10b981' : 'var(--shear)'}
+            fill={isZeroCrossing ? 'var(--ok)' : 'var(--shear)'}
             stroke="var(--panel)"
             strokeWidth={2}
           />

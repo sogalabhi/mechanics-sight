@@ -77,7 +77,7 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
   const py = v && yOf ? yOf(v.right) : 0
   const badgeY = py < 44 ? py + 8 : py - badgeHeight - 4
 
-  const activeColor = isZeroShear ? '#10b981' : color
+  const activeColor = isZeroShear ? 'var(--ok)' : color
 
   return (
     <g pointerEvents="none">
@@ -106,7 +106,7 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
             height={20}
             rx={4}
             fill="var(--panel)"
-            stroke={sawCutX === mx ? '#d97706' : 'var(--rule)'}
+            stroke={sawCutX === mx ? 'var(--cut)' : 'var(--rule)'}
             strokeWidth={1.2}
           />
           <text
@@ -116,7 +116,7 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
             fontFamily="var(--font-mono)"
             fontSize={10}
             fontWeight={600}
-            fill={sawCutX === mx ? '#d97706' : 'var(--ink)'}
+            fill={sawCutX === mx ? 'var(--cut)' : 'var(--ink)'}
           >
             {sawCutX === mx ? '🪚 Close' : '🪚 Saw Cut'}
           </text>
@@ -149,7 +149,7 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
             height={badgeHeight}
             rx={4}
             fill="var(--panel)"
-            stroke={isZeroShear ? '#10b981' : 'var(--rule)'}
+            stroke={isZeroShear ? 'var(--ok)' : 'var(--rule)'}
             strokeWidth={isZeroShear ? 1.5 : 1}
           />
           <text
@@ -171,7 +171,7 @@ export function Crosshair({ kind, yOf, height, color = 'var(--ink)', unit = '' }
               fontFamily="var(--font-mono)"
               fontSize={10}
               fontWeight={isZeroShear ? 600 : 400}
-              fill={isZeroShear ? '#10b981' : 'var(--ink-2)'}
+              fill={isZeroShear ? 'var(--ok)' : 'var(--ink-2)'}
             >
               {subText}
             </text>

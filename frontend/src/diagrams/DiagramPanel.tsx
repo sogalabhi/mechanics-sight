@@ -16,7 +16,7 @@ const BOTTOM = 14
 const FONT = 'var(--font-mono)'
 
 const META = {
-  axial: { title: 'AXIAL FORCE  N (kN) · tension +', color: 'var(--axial, #2563eb)', unit: 'kN' },
+  axial: { title: 'AXIAL FORCE  N (kN) · tension +', color: 'var(--axial)', unit: 'kN' },
   shear: { title: 'SHEAR FORCE  V (kN)', color: 'var(--shear)', unit: 'kN' },
   moment: { title: 'BENDING MOMENT  M (kN·m) · sagging +', color: 'var(--moment)', unit: 'kN·m' },
 } as const

@@ -1,10 +1,10 @@
 .field { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
-.fieldLabel { font-size: 11px; color: var(--ink-2); }
+.fieldLabel { font-size: var(--text-xs); color: var(--ink-2); }
 .inputWrap { display: flex; align-items: center; gap: 6px; }
 .input { width: 100%; height: 28px; padding: 0 8px; text-align: right; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); }
 .input[aria-invalid='true'] { border-color: var(--danger); }
-.unit { width: 40px; color: var(--ink-2); font-size: 12px; }
-.err { color: var(--danger); font-size: 11px; }
+.unit { width: 40px; color: var(--ink-2); font-size: var(--text-sm); }
+.err { color: var(--danger); font-size: var(--text-xs); }
 .seg { display: flex; border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
 .seg button { flex: 1; height: 28px; font: inherit; color: var(--ink); background: var(--panel); border: 0; border-right: 1px solid var(--rule); cursor: pointer; }
 .seg button:last-child { border-right: 0; }
@@ -19,5 +19,5 @@
   .stepBtn { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 44px; height: 44px; font: inherit; font-size: 22px; color: var(--ink); background: var(--panel); border: 1px solid var(--rule); border-radius: var(--radius); cursor: pointer; }
   .seg button { height: 44px; }
   .btn { height: 40px; }
-  .unit { width: 36px; font-size: 13px; }
+  .unit { width: 36px; font-size: var(--text-md); }
 }

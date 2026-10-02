@@ -21,7 +21,7 @@ body {
 
 .num {
   font-family: var(--font-mono);
-  font-size: 12px;
+  font-size: var(--text-sm);
   font-variant-numeric: tabular-nums;
 }
 

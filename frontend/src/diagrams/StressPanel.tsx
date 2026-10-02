@@ -125,8 +125,8 @@ export function StressPanel({ width }: { width: number }) {
       })}
 
       {/* Top and Bottom Fibre Stress Curves */}
-      <path d={topPath} fill="none" stroke="var(--moment, #d97706)" strokeWidth={fibre === 'top' ? 3.2 : 2} strokeDasharray="5 3" opacity={fibre === 'bottom' ? 0.3 : 1} />
-      <path d={botPath} fill="none" stroke="var(--axial, #2563eb)" strokeWidth={fibre === 'bottom' ? 3.2 : 2} opacity={fibre === 'top' ? 0.3 : 1} />
+      <path d={topPath} fill="none" stroke="var(--moment)" strokeWidth={fibre === 'top' ? 3.2 : 2} strokeDasharray="5 3" opacity={fibre === 'bottom' ? 0.3 : 1} />
+      <path d={botPath} fill="none" stroke="var(--axial)" strokeWidth={fibre === 'bottom' ? 3.2 : 2} opacity={fibre === 'top' ? 0.3 : 1} />
 
       {/* Header Legend & Title */}
       <text x={GUTTER} y={TOP - 12} fontFamily={FONT} fontSize={11} fontWeight={600} fill="var(--ink)">

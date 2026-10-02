@@ -7,7 +7,7 @@ import { downloadReport } from '@/report/downloadReport'
 import { useStore } from '@/store/store'
 import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
-import { ViewMenu } from './ViewMenu'
+import { resetBeam } from './resetBeam'
 
 export function TopBar() {
   const phone = useMediaQuery('(max-width: 699px)')
@@ -112,7 +112,7 @@ export function TopBar() {
               {examples}
               {shareBtn}
               {reportBtn}
-              <ViewMenu inline />
+              <button className={ui.btn} onClick={resetBeam}>Reset beam</button>
               {themeSel}
               {toast}
             </nav>
@@ -132,8 +132,8 @@ export function TopBar() {
       {shareBtn}
       {reportBtn}
       {toast}
-      <ViewMenu />
       <span className={styles.spacer} />
+      <button className={ui.btn} onClick={resetBeam}>Reset beam</button>
       {themeSel}
     </>
   )

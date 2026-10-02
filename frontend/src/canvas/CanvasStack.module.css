@@ -1,0 +1,2 @@
+.stack { position: relative; touch-action: pan-y; }
+.stack:focus-visible { outline: 2px solid var(--select); outline-offset: -2px; }

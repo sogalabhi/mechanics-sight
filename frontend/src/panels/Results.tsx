@@ -164,7 +164,7 @@ export function Results() {
           )}
           <div className={`${styles.row} num`}>
             <span>Yield check</span>
-            <span style={{ color: result.bending_stress.yield_exceeded ? 'var(--danger, #ef4444)' : 'var(--emerald, #10b981)' }}>
+            <span style={{ color: result.bending_stress.yield_exceeded ? 'var(--danger)' : 'var(--ok)' }}>
               {result.bending_stress.yield_exceeded ? '⚠ Yield exceeded' : '✓ Elastic'} · ratio {(result.bending_stress.yield_ratio * 100).toFixed(1)}%
             </span>
           </div>

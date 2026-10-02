@@ -196,7 +196,7 @@ export function VirtualSawCard() {
           {/* Cut Face Section Indicator (Saw Cut) */}
           <path
             d={`M${xCutPx},${beamY - 10} L${xCutPx + 3},${beamY - 2} L${xCutPx - 3},${beamY + 6} L${xCutPx + 3},${beamY + beamH - 2} L${xCutPx},${beamY + beamH + 10}`}
-            stroke="#d97706"
+            stroke="var(--cut)"
             strokeWidth={2}
             fill="none"
           />
@@ -238,7 +238,7 @@ export function VirtualSawCard() {
             {vMatches && (
               <span className={styles.checkBadge}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 8.5L6.5 11L12 5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 8.5L6.5 11L12 5" stroke="var(--ok)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Matches SFD
               </span>
@@ -285,7 +285,7 @@ export function VirtualSawCard() {
             {mMatches && (
               <span className={styles.checkBadge}>
                 <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
-                  <path d="M4 8.5L6.5 11L12 5" stroke="#10b981" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M4 8.5L6.5 11L12 5" stroke="var(--ok)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
                 Matches BMD
               </span>
@@ -369,15 +369,15 @@ export function VirtualSawCard() {
                 return (
                   <g>
                     <line x1={80} x2={80} y1={12} y2={78} stroke="var(--ink-2)" strokeWidth={1} />
-                    <line x1={xTop} x2={xBot} y1={12} y2={78} stroke="var(--moment, #d97706)" strokeWidth={1.8} />
-                    <line x1={80} x2={xTop} y1={12} y2={12} stroke="var(--moment, #d97706)" strokeWidth={1} />
-                    <line x1={80} x2={xBot} y1={78} y2={78} stroke="var(--moment, #d97706)" strokeWidth={1} />
+                    <line x1={xTop} x2={xBot} y1={12} y2={78} stroke="var(--moment)" strokeWidth={1.8} />
+                    <line x1={80} x2={xTop} y1={12} y2={12} stroke="var(--moment)" strokeWidth={1} />
+                    <line x1={80} x2={xBot} y1={78} y2={78} stroke="var(--moment)" strokeWidth={1} />
                     <text
                       x={xTop >= 80 ? xTop + 3 : xTop - 3}
                       y={15}
                       fontSize={7.5}
                       textAnchor={xTop >= 80 ? 'start' : 'end'}
-                      fill="var(--moment, #d97706)"
+                      fill="var(--moment)"
                       fontFamily="var(--font-mono)"
                     >
                       σ_top
@@ -387,7 +387,7 @@ export function VirtualSawCard() {
                       y={81}
                       fontSize={7.5}
                       textAnchor={xBot >= 80 ? 'start' : 'end'}
-                      fill="var(--moment, #d97706)"
+                      fill="var(--moment)"
                       fontFamily="var(--font-mono)"
                     >
                       σ_bot
@@ -415,7 +415,7 @@ export function VirtualSawCard() {
                   style={{
                     fontSize: 9,
                     marginLeft: 4,
-                    color: stressProfile.sigmaTop > 0 ? 'var(--axial, #2563eb)' : 'var(--danger, #ef4444)',
+                    color: stressProfile.sigmaTop > 0 ? 'var(--tension)' : 'var(--compression)',
                   }}
                 >
                   ({stressProfile.sigmaTop > 0 ? 'Tension' : 'Compression'})
@@ -438,7 +438,7 @@ export function VirtualSawCard() {
                   style={{
                     fontSize: 9,
                     marginLeft: 4,
-                    color: stressProfile.sigmaBottom > 0 ? 'var(--axial, #2563eb)' : 'var(--danger, #ef4444)',
+                    color: stressProfile.sigmaBottom > 0 ? 'var(--tension)' : 'var(--compression)',
                   }}
                 >
                   ({stressProfile.sigmaBottom > 0 ? 'Tension' : 'Compression'})

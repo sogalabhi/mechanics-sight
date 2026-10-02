@@ -3,12 +3,15 @@ import { Crosshair } from '@/diagrams/Crosshair'
 import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { DEFLECTION_PANEL_HEIGHT, ElasticCurvePanel } from '@/diagrams/ElasticCurvePanel'
 import { STRESS_PANEL_HEIGHT, StressPanel } from '@/diagrams/StressPanel'
+import { gridStep } from '@/math/snap'
 import { selectCursorX, useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
+import { CanvasBar } from './CanvasBar'
 import { DiagramSkeleton } from './DiagramSkeleton'
 import skeleton from './DiagramSkeleton.module.css'
 import { EmptyDiagramState } from './EmptyDiagramState'
 import { Guides } from './Guides'
+import styles from './CanvasStack.module.css'
 import { useDelayedFlag } from './useDelayedFlag'
 import { useXScale } from './xscale'
 
@@ -116,7 +119,24 @@ export function CanvasStack({ width }: { width: number }) {
   return (
     <div
       ref={ref}
-      style={{ touchAction: 'pan-y', position: 'relative' }}
+      className={styles.stack}
+      tabIndex={0}
+      role="group"
+      aria-label="Beam and diagrams. Left and right arrows move the pinned position."
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget) return
+        const s = useStore.getState()
+        const step = gridStep(length) * (e.shiftKey ? 5 : 1)
+        const at = selectCursorX(s) ?? length / 2
+        let next: number
+        if (e.key === 'ArrowLeft') next = at - step
+        else if (e.key === 'ArrowRight') next = at + step
+        else if (e.key === 'Home') next = 0
+        else if (e.key === 'End') next = length
+        else return
+        e.preventDefault()
+        s.setPinned(Math.round(Math.min(length, Math.max(0, next)) * 1000) / 1000)
+      }}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
@@ -125,9 +145,7 @@ export function CanvasStack({ width }: { width: number }) {
         if (e.pointerType !== 'touch') setHover(null)
       }}
     >
-      <p style={{ margin: '6px 8px', fontSize: 11, color: 'var(--ink-2)' }}>
-        Drag supports and loads · Select a distributed load to resize its ends · Alt: no snapping · Esc: cancel
-      </p>
+      <CanvasBar />
       <svg data-beam-canvas width={width} height={BEAM_PANEL_HEIGHT} style={{ display: 'block' }}>
         <Guides height={BEAM_PANEL_HEIGHT} />
         <BeamView />

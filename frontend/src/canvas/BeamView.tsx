@@ -179,7 +179,7 @@ export function BeamView() {
           {/* Jagged Saw Cut Line */}
           <path
             d={`M${x(sawCutX)},-22 L${x(sawCutX) + 3.5},-11 L${x(sawCutX) - 3.5},0 L${x(sawCutX) + 3.5},11 L${x(sawCutX)},22`}
-            stroke="#d97706"
+            stroke="var(--cut)"
             strokeWidth={2.4}
             fill="none"
           />
@@ -190,7 +190,7 @@ export function BeamView() {
             height={16}
             rx={3}
             fill="var(--panel)"
-            stroke="#d97706"
+            stroke="var(--cut)"
             strokeWidth={1}
             opacity={0.94}
           />
@@ -201,7 +201,7 @@ export function BeamView() {
             fontFamily="var(--font-mono)"
             fontSize={9.5}
             fontWeight={600}
-            fill="#d97706"
+            fill="var(--cut)"
           >
             🪚 Cut x = {formatNumber(sawCutX)} m
           </text>

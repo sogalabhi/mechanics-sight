@@ -67,8 +67,8 @@ export function IntegrationCard() {
           {!hasCouple ? (
             <div className={styles.proof}>
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                <circle cx="8" cy="8" r="7" stroke="#10b981" strokeWidth="1.5" />
-                <path d="M5 8.5L7 10.5L11 5.5" stroke="#10b981" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                <circle cx="8" cy="8" r="7" stroke="var(--ok)" strokeWidth="1.5" />
+                <path d="M5 8.5L7 10.5L11 5.5" stroke="var(--ok)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               <span>Exact Identity: ΔM ≡ ∫ V(x) dx</span>
             </div>

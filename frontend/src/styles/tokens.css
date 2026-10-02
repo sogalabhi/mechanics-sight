@@ -13,13 +13,32 @@
   --select: #175cd3;
   --danger: #b42318;
   --warn: #b54708;
-  --compression: #dc2626;
+  /* Fixed meanings, identical in every view: tension = blue, compression = red. */
   --tension: #2563eb;
+  --compression: #dc2626;
+  --ok: #15803d;
+  --cut: #b45309;
+  --shear-neg: #ea580c;
 
   --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
   --radius: 4px;
   --space: 4px;
+
+  /* Spacing scale (px): use these, not ad-hoc numbers. */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+
+  /* Type scale */
+  --text-xs: 11px;
+  --text-sm: 12px;
+  --text-md: 13px;
+  --text-lg: 15px;
+  --text-xl: 18px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -38,8 +57,11 @@
     --select: #53b1fd;
     --danger: #f97066;
     --warn: #fdb022;
-    --compression: #f87171;
     --tension: #60a5fa;
+    --compression: #f87171;
+    --ok: #4ade80;
+    --cut: #fbbf24;
+    --shear-neg: #ea580c;
   }
 }
 
@@ -58,6 +80,9 @@
   --select: #53b1fd;
   --danger: #f97066;
   --warn: #fdb022;
-  --compression: #f87171;
   --tension: #60a5fa;
+  --compression: #f87171;
+  --ok: #4ade80;
+  --cut: #fbbf24;
+  --shear-neg: #ea580c;
 }

@@ -62,7 +62,7 @@ export function AreaShading({ kind, width: _width, yOf, height }: Props) {
             patternTransform="rotate(-45 0 0)"
             patternUnits="userSpaceOnUse"
           >
-            <line x1="0" y1="0" x2="0" y2="8" stroke="#ea580c" strokeWidth="1.2" strokeOpacity="0.35" />
+            <line x1="0" y1="0" x2="0" y2="8" stroke="var(--shear-neg)" strokeWidth="1.2" strokeOpacity="0.35" />
           </pattern>
         </defs>
 
@@ -70,7 +70,7 @@ export function AreaShading({ kind, width: _width, yOf, height }: Props) {
         {data.regions.map((r, i) => {
           const polyPoints = r.pts.map(([px, v]) => `${xs(px)},${yOf(v)}`).join(' ')
           const isPos = r.sign > 0
-          const color = isPos ? 'var(--shear)' : '#ea580c'
+          const color = isPos ? 'var(--shear)' : 'var(--shear-neg)'
           const hatch = isPos ? 'url(#hatch-shear-pos)' : 'url(#hatch-shear-neg)'
           const xMid = (xs(r.x0) + xs(r.x1)) / 2
 

@@ -184,7 +184,7 @@ export function PhysicalProperties() {
                       {(beam.spans ?? []).length > 1 && (
                         <button
                           className={ui.btn}
-                          style={{ padding: '2px 8px', fontSize: 11, color: 'var(--danger, #ef4444)' }}
+                          style={{ padding: '2px 8px', fontSize: 11, color: 'var(--danger)' }}
                           onClick={() => removeSpan(idx)}
                           title="Remove this span and merge with adjacent"
                         >
