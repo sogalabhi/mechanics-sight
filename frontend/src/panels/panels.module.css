@@ -125,3 +125,8 @@ section + section { margin-top: 16px; }
 .widen:hover { color: var(--ink); border-color: var(--ink-2); }
 .tabs { padding-right: 44px; }
 .sheetBar .tabs { padding-right: 0; }
+
+.workspace { display: inline-flex; margin: 0 var(--space-2); border: 1px solid var(--rule); border-radius: var(--radius); overflow: hidden; }
+.workspace button { height: 28px; padding: 0 var(--space-3); font: inherit; color: var(--ink); background: transparent; border: 0; cursor: pointer; }
+.workspace button[aria-pressed='true'] { color: var(--paper); background: var(--ink); }
+.workspace button:focus-visible { outline: 2px solid var(--select); outline-offset: -2px; }

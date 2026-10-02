@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import styles from './App.module.css'
 import { startLiveAnalysis } from '@/api/live'
 import { CanvasStack } from '@/canvas/CanvasStack'
@@ -6,6 +6,7 @@ import { XScaleProvider } from '@/canvas/XScaleContext'
 import { useMediaQuery } from '@/canvas/useMediaQuery'
 import { useWidth } from '@/canvas/useWidth'
 import SymbolGallery from '@/dev/SymbolGallery'
+import { isLabHash } from '@/lab/steel/share'
 import { AddSheet } from '@/panels/AddSheet'
 import { Banner } from '@/panels/Banner'
 import { Palette } from '@/panels/Palette'
@@ -15,6 +16,8 @@ import { TopBar } from '@/panels/TopBar'
 import { useShortcuts } from '@/panels/useShortcuts'
 import { applyTheme, loadTheme } from '@/model/theme'
 import { useStore } from '@/store/store'
+
+const LabShell = lazy(() => import('@/lab/steel/LabShell'))
 
 function Editor() {
   const length = useStore((s) => s.beam.length)
@@ -48,5 +51,12 @@ export default function App() {
     window.addEventListener('hashchange', on)
     return () => window.removeEventListener('hashchange', on)
   }, [])
+  if (isLabHash(hash)) {
+    return (
+      <Suspense fallback={<p style={{ padding: 16 }}>Loading the lab…</p>}>
+        <LabShell />
+      </Suspense>
+    )
+  }
   return hash === '#/symbols' ? <SymbolGallery /> : <Editor />
 }

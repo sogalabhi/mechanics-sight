@@ -8,6 +8,7 @@ import { useStore } from '@/store/store'
 import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
 import { resetBeam } from './resetBeam'
+import { WorkspaceSwitch } from './WorkspaceSwitch'
 
 export function TopBar() {
   const phone = useMediaQuery('(max-width: 699px)')
@@ -109,6 +110,7 @@ export function TopBar() {
           <>
             <div className={styles.scrim} style={{ top: 48 }} onClick={() => setMenuOpen(false)} aria-hidden />
             <nav className={styles.drawer} aria-label="Menu">
+              <WorkspaceSwitch active="beam" />
               {examples}
               {shareBtn}
               {reportBtn}
@@ -126,6 +128,7 @@ export function TopBar() {
   return (
     <>
       <strong>Mechanics Sight</strong>
+      <WorkspaceSwitch active="beam" />
       {undoBtn}
       {redoBtn}
       {examples}

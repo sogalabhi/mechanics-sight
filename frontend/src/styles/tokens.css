@@ -19,6 +19,9 @@
   --ok: #15803d;
   --cut: #b45309;
   --shear-neg: #ea580c;
+  --plastic: #b45309;
+  --plastic-fill: rgba(180, 83, 9, 0.12);
+  --tension-fill: rgba(37, 99, 235, 0.12);
 
   --font-ui: 'IBM Plex Sans', system-ui, sans-serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
@@ -62,6 +65,9 @@
     --ok: #4ade80;
     --cut: #fbbf24;
     --shear-neg: #ea580c;
+    --plastic: #fbbf24;
+    --plastic-fill: rgba(251, 191, 36, 0.14);
+    --tension-fill: rgba(96, 165, 250, 0.16);
   }
 }
 
@@ -85,4 +91,7 @@
   --ok: #4ade80;
   --cut: #fbbf24;
   --shear-neg: #ea580c;
+  --plastic: #fbbf24;
+  --plastic-fill: rgba(251, 191, 36, 0.14);
+  --tension-fill: rgba(96, 165, 250, 0.16);
 }

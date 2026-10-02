@@ -1537,7 +1537,7 @@ One short explanation                       Why?   Show maths
 
 ### 18.6 Ordered steel milestones
 
-**Status:** S0 is drafted for review in `docs/STEEL_LAB_CONTRACT.md` (lab workspace and routing, units, specimen, a textbook mild-steel idealisation with points A to F, behaviour rules, a stateless `POST /api/v1/lab/tension` contract, and 23 hand-solved reference cases) with a clickable prototype. Not yet built: fixtures, backend model, endpoint, frontend lab. S1 onwards are pending. The first new working feature is the tensile Material Lab, and it can ship standalone before the complete multi-tool project system exists.
+**Status:** S0 is done (`docs/STEEL_LAB_CONTRACT.md`: workspace and routing, units, specimen, a textbook mild-steel idealisation with points A to F, behaviour rules, a stateless `POST /api/v1/lab/tension` contract, 25 hand-solved reference cases in `shared/fixtures/lab`). S1 and S2 are built for the one preset `steel_textbook`: backend model (`beam_solver.material`), endpoint, and the lab screen (Beam | Steel switcher, specimen and stress–strain curve, slider, Play/Pause/Unload/Reset, points A to F, 0.2 % offset proof strength with LaTeX explanation, share links, light/dark, phone layout). Verified by the fixtures (backend and Playwright) and property tests. Not done: more presets (a sourced steel grade, rebar, aluminium, brittle materials), the shear and compression labs (S3), and S4 onwards. Phone check of the Explain and Maths tabs is still open.
 
 | ID | Deliverable | Acceptance criteria / boundary |
 |---|---|---|
