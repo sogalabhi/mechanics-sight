@@ -2,7 +2,6 @@ import { formatNumber } from '@/math/format'
 import type { AnalysisResult } from '@/model/types'
 import { useStore } from '@/store/store'
 import { ValuesTable } from './ValuesTable'
-import { WorkingPanel } from '@/working/WorkingPanel'
 import { CanonicalCard } from '@/working/CanonicalCard'
 import ui from '@/ui/ui.module.css'
 import styles from './panels.module.css'
@@ -193,7 +192,6 @@ export function Results() {
         <p key={w} className={styles.hint}>{w}</p>
       ))}
       <ValuesTable />
-      <WorkingPanel />
     </div>
   )
 }

@@ -1,20 +1,17 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { formatNumber, formatQty } from '@/math/format'
 import { computeSectionCut } from '@/math/sectionCut'
 import { computeStressProfile } from '@/math/stressProfile'
 import { useStore } from '@/store/store'
 import styles from './VirtualSawCard.module.css'
 
-export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
+export function VirtualSawCard() {
   const sawCutX = useStore((s) => s.sawCutX)
   const beam = useStore((s) => s.draft ?? s.beam)
   const result = useStore((s) => s.result)
   const setSawCutX = useStore((s) => s.setSawCutX)
-  const dockHud = useStore((s) => s.dockHud)
-  const setDockHud = useStore((s) => s.setDockHud)
   const fibre = useStore((s) => s.fibre)
   const setFibre = useStore((s) => s.setFibre)
-  const [minimized, setMinimized] = useState(false)
 
   const data = useMemo(() => {
     if (sawCutX === null || !result) return null
@@ -35,8 +32,6 @@ export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
     return computeStressProfile(activeSection, data.mCut, data.vCut)
   }, [activeSection, data])
 
-  if (!docked && dockHud) return null
-  if (docked && !dockHud) return null
   if (!data) return null
 
   // Mini-FBD SVG dimensions
@@ -52,10 +47,8 @@ export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
   const vMatches = Math.abs(data.vCut - data.vDiagram) < 1e-4
   const mMatches = Math.abs(data.mCut - data.mDiagram) < 1e-4
 
-  const cardClass = `${docked ? styles.dockedCard : styles.card} ${minimized ? styles.minimized : ''}`
-
   return (
-    <aside className={cardClass} aria-label="Virtual Saw Free Body Cut">
+    <aside className={styles.card} aria-label="Virtual Saw Free Body Cut">
       {/* Header */}
       <div className={styles.header}>
         <div className={styles.titleGroup}>
@@ -63,22 +56,6 @@ export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
           <span className={styles.badge}>x = {formatNumber(data.xCut)} m</span>
         </div>
         <div className={styles.actionGroup}>
-          <button
-            className={styles.actionBtn}
-            onClick={() => setDockHud(!dockHud)}
-            title={dockHud ? 'Float over canvas' : 'Dock to sidebar (frees up canvas)'}
-            aria-label={dockHud ? 'Float over canvas' : 'Dock to sidebar'}
-          >
-            {dockHud ? '⧉ Float' : '◨ Dock'}
-          </button>
-          <button
-            className={styles.actionBtn}
-            onClick={() => setMinimized(!minimized)}
-            title={minimized ? 'Expand details' : 'Minimize to header'}
-            aria-label={minimized ? 'Expand details' : 'Minimize'}
-          >
-            {minimized ? '＋' : '—'}
-          </button>
           <button
             className={styles.closeBtn}
             onClick={() => setSawCutX(null)}
@@ -90,7 +67,7 @@ export function VirtualSawCard({ docked = false }: { docked?: boolean }) {
         </div>
       </div>
 
-      {!minimized && (
+      {(
         <>
 
       <div className={styles.intro}>

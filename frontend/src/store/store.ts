@@ -3,7 +3,7 @@ import { emptyBeam } from '@/model/actions'
 import { beamFromHash } from '@/model/share'
 import type { AnalysisResult, BeamInput } from '@/model/types'
 
-export type PaneTab = 'inspect' | 'results'
+export type PaneTab = 'inspect' | 'section' | 'results' | 'maths'
 /** Extreme fibre of the section a view is focused on. */
 export type Fibre = 'top' | 'bottom'
 
@@ -45,7 +45,6 @@ interface State {
   fibre: Fibre | null
   sawCutX: number | null
   integrationRange: [number, number] | null
-  dockHud: boolean
   /** One call = one undo step. */
   commit: (beam: BeamInput, selectId?: string | null) => void
   undo: () => void
@@ -62,7 +61,6 @@ interface State {
   toggleSawAt: (x: number) => void
   setSawCutX: (x: number | null) => void
   setIntegrationRange: (range: [number, number] | null) => void
-  setDockHud: (dock: boolean) => void
   setShowWorking: (on: boolean) => void
   setSelectedMethod: (method: string | null) => void
   setStepsUnsupported: (v: boolean) => void
@@ -88,19 +86,6 @@ const getStoredPaneWidth = () => {
     return Number.isFinite(v) && v > 0 ? clampPane(v) : PANE_W_DEFAULT
   } catch {
     return PANE_W_DEFAULT
-  }
-}
-
-const DOCK_HUD_KEY = 'ms_dock_hud'
-const getStoredDockHud = () => {
-  try {
-    return (
-      typeof window !== 'undefined' &&
-      typeof window.localStorage !== 'undefined' &&
-      window.localStorage.getItem(DOCK_HUD_KEY) === 'true'
-    )
-  } catch {
-    return false
   }
 }
 
@@ -137,7 +122,6 @@ export const useStore = create<State>((set) => ({
   fibre: null,
   sawCutX: null,
   integrationRange: null,
-  dockHud: getStoredDockHud(),
   commit: (beam, selectId) =>
     set((s) => ({
       beam,
@@ -150,8 +134,9 @@ export const useStore = create<State>((set) => ({
     set((s) => (s.draft ? { draft: null } : s.past.length ? { beam: s.past[s.past.length - 1], past: s.past.slice(0, -1), future: [s.beam, ...s.future] } : s)),
   redo: () =>
     set((s) => (s.draft ? { draft: null } : s.future.length ? { beam: s.future[0], past: [...s.past, s.beam], future: s.future.slice(1) } : s)),
-  select: (id) => set(id === null ? { selectedId: null } : { selectedId: id, paneTab: 'inspect' }),
-  setPaneTab: (paneTab) => set({ paneTab }),
+  select: (id) => set(id === null ? { selectedId: null } : { selectedId: id, paneTab: 'inspect', showWorking: false }),
+  // Worked steps are only requested from the solver while the Maths tab is open.
+  setPaneTab: (paneTab) => set({ paneTab, showWorking: paneTab === 'maths', stepsUnsupported: false }),
   setPaneWidth: (w) => {
     const paneWidth = clampPane(w)
     try {
@@ -166,17 +151,11 @@ export const useStore = create<State>((set) => ({
   setFibre: (fibre) => set({ fibre }),
   clearSelection: () =>
     set({ pinnedX: null, integrationRange: null, sawCutX: null, fibre: null, selectedId: null }),
-  toggleSawAt: (x) => set((s) => ({ sawCutX: s.sawCutX === x ? null : x })),
-  setSawCutX: (sawCutX) => set({ sawCutX }),
-  setIntegrationRange: (integrationRange) => set({ integrationRange }),
-  setDockHud: (dockHud) => {
-    try {
-      if (typeof window !== 'undefined' && typeof window.localStorage !== 'undefined') {
-        window.localStorage.setItem(DOCK_HUD_KEY, String(dockHud))
-      }
-    } catch {}
-    set({ dockHud })
-  },
+  toggleSawAt: (x) =>
+    set((s) => (s.sawCutX === x ? { sawCutX: null } : { sawCutX: x, paneTab: 'section', showWorking: false })),
+  setSawCutX: (sawCutX) => set(sawCutX === null ? { sawCutX } : { sawCutX, paneTab: 'section', showWorking: false }),
+  setIntegrationRange: (integrationRange) =>
+    set(integrationRange === null ? { integrationRange } : { integrationRange, paneTab: 'section', showWorking: false }),
   setShowWorking: (showWorking) => set({ showWorking, stepsUnsupported: false }),
   setSelectedMethod: (selectedMethod) => set({ selectedMethod }),
   setStepsUnsupported: (stepsUnsupported) => set({ stepsUnsupported }),

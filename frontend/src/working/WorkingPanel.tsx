@@ -42,7 +42,6 @@ const METHOD_LABELS: Record<string, string> = {
 
 export function WorkingPanel() {
   const on = useStore((s) => s.showWorking)
-  const setOn = useStore((s) => s.setShowWorking)
   const steps = useStore((s) => s.result?.steps)
   const availableMethods = useStore((s) => s.result?.available_methods)
   const selectedMethod = useStore((s) => s.selectedMethod)
@@ -53,9 +52,6 @@ export function WorkingPanel() {
   const activeMethod = selectedMethod ?? resultSelectedMethod ?? availableMethods?.[0]
   return (
     <div>
-      <button className={styles.toggle} aria-expanded={on} onClick={() => setOn(!on)}>
-        {on ? 'Hide working' : 'Show working'}
-      </button>
       {on && unsupported && (
         <p className={styles.note} role="alert">This solver did not return steps. Restart the backend so it runs the latest code.</p>
       )}

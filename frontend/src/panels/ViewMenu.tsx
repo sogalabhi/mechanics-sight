@@ -17,7 +17,6 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
     showStress,
     showAxial,
     sawCutX,
-    dockHud,
     setShowReactions,
     setShowGuides,
     setShowCalculus,
@@ -25,7 +24,6 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
     setShowStress,
     setShowAxial,
     setSawCutX,
-    setDockHud,
     commit,
   } = useStore()
   const cursorX = useStore(selectCursorX)
@@ -59,7 +57,6 @@ export function ViewMenu({ inline = false }: { inline?: boolean }) {
       <label><input type="checkbox" checked={showDeflection} onChange={(e) => setShowDeflection(e.target.checked)} /> Show deflected shape (elastic curve)</label>
       <label><input type="checkbox" checked={showStress} onChange={(e) => setShowStress(e.target.checked)} /> Show bending stress diagram (σ)</label>
       <label><input type="checkbox" checked={showAxial === true || showAxial === null} onChange={(e) => setShowAxial(e.target.checked)} /> Show axial force diagram (AFD){showAxial === null ? ' (auto)' : ''}</label>
-      <label><input type="checkbox" checked={dockHud} onChange={(e) => setDockHud(e.target.checked)} /> Dock cut & integration cards to sidebar</label>
       <button
         className={ui.btn}
         onClick={() => {

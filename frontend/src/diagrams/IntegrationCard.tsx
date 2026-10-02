@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { formatNumber, formatQty } from '@/math/format'
 import { integrateShear } from '@/math/poly'
 import { useStore } from '@/store/store'
@@ -8,52 +8,26 @@ import styles from './IntegrationCard.module.css'
  * Pedagogical HUD card showing the calculus relationship:
  * Shaded Area under SFD = ∫ V(x) dx ≡ ΔM = M(x_b) - M(x_a).
  */
-export function IntegrationCard({ docked = false }: { docked?: boolean }) {
+export function IntegrationCard() {
   const range = useStore((s) => s.integrationRange)
   const result = useStore((s) => s.result)
   const setIntegrationRange = useStore((s) => s.setIntegrationRange)
-  const dockHud = useStore((s) => s.dockHud)
-  const setDockHud = useStore((s) => s.setDockHud)
-  const sawCutX = useStore((s) => s.sawCutX)
-  const [minimized, setMinimized] = useState(false)
 
   const data = useMemo(() => {
     if (!range || !result) return null
     return integrateShear(result, range[0], range[1])
   }, [range, result])
 
-  if (!docked && dockHud) return null
-  if (docked && !dockHud) return null
   if (!data) return null
 
   const hasBothSigns = data.positiveArea > 1e-4 && data.negativeArea < -1e-4
   const hasCouple = Math.abs(data.momentJumpSum) > 1e-5
 
-  const cardClass = `${docked ? styles.dockedCard : styles.card} ${
-    !docked && sawCutX !== null ? styles.leftPositioned : ''
-  } ${minimized ? styles.minimized : ''}`
-
   return (
-    <aside className={cardClass} aria-label="Shear Integration Breakdown">
+    <aside className={styles.card} aria-label="Shear Integration Breakdown">
       <div className={styles.header}>
         <span className={styles.title}>SFD Area Integration</span>
         <div className={styles.actionGroup}>
-          <button
-            className={styles.actionBtn}
-            onClick={() => setDockHud(!dockHud)}
-            title={dockHud ? 'Float over canvas' : 'Dock to sidebar (frees up canvas)'}
-            aria-label={dockHud ? 'Float over canvas' : 'Dock to sidebar'}
-          >
-            {dockHud ? '⧉ Float' : '◨ Dock'}
-          </button>
-          <button
-            className={styles.actionBtn}
-            onClick={() => setMinimized(!minimized)}
-            title={minimized ? 'Expand details' : 'Minimize to header'}
-            aria-label={minimized ? 'Expand details' : 'Minimize'}
-          >
-            {minimized ? '＋' : '—'}
-          </button>
           <button
             className={styles.closeBtn}
             onClick={() => setIntegrationRange(null)}
@@ -65,7 +39,7 @@ export function IntegrationCard({ docked = false }: { docked?: boolean }) {
         </div>
       </div>
 
-      {!minimized && (
+      {(
         <>
           <div className={styles.rangeText}>
             Interval: <strong>x = {formatNumber(data.xStart)} m</strong> → <strong>{formatNumber(data.xEnd)} m</strong> (Δx = {formatNumber(data.xEnd - data.xStart)} m)

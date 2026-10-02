@@ -6,11 +6,14 @@ import { PANE_W_DEFAULT, PANE_W_WIDE, paneWidthMax, useStore, type PaneTab } fro
 import { Inspector } from './Inspector'
 import { PhysicalProperties } from './PhysicalProperties'
 import { Results } from './Results'
+import { WorkingPanel } from '@/working/WorkingPanel'
 import styles from './panels.module.css'
 
 const TABS: { id: PaneTab; label: string }[] = [
   { id: 'inspect', label: 'Inspect' },
+  { id: 'section', label: 'Section' },
   { id: 'results', label: 'Results' },
+  { id: 'maths', label: 'Maths' },
 ]
 
 export const SHEET_MAX = '52vh'
@@ -85,23 +88,42 @@ function ResizeHandle() {
 
 function Body({ phone }: { phone: boolean }) {
   const tab = useStore((s) => s.paneTab)
-  return (
-    <>
-      {/* Docked cards stay on top whichever tab is open, so a cut can always be closed. */}
-      <DockedCards />
-      {tab === 'inspect' ? <InspectTab phone={phone} /> : <Results />}
-    </>
-  )
+  switch (tab) {
+    case 'inspect':
+      return <InspectTab phone={phone} />
+    case 'section':
+      return <SectionTab />
+    case 'results':
+      return <Results />
+    case 'maths':
+      return (
+        <>
+          <h2 className={styles.title}>Maths</h2>
+          <WorkingPanel />
+        </>
+      )
+  }
 }
 
-function DockedCards() {
-  const dockHud = useStore((s) => s.dockHud)
+/** The cut and the shaded-area integration: the two ways of looking inside the beam at a place. */
+function SectionTab() {
   const sawCutX = useStore((s) => s.sawCutX)
-  const integrationRange = useStore((s) => s.integrationRange)
+  const range = useStore((s) => s.integrationRange)
+  if (sawCutX === null && range === null) {
+    return (
+      <div>
+        <h2 className={styles.title}>Section A–A</h2>
+        <p className={styles.hint}>
+          Click the beam and press <kbd>S</kbd>, or pick Saw Cut on the crosshair, to cut it and see the forces inside.
+          Drag along the shear diagram to integrate an area.
+        </p>
+      </div>
+    )
+  }
   return (
     <>
-      {dockHud && sawCutX !== null && <VirtualSawCard docked />}
-      {dockHud && integrationRange !== null && <IntegrationCard docked />}
+      {sawCutX !== null && <VirtualSawCard />}
+      {range !== null && <IntegrationCard />}
     </>
   )
 }
@@ -124,11 +146,14 @@ export function RightPane({ phone }: { phone: boolean }) {
   const commit = useStore((s) => s.commit)
   const [open, setOpen] = useState(false)
 
-  // Selecting an item opens the sheet; adjusted during render instead of in an effect.
-  const [seen, setSeen] = useState(selectedId)
-  if (seen !== selectedId) {
-    setSeen(selectedId)
-    if (selectedId) setOpen(true)
+  const sawCutX = useStore((s) => s.sawCutX)
+  const range = useStore((s) => s.integrationRange)
+  // Selecting an item or opening a cut / range opens the sheet; adjusted during render instead of in an effect.
+  const trigger = `${selectedId}|${sawCutX}|${range}`
+  const [seen, setSeen] = useState(trigger)
+  if (seen !== trigger) {
+    setSeen(trigger)
+    if (selectedId || sawCutX !== null || range !== null) setOpen(true)
   }
 
   if (!phone) {

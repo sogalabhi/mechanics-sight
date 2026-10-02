@@ -3,8 +3,6 @@ import { Crosshair } from '@/diagrams/Crosshair'
 import { DIAGRAM_HEIGHT, DiagramPanel } from '@/diagrams/DiagramPanel'
 import { DEFLECTION_PANEL_HEIGHT, ElasticCurvePanel } from '@/diagrams/ElasticCurvePanel'
 import { STRESS_PANEL_HEIGHT, StressPanel } from '@/diagrams/StressPanel'
-import { IntegrationCard } from '@/diagrams/IntegrationCard'
-import { VirtualSawCard } from '@/diagrams/VirtualSawCard'
 import { selectCursorX, useStore } from '@/store/store'
 import { BEAM_PANEL_HEIGHT, BeamView } from './BeamView'
 import { EmptyDiagramState } from './EmptyDiagramState'
@@ -123,8 +121,6 @@ export function CanvasStack({ width }: { width: number }) {
       <p style={{ margin: '6px 8px', fontSize: 11, color: 'var(--ink-2)' }}>
         Drag supports and loads · Select a distributed load to resize its ends · Alt: no snapping · Esc: cancel
       </p>
-      <IntegrationCard />
-      <VirtualSawCard />
       <svg data-beam-canvas width={width} height={BEAM_PANEL_HEIGHT} style={{ display: 'block' }}>
         <Guides height={BEAM_PANEL_HEIGHT} />
         <BeamView />

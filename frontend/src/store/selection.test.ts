@@ -45,4 +45,17 @@ describe('selection state', () => {
     useStore.getState().select('p1')
     expect(useStore.getState().paneTab).toBe('inspect')
   })
+
+  it('opening a cut or a range shows the Section tab; the Maths tab alone requests worked steps', () => {
+    useStore.getState().setPaneTab('results')
+    useStore.getState().toggleSawAt(3)
+    expect(useStore.getState().paneTab).toBe('section')
+    useStore.getState().setPaneTab('results')
+    useStore.getState().setIntegrationRange([1, 2])
+    expect(useStore.getState().paneTab).toBe('section')
+    useStore.getState().setPaneTab('maths')
+    expect(useStore.getState().showWorking).toBe(true)
+    useStore.getState().setPaneTab('inspect')
+    expect(useStore.getState().showWorking).toBe(false)
+  })
 })
